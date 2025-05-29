@@ -44,6 +44,10 @@ export default function MentalScoreScreen() {
     Alert.alert('✅ Reset Complete', 'Check-In 3 has been cleared for testing.');
   };
 
+  const devLaunchCheckIn3 = () => {
+    navigation.navigate('CheckIn', { window: 'checkIn3' });
+  };
+
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
@@ -116,10 +120,14 @@ export default function MentalScoreScreen() {
         </View>
       </View>
 
-      {/* Developer Reset Button */}
+      {/* Developer Buttons */}
       <View style={styles.resetContainer}>
         <TouchableOpacity onPress={resetCheckIn3} style={styles.resetButton}>
           <Text style={styles.resetButtonText}>Reset Check-In 3 (Dev)</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={devLaunchCheckIn3} style={[styles.resetButton, { marginTop: 12, backgroundColor: '#3b82f6' }]}>
+          <Text style={styles.resetButtonText}>Open Check-In 3 (Dev)</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>
