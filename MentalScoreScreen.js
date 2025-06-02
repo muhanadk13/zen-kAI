@@ -180,14 +180,21 @@ export default function MentalScoreScreen() {
 
   useLayoutEffect(() => {
     navigation.setOptions({
+      headerLeft: () => (
+        <Image
+          source={require('./assets/logo-pic.png')} // Path to your logo image
+          style={{ width: 60, height: 60, marginLeft: 1, marginBottom: 8 }} // Adjust size and margin as needed
+          resizeMode="contain"
+        />
+      ),
       headerTitle: () => (
         <Image
-          source={require('./assets/logo-text.png')} // Path to your logo image
+          source={require('./assets/logo-text.png')} // Path to your logo text image
           style={{ width: 120, height: 40 }} // Adjust size as needed
           resizeMode="contain"
         />
       ),
-      headerTitleAlign: 'left' // Center the logo in the header
+      headerTitleAlign: 'center', // Center the logo text in the header
     });
   }, [navigation]);
 
