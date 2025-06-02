@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -11,65 +11,217 @@ import {
   Keyboard,
   ScrollView,
   Pressable,
-  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useColorScheme } from 'react-native';
+import { useNavigation } from '@react-navigation/native'; // Import useNavigation
+
+const OPENAI_API_KEY = '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';
 
 export default function ReflectionScreen() {
+  const navigation = useNavigation(); // Access navigation object
+
   const [message, setMessage] = useState('');
   const [chatMessages, setChatMessages] = useState([]);
+  const [isAIResponding, setIsAIResponding] = useState(false); // Track AI response state
   const scrollViewRef = useRef();
   const colorScheme = useColorScheme();
   const isDarkMode = colorScheme === 'dark';
 
-  const handleSend = async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    const userMessage = message.trim();
-    if (!userMessage) return;
-
-    setChatMessages(prev => [...prev, { text: userMessage, fromUser: true }]);
-    setMessage('');
-
-    // Simulate AI reply immediately
-    const reply = generateAIResponse(userMessage);
-    animateAIResponse(reply);
-  };
-
-  const animateAIResponse = async (reply) => {
-    let displayedText = '';
-    const words = reply.split(' '); // Split reply into words
-    for (const word of words) {
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); // Light haptic for each word
-      for (const letter of word) {
-        displayedText += letter; // Append letter by letter
-        setChatMessages(prev => {
-          const lastMessage = prev[prev.length - 1];
-          if (lastMessage && !lastMessage.fromUser) {
-            // Update the last AI message
-            return [
-              ...prev.slice(0, -1),
-              { text: displayedText, fromUser: false },
-            ];
-          } else {
-            // Add a new AI message
-            return [...prev, { text: displayedText, fromUser: false }];
-          }
-        });
-
-        // Scroll to the end after updating the chat
-        scrollViewRef.current?.scrollToEnd({ animated: true }); // Animated scroll
-
-        await new Promise(resolve => setTimeout(resolve, 30)); // Faster delay for letter animation
+  useEffect(() => {
+    const loadChatHistory = async () => {
+      const savedChatHistory = await AsyncStorage.getItem('chatHistory');
+      if (savedChatHistory) {
+        setChatMessages(JSON.parse(savedChatHistory));
       }
-      displayedText += ' '; // Add space after each word
+    };
+
+    loadChatHistory();
+    startConversation();
+  }, []);
+
+  // Autoscroll to the bottom whenever chatMessages changes
+  useEffect(() => {
+    scrollViewRef.current?.scrollToEnd({ animated: false }); // Instant scroll
+  }, [chatMessages]);
+
+  const animateAIResponse = async (response) => {
+    let displayedText = '';
+    for (const letter of response) {
+      displayedText += letter;
+      setChatMessages((prev) => {
+        const lastMessage = prev[prev.length - 1];
+        if (lastMessage && !lastMessage.fromUser) {
+          return [
+            ...prev.slice(0, -1),
+            { text: displayedText, fromUser: false },
+          ];
+        } else {
+          return [...prev, { text: displayedText, fromUser: false }];
+        }
+      });
+
+      // Trigger subtle haptics feedback for AI response
+      await Haptics.selectionAsync();
+
+      await new Promise((resolve) => setTimeout(resolve, 30)); // Typing speed
     }
   };
 
-  const generateAIResponse = (userMessage) => {
-    // Simulate dynamic AI response
-    return `You said: "${userMessage}". Here's something to reflect on...`;
+  const fetchOpenAIResponse = async (messages) => {
+    try {
+      // Simulate AI thinking with a delay
+      await new Promise((resolve) => setTimeout(resolve, 1000)); // 1-second delay
+
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${OPENAI_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: messages,
+          temperature: 0.7,
+          max_tokens: 150,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.error('❌ API Error:', data);
+        Alert.alert('Error', `OpenAI API Error: ${data.error.message}`);
+        return `Error: ${data.error.message}`;
+      }
+
+      const aiResponse = data.choices[0].message.content.trim();
+      await animateAIResponse(aiResponse); // Use typing animation
+      return aiResponse;
+    } catch (err) {
+      console.error('❌ Error fetching OpenAI response:', err.message || err);
+      return 'Sorry, I encountered an error. Please try again.';
+    }
+  };
+
+  const startConversation = async () => {
+    try {
+      // Clear previous chat messages immediately
+      setChatMessages([]);
+
+      const historyRaw = await AsyncStorage.getItem('checkInHistory');
+      const history = historyRaw ? JSON.parse(historyRaw) : [];
+      const today = new Date().toISOString().split('T')[0];
+      const todayEntries = history.filter((entry) => entry.timestamp.startsWith(today));
+      const context = {
+        today: todayEntries,
+        previousDays: history.filter((entry) => !entry.timestamp.startsWith(today)),
+      };
+
+      const initialMessages = [
+        {
+            role: 'system',
+            content: `You are zen-kAI, a calm, emotionally intelligent assistant. Your goal is to help the user reflect, not explain. Each message must be extremely short: 1 sentence to acknowledge what they said or point out a recent trend, followed by 1 short, emotionally aware question. Avoid lecturing or giving reasons. Keep the tone simple and warm. Reference today's check-ins casually, like “check-in 2 showed high clarity.” Never exceed a few words.`
+          }
+          ,
+        {
+          role: 'user',
+          content: `Here are my check-ins:
+        
+        Today's: ${JSON.stringify(context.today)}
+        
+        Previous days: ${JSON.stringify(context.previousDays)}
+        
+        Ask one short, meaningful reflection question that helps me understand something about how I’ve been feeling lately — without offering advice or suggesting actions. You never say more than a few words`,
+        },
+      ];
+
+      // Fetch AI response
+      const response = await fetchOpenAIResponse(initialMessages);
+
+      // Add AI response as the first message
+      setChatMessages([{ text: response, fromUser: false }]);
+    } catch (err) {
+      console.error('❌ Error starting conversation:', err);
+      Alert.alert('Error', 'Failed to start the conversation.');
+    }
+  };
+
+  const handleSend = async () => {
+    if (isAIResponding) return;
+  
+    await Haptics.selectionAsync();
+  
+    const userMessage = message.trim();
+    if (!userMessage) return;
+  
+    const newChatMessages = [...chatMessages, { text: userMessage, fromUser: true }];
+    setChatMessages(newChatMessages);
+    setMessage('');
+  
+    // Save all chat messages
+    await AsyncStorage.setItem('chatHistory', JSON.stringify(newChatMessages));
+  
+    // Save only user messages for important information
+    const importantInfo = newChatMessages.filter((m) => m.fromUser).map((m) => m.text);
+    await AsyncStorage.setItem('importantInfo', JSON.stringify(importantInfo));
+  
+    setTimeout(() => {
+      scrollViewRef.current?.scrollTo({ y: 0, animated: false });
+    }, 100);
+  
+    const userReplyCount = newChatMessages.filter((m) => m.fromUser).length;
+  
+    // Check if the user has responded to the final question
+    const hasRespondedToFinalQuestion =
+      newChatMessages.length >= 2 &&
+      newChatMessages[newChatMessages.length - 2].text === 'What will you do differently tomorrow?' &&
+      newChatMessages[newChatMessages.length - 1].fromUser;
+  
+    if (hasRespondedToFinalQuestion) {
+      // Clear visual chat messages after responding to the final question
+      setTimeout(() => {
+        setChatMessages([]); // Clear visual chat messages
+        navigation.navigate('MentalScore'); // Navigate after delay
+      }, 1000); // Delay for navigation
+      return;
+    }
+  
+    const aiReplyCount = newChatMessages.filter((m) => !m.fromUser).length;
+  
+    if (aiReplyCount >= 4) {
+      // Add the final question with AI typing animation
+      const finalQuestion = 'What will you do differently tomorrow?';
+      await animateAIResponse(finalQuestion); // Animation handles state updates
+      // No need to call setChatMessages again here
+      return;
+    }
+  
+    const messages = [
+      ...newChatMessages.map((msg) => ({
+        role: msg.fromUser ? 'user' : 'assistant',
+        content: msg.text,
+      })),
+      { role: 'user', content: userMessage },
+    ];
+  
+    // Log the prompt being sent to the AI
+    console.log('Prompt sent to AI:', JSON.stringify(messages, null, 2));
+  
+    setIsAIResponding(true);
+  
+    const response = await fetchOpenAIResponse(messages);
+  
+    // Add the AI response to chat messages
+    const updatedChatMessages = [...newChatMessages, { text: response, fromUser: false }];
+    setChatMessages(updatedChatMessages);
+  
+    await AsyncStorage.setItem('chatHistory', JSON.stringify(updatedChatMessages));
+  
+    setIsAIResponding(false);
   };
 
   return (
@@ -112,19 +264,28 @@ export default function ReflectionScreen() {
               style={[
                 styles.input,
                 {
-                  backgroundColor: isDarkMode ? '#2C2C2E' : '#F1F1F3',
-                  color: isDarkMode ? '#FFFFFF' : '#1C1C1E',
+                  backgroundColor: isAIResponding ? '#E0E0E0' : isDarkMode ? '#2C2C2E' : '#F1F1F3',
+                  color: isAIResponding ? '#A9A9A9' : isDarkMode ? '#FFFFFF' : '#1C1C1E',
                 },
               ]}
-              placeholder="Ask me anything..."
-              placeholderTextColor={isDarkMode ? '#666666' : '#A9A9A9'}
+              placeholder={isAIResponding ? 'AI is responding...' : 'Type your response...'}
+              placeholderTextColor={isAIResponding ? '#A9A9A9' : isDarkMode ? '#666666' : '#A9A9A9'}
               value={message}
               onChangeText={setMessage}
               returnKeyType="send"
               onSubmitEditing={handleSend}
+              editable={!isAIResponding} // Disable input while AI is responding
             />
-            <Pressable onPress={handleSend} style={styles.sendButton}>
-              <Ionicons name="arrow-up-circle" size={43} color={isDarkMode ? '#0A84FF' : '#007AFF'} />
+            <Pressable
+              onPress={handleSend}
+              style={styles.sendButton}
+              disabled={isAIResponding} // Disable button while AI is responding
+            >
+              <Ionicons
+                name="arrow-up-circle"
+                size={43}
+                color={isAIResponding ? '#A9A9A9' : isDarkMode ? '#0A84FF' : '#007AFF'}
+              />
             </Pressable>
           </View>
         </KeyboardAvoidingView>
@@ -195,8 +356,8 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     justifyContent: 'center',
     alignItems: 'center',
-    width: 44, // Increased size by 25%
-    height: 44, // Increased size by 25%
-    borderRadius: 22, // Ensure circular shape
+    width: 44,
+    height: 44,
+    borderRadius: 22,
   },
 });

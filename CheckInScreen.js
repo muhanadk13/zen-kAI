@@ -11,6 +11,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Keyboard,
+  Alert,
 } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -57,25 +58,45 @@ export default function CheckInScreen() {
 
   const handleSave = async () => {
     const now = new Date();
-    const today = now.toISOString().split('T')[0];
+    const timestamp = now.toISOString();
+    const today = timestamp.split('T')[0];
     const window = route.params?.window || getCheckInWindow();
-    const key = `${today}-${window}`;
 
-    const data = {
+    const entry = {
       energy,
       clarity,
       emotion,
       note,
-      timestamp: now.toISOString(),
+      window,
+      timestamp,
     };
 
-    await AsyncStorage.setItem(key, JSON.stringify(data));
+    try {
+      const key = `${today}-${window}`;
+      await AsyncStorage.setItem(key, JSON.stringify(entry));
 
-    if (window === 'checkIn3') {
-      navigation.navigate('Reflection'); // ✅ Go to Reflection only
-    } else {
-      navigation.navigate('InsightPlaceholder'); // 🔄 For checkIn1 and checkIn2
+      const historyRaw = await AsyncStorage.getItem('checkInHistory');
+      const history = historyRaw ? JSON.parse(historyRaw) : [];
+      history.push(entry);
+      await AsyncStorage.setItem('checkInHistory', JSON.stringify(history));
+
+      console.log('✅ Check-in saved:', entry);
+
+      if (window === 'checkIn3') {
+        navigation.navigate('Reflection');
+      } else {
+        navigation.navigate('InsightPlaceholder');
+      }
+    } catch (err) {
+      console.error('❌ Error saving check-in:', err);
     }
+  };
+
+  const showHistory = async () => {
+    const raw = await AsyncStorage.getItem('checkInHistory');
+    const parsed = raw ? JSON.parse(raw) : [];
+    Alert.alert('Check-In History (Console)', 'Open the console to view.');
+    console.log('📅 Full Check-In History:', parsed);
   };
 
   return (
@@ -161,6 +182,14 @@ export default function CheckInScreen() {
                 <Text style={styles.buttonText}>Save Check-In</Text>
               </TouchableOpacity>
             </Animatable.View>
+
+            <TouchableOpacity
+              style={[styles.button, { backgroundColor: '#A0AEC0', marginTop: 14 }]}
+              onPress={showHistory}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.buttonText}>📅 Show History (Dev)</Text>
+            </TouchableOpacity>
 
             <View style={styles.footer}>
               <Image source={require('./assets/lock.png')} style={styles.lockIcon} />
