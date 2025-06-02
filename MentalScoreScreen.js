@@ -22,11 +22,12 @@ export default function MentalScoreScreen() {
   const [clarity, setClarity] = useState(0);
   const [emotion, setEmotion] = useState(0);
   const [focus, setFocus] = useState(0);
-  const [insight, setInsight] = useState('Loading insight...');
-  const [advice, setAdvice] = useState('Loading advice...');
+  const [microInsight, setMicroInsight] = useState('Loading insight...');
+  const [weeklyMindMirror, setWeeklyMindMirror] = useState('No MindMirror yet.');
 
   useEffect(() => {
     fetchCheckInData();
+    loadMindMirror();
   }, []);
 
   const fetchCheckInData = async () => {
@@ -35,11 +36,9 @@ export default function MentalScoreScreen() {
       const history = historyRaw ? JSON.parse(historyRaw) : [];
       const today = new Date().toISOString().split('T')[0];
 
-      // Filter history to include only today's entries
       const todayEntries = history.filter((entry) => entry.timestamp.startsWith(today));
 
       if (todayEntries.length === 0) {
-        // Set default values to 100 for a new day
         setEnergy(100);
         setClarity(100);
         setEmotion(100);
@@ -47,37 +46,30 @@ export default function MentalScoreScreen() {
         return;
       }
 
-      // Sort entries by timestamp to process them in order
       const sortedEntries = todayEntries.sort((a, b) => 
         new Date(a.timestamp) - new Date(b.timestamp)
       );
 
-      // Start with 100 and subtract impact of each check-in
       let currentEnergy = 100;
       let currentClarity = 100;
       let currentEmotion = 100;
 
-      // Each check-in impacts 33.3% of the total score
       const impactPerCheckIn = 33.3;
 
       sortedEntries.forEach((entry) => {
-        // Calculate the impact of this check-in
         const energyImpact = ((100 - entry.energy) * impactPerCheckIn) / 100;
         const clarityImpact = ((100 - entry.clarity) * impactPerCheckIn) / 100;
         const emotionImpact = ((100 - entry.emotion) * impactPerCheckIn) / 100;
 
-        // Subtract the impact from current values
         currentEnergy -= energyImpact;
         currentClarity -= clarityImpact;
         currentEmotion -= emotionImpact;
       });
 
-      // Ensure values don't go below 0
       currentEnergy = Math.max(0, Math.round(currentEnergy));
       currentClarity = Math.max(0, Math.round(currentClarity));
       currentEmotion = Math.max(0, Math.round(currentEmotion));
 
-      // Calculate focus based on clarity and energy
       const currentFocus = Math.round(0.6 * currentClarity + 0.4 * currentEnergy);
 
       setEnergy(currentEnergy);
@@ -86,6 +78,16 @@ export default function MentalScoreScreen() {
       setFocus(currentFocus);
 
       await fetchGPTContent(currentEnergy, currentClarity, currentEmotion, currentFocus);
+
+      const todayDate = new Date();
+      const isSunday = todayDate.getDay() === 0;
+      const lastMindMirrorUpdate = await AsyncStorage.getItem('lastMindMirrorUpdate');
+      const alreadyUpdated = lastMindMirrorUpdate && new Date(lastMindMirrorUpdate).toDateString() === todayDate.toDateString();
+
+      if (isSunday && !alreadyUpdated) {
+        await generateMindMirror();
+        await AsyncStorage.setItem('lastMindMirrorUpdate', todayDate.toISOString());
+      }
     } catch (err) {
       console.error('❌ Error loading check-in data:', err);
       setEnergy(100);
@@ -95,12 +97,21 @@ export default function MentalScoreScreen() {
     }
   };
 
+  const fetchGPTContent = async (energy, clarity, emotion, focus) => {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const microInsight = await AsyncStorage.getItem(`${today}-microInsight`);
+      setMicroInsight(microInsight || 'No insight yet.');
+    } catch (err) {
+      console.error('❌ GPT error:', err);
+    }
+  };
+
   const getWeeklyData = async () => {
     try {
       const historyRaw = await AsyncStorage.getItem('checkInHistory');
       const history = historyRaw ? JSON.parse(historyRaw) : [];
       
-      // Get last week's data (last 7 days)
       const weekAgo = new Date();
       weekAgo.setDate(weekAgo.getDate() - 7);
       
@@ -108,7 +119,6 @@ export default function MentalScoreScreen() {
         new Date(entry.timestamp) >= weekAgo
       );
 
-      // Calculate weekly averages
       const avg = arr => Math.round(arr.reduce((a, b) => a + b, 0) / arr.length);
       
       return {
@@ -120,102 +130,6 @@ export default function MentalScoreScreen() {
     } catch (err) {
       console.error('❌ Error getting weekly data:', err);
       return null;
-    }
-  };
-
-  const fetchGPTContent = async (energy, clarity, emotion, focus) => {
-    try {
-      const today = new Date();
-      const isMonday = today.getDay() === 1;
-      const lastInsightUpdate = await AsyncStorage.getItem('lastInsightUpdate');
-      const savedInsight = await AsyncStorage.getItem('currentInsight');
-      const needsInsightUpdate = !lastInsightUpdate || 
-        new Date(lastInsightUpdate).toDateString() !== today.toDateString();
-
-      // Update insight if it's Monday and hasn't been updated today OR if no insight exists
-      if ((isMonday && needsInsightUpdate) || !savedInsight) {
-        const weeklyData = await getWeeklyData();
-        if (weeklyData) {
-          const insightPrompt = `Based on last week's averages:
-            Energy: ${weeklyData.weeklyEnergy}%, Clarity: ${weeklyData.weeklyClarity}%, 
-            Emotion: ${weeklyData.weeklyEmotion}%, Focus: ${weeklyData.weeklyFocus}%.
-            Give one short reflective weekly insight in a calm, supportive tone. 
-            Max 2 short sentences. Do not list the numbers.`;
-
-          const insightRes = await fetch('https://api.openai.com/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${OPENAI_API_KEY}`,
-            },
-            body: JSON.stringify({
-              model: 'gpt-4o-mini',
-              messages: [
-                { role: 'system', content: 'You are a calm and supportive mental wellness coach.' },
-                { role: 'user', content: insightPrompt },
-              ],
-              temperature: 0.7,
-            }),
-          });
-
-          const insightData = await insightRes.json();
-          const gptInsight = insightData.choices?.[0]?.message?.content?.trim();
-          setInsight(gptInsight || 'No insight available.');
-          await AsyncStorage.setItem('lastInsightUpdate', today.toISOString());
-          await AsyncStorage.setItem('currentInsight', gptInsight);
-        }
-      } else {
-        // Load saved insight
-        if (savedInsight) {
-          setInsight(savedInsight);
-        }
-      }
-
-      // Check if this is after check-in 1
-      const currentWindow = getCheckInWindow();
-      const isAfterCheckIn1 = currentWindow !== 'checkIn1';
-      const today_str = today.toISOString().split('T')[0];
-      const checkIn1Key = `${today_str}-checkIn1`;
-      const hasCompletedCheckIn1 = await AsyncStorage.getItem(checkIn1Key);
-
-      // Only update advice after check-in 1 is completed
-      if (hasCompletedCheckIn1) {
-        const advicePrompt = `Based on today's metrics - energy ${energy}%, clarity ${clarity}%, 
-          emotion ${emotion}%, and focus ${focus}%, give one practical piece of advice for today 
-          in one short sentence. Do not restate the numbers.`;
-
-        const adviceRes = await fetch('https://api.openai.com/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${OPENAI_API_KEY}`,
-          },
-          body: JSON.stringify({
-            model: 'gpt-4o-mini',
-            messages: [
-              { role: 'system', content: 'You are a practical mental performance assistant.' },
-              { role: 'user', content: advicePrompt },
-            ],
-            temperature: 0.7,
-          }),
-        });
-
-        const adviceData = await adviceRes.json();
-        const gptAdvice = adviceData.choices?.[0]?.message?.content?.trim();
-        setAdvice(gptAdvice || 'No advice available.');
-        await AsyncStorage.setItem('currentAdvice', gptAdvice);
-      } else {
-        // Load saved advice if it exists
-        const savedAdvice = await AsyncStorage.getItem('currentAdvice');
-        if (savedAdvice) {
-          setAdvice(savedAdvice);
-        }
-      }
-
-    } catch (err) {
-      console.error('❌ GPT error:', err);
-      setInsight('Failed to load insight.');
-      setAdvice('Failed to load advice.');
     }
   };
 
@@ -263,17 +177,74 @@ export default function MentalScoreScreen() {
       await AsyncStorage.clear();
       console.log('✅ All data cleared successfully');
       Alert.alert('Reset Complete', 'All app data has been cleared.');
-      // Reset all states to default
       setEnergy(100);
       setClarity(100);
       setEmotion(100);
       setFocus(100);
-      setInsight('Loading insight...');
-      setAdvice('Loading advice...');
+      setMicroInsight('Loading insight...');
     } catch (err) {
       console.error('❌ Error clearing data:', err);
       Alert.alert('Error', 'Failed to clear data');
     }
+  };
+
+  const generateMindMirror = async () => {
+    try {
+      const historyRaw = await AsyncStorage.getItem('checkInHistory');
+      const history = historyRaw ? JSON.parse(historyRaw) : [];
+
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      const last7 = history.filter(entry => new Date(entry.timestamp) >= weekAgo);
+
+      const formatted = last7.map(entry => {
+        return `🕒 ${entry.timestamp.slice(0, 16)} → Energy: ${entry.energy}, Clarity: ${entry.clarity}, Emotion: ${entry.emotion}, Focus: ${entry.focus}, Note: ${entry.note || "No note"}`
+      }).join('\n');
+
+      const mindMirrorPrompt = `
+You are a weekly mental performance coach.
+
+Below is a user's check-in history for the past 7 days. Each includes energy, clarity, emotion, focus, and notes.
+
+Your job is to generate a Weekly MindMirror report in this format:
+
+📈 Strongest Day: [Highlight a day that stood out and why]  
+📉 Toughest Day: [Mention the dip and possible cause]  
+🔁 Pattern Noticed: [Find 1 behavioral/emotional trend]  
+🧠 Next Week's Tip: [Suggest 1 helpful change or experiment]
+
+Data:
+${formatted}
+`;
+
+      const gptRes = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${OPENAI_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [
+            { role: 'system', content: 'You are a supportive self-reflection assistant.' },
+            { role: 'user', content: mindMirrorPrompt },
+          ],
+          temperature: 0.7,
+        }),
+      });
+
+      const json = await gptRes.json();
+      const mindMirror = json.choices?.[0]?.message?.content?.trim();
+      await AsyncStorage.setItem('weeklyMindMirror', mindMirror);
+      setWeeklyMindMirror(mindMirror || 'No MindMirror yet.');
+    } catch (err) {
+      console.error('❌ Error generating MindMirror:', err);
+    }
+  };
+
+  const loadMindMirror = async () => {
+    const stored = await AsyncStorage.getItem('weeklyMindMirror');
+    if (stored) setWeeklyMindMirror(stored);
   };
 
   useLayoutEffect(() => {
@@ -296,18 +267,18 @@ export default function MentalScoreScreen() {
 
       <View style={styles.card}>
         <View style={styles.cardHeader}>
-          <Image source={require('./assets/calendar.webp')} style={styles.cardIcon} />
-          <Text style={styles.cardTitle}>Weekly Insight</Text>
+          <Image source={require('./assets/mirror.png')} style={styles.cardIcon} />
+          <Text style={styles.cardTitle}>Weekly MindMirror</Text>
         </View>
-        <Text style={styles.cardText}>{insight}</Text>
+        <Text style={styles.cardText}>{weeklyMindMirror}</Text>
       </View>
 
       <View style={styles.card}>
         <View style={styles.cardHeader}>
           <Image source={require('./assets/advice.png')} style={styles.cardIcon} />
-          <Text style={styles.cardTitle}>Advice</Text>
+          <Text style={styles.cardTitle}>Today’s Insight</Text>
         </View>
-        <Text style={styles.cardText}>{advice}</Text>
+        <Text style={styles.cardText}>{microInsight}</Text>
       </View>
 
       <View style={styles.metricsSection}>
