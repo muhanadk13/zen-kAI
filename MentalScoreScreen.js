@@ -176,17 +176,32 @@ export default function MentalScoreScreen() {
   const [focus, setFocus] = useState(0);
   const [microInsight, setMicroInsight] = useState('Loading insight...');
   const [weeklyMindMirror, setWeeklyMindMirror] = useState('No MindMirror yet.');
+  const [streak, setStreak] = useState(0);
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerTitle: () => (
+        <Image
+          source={require('./assets/logo-text.png')} // Path to your logo image
+          style={{ width: 120, height: 40 }} // Adjust size as needed
+          resizeMode="contain"
+        />
+      ),
+      headerTitleAlign: 'left' // Center the logo in the header
+    });
+  }, [navigation]);
 
   useEffect(() => {
     const fetchData = async () => {
       await fetchCheckInData();
       await triggerMindMirror();
+      await calculateStreak(); // Calculate streak on load
     };
     fetchData();
 
-    // Listen for navigation focus to refresh data after check-in
     const unsubscribe = navigation.addListener('focus', () => {
       fetchCheckInData();
+      calculateStreak(); // Recalculate streak on navigation focus
     });
 
     return unsubscribe;
@@ -299,6 +314,37 @@ export default function MentalScoreScreen() {
     }
   };
 
+  const calculateStreak = async () => {
+    try {
+      const historyRaw = await AsyncStorage.getItem('checkInHistory');
+      const history = historyRaw ? JSON.parse(historyRaw) : [];
+      const today = new Date().toISOString().split('T')[0];
+
+      const sortedHistory = history.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+      const uniqueDates = [...new Set(sortedHistory.map(entry => entry.timestamp.split('T')[0]))];
+
+      let streakCount = 0;
+      let currentDate = new Date(today);
+
+      for (let i = uniqueDates.length - 1; i >= 0; i--) {
+        const checkInDate = new Date(uniqueDates[i]);
+        if (
+          checkInDate.toISOString().split('T')[0] === currentDate.toISOString().split('T')[0]
+        ) {
+          streakCount++;
+          currentDate.setDate(currentDate.getDate() - 1);
+        } else {
+          break;
+        }
+      }
+
+      setStreak(streakCount);
+    } catch (err) {
+      console.error('❌ Error calculating streak:', err);
+      setStreak(0);
+    }
+  };
+
   const getCheckInWindow = () => {
     const hour = new Date().getHours();
     if (hour >= 6 && hour < 12) return 'checkIn1';
@@ -313,6 +359,7 @@ export default function MentalScoreScreen() {
     const existing = await AsyncStorage.getItem(key);
     if (!existing) {
       navigation.navigate('CheckIn', { window });
+      await calculateStreak(); // Update streak after check-in
     } else {
       Alert.alert('Already Checked In', 'You already completed this check-in.');
     }
@@ -385,6 +432,10 @@ export default function MentalScoreScreen() {
         <Image source={require('./assets/gauge.png')} style={styles.gaugeImage} resizeMode="contain" />
         <Text style={styles.mentalScore}>{Math.round((energy + clarity + emotion + focus) / 4)}</Text>
         <Text style={styles.mentalScoreLabel}>MentalScore</Text>
+      </View>
+
+      <View style={styles.streakContainer}>
+        <Text style={styles.streakText}>🔥 {streak} Day Streak</Text>
       </View>
 
       <View style={styles.card}>
@@ -493,6 +544,18 @@ const styles = StyleSheet.create({
     color: '#555',
     marginTop: -70,
   },
+  streakContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+  },
+
+  streakText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#FF4500',
+  },
   card: {
     backgroundColor: '#fff',
     padding: 18,
@@ -507,7 +570,7 @@ const styles = StyleSheet.create({
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 6,
+    marginBottom: 8,
   },
   cardIcon: {
     width: 22,
