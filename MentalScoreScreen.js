@@ -16,6 +16,158 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const OPENAI_API_KEY = 'REMOVED-5S2cF3LsFrPCHXsmY9pXuHn4c9D5yc0y6CJF8yQ-n7MGfFlM118VY8Fimuo7v-nUhQIBvTd28_T3BlbkFJpOH-UrEDOxvwe66hZyi-kg4q-GrthddA5naQ7KEEJ_UabWh5GhA21HK6e_7m2tOIejJo0F2zIA';
 
+const generateInsights = async (type, checkInData = {}) => {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+
+    if (type === 'microInsight') {
+      const { energy, clarity, emotion, focus, timestamp, note, window } = checkInData;
+      const historyRaw = await AsyncStorage.getItem('checkInHistory');
+      const history = historyRaw ? JSON.parse(historyRaw) : [];
+      const lastCheckIns = history
+        .slice(-3)
+        .map(entry => `🕒 ${entry.timestamp}: Energy: ${entry.energy}, Clarity: ${entry.clarity}, Emotion: ${entry.emotion}, Focus: ${entry.focus}`)
+        .join('\n');
+
+      const prompt = `You are ZenKai, a highly emotionally intelligent, perceptive, and human-sounding self-reflection assistant.
+
+You are speaking to one specific user who just completed a mental check-in. Your job is to generate a single, short insight that feels eerily personal — like you’ve been watching them for a week and noticed something even they didn’t.
+
+✅ Format:
+- One brief but meaningful insight (1–2 short sentences)
+- Start with one emoji that categorizes the insight:
+  🧠 = mindset or emotional pattern  
+  🔁 = habit or routine-based trend  
+  🔍 = subtle behavioral pattern or timing shift
+- End with a *curious question* or *gentle praise* — never a command
+- Never repeat the actual check-in numbers
+- Never be generic — always sound like you're noticing *them*
+
+✅ Style:
+- Speak like a coach or therapist who truly *sees* them
+- Be soft, intuitive, warm — but don’t flatter
+- Use behavioral and emotional pattern recognition (from timing, trends, and tone)
+- Prioritize **subtlety** over stats, **emotion** over data
+
+Here is the user’s current check-in data:
+
+- 📊 Today’s Scores: Energy: ${energy}%, Clarity: ${clarity}%, Emotion: ${emotion}%, Focus: ${focus}%
+- 🕒 Time of Check-In: ${timestamp}
+- ⏱ Check-In Window: ${window} (morning, afternoon, or evening)
+- 🧾 Last 2–3 Check-Ins Summary: ${lastCheckIns}
+- ✍️ Today’s Reflection Note: ${note || 'No note provided'}
+
+Vary tone: sometimes reflective, sometimes curious, sometimes validating
+
+Occasionally give a surprise deep pattern (e.g. “This insight took a week to detect…”)
+
+“You just unlocked a rare insight” → give scarcity to some insights
+
+Now, based on everything above — generate one powerful, personal insight that makes the user pause and think, “Whoa… this app gets me.”
+
+Examples:
+🔁 You’ve been checking in later each day — are your mornings slipping away, or are evenings becoming your thinking space?
+🧠 Even on low-clarity days, you’ve been showing up — that’s a sign of discipline, not just routine.
+🔍 When your emotion score dips, your reflections get sharper. Maybe discomfort helps you focus inward.
+🧠 Your note today had fewer words, but said more — is your mind getting quieter or heavier?
+🔁 You reflect more when you skip lunch. Could your hunger be your inner monologue?
+
+
+`;
+
+      const gptRes = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${OPENAI_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [
+            { role: 'system', content: 'You are a supportive self-reflection assistant.' },
+            { role: 'user', content: prompt },
+          ],
+          temperature: 0.7,
+        }),
+      });
+
+      const json = await gptRes.json();
+      const insight = json.choices?.[0]?.message?.content?.trim() || '🔍 Keep checking in to uncover patterns. What’s on your mind today?';
+      // Store insight with a unique key including timestamp to allow multiple insights per day
+      await AsyncStorage.setItem(`${today}-microInsight-${timestamp}`, insight);
+      return insight;
+    } else if (type === 'mindMirror') {
+      const historyRaw = await AsyncStorage.getItem('checkInHistory');
+      const history = historyRaw ? JSON.parse(historyRaw) : [];
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      const last7 = history.filter(entry => new Date(entry.timestamp) >= weekAgo);
+
+      if (last7.length < 3) {
+        return 'Not enough check-ins this week to generate a MindMirror. Try checking in daily to uncover patterns!';
+      }
+
+      const formatted = last7
+        .map(entry => `🕒 ${entry.timestamp.slice(0, 16)} → Energy: ${entry.energy}, Clarity: ${entry.clarity}, Emotion: ${entry.emotion}, Focus: ${entry.focus}, Note: ${entry.note || 'No note'}`)
+        .join('\n');
+
+      const lastNudge = (await AsyncStorage.getItem('lastWeekNudge')) || 'None';
+      const prompt = `
+You are a weekly mental performance coach for ZenKai. Generate a Weekly MindMirror report that feels like positive therapy. Use this format:
+📈 **Strongest Day:** [Highlight a day and why]
+📉 **Hardest Day:** [Mention the dip and possible cause]
+🔁 **Pattern Noticed:** [Find 1 trend]
+🧠 **Next Week's Nudge:** [Suggest 1 change]
+
+Example:
+“Last week you wrote: ‘I feel foggy but determined.’
+This week, you showed the same pattern again.”
+
+Data:
+- Check-ins (past 7 days): ${formatted}
+- Previous week's nudge: ${lastNudge}
+      `;
+
+      const gptRes = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${OPENAI_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [
+            { role: 'system', content: 'You are a supportive self-reflection assistant.' },
+            { role: 'user', content: prompt },
+          ],
+          temperature: 0.7,
+        }),
+      });
+
+      const json = await gptRes.json();
+      const mindMirror = json.choices?.[0]?.message?.content?.trim() || 'No MindMirror yet.';
+      await AsyncStorage.setItem(`mindMirror-${today}`, mindMirror);
+      const nudgeMatch = mindMirror.match(/🧠 \*\*Next Week's Nudge:\*\* (.*?)$/m);
+      if (nudgeMatch) {
+        await AsyncStorage.setItem('lastWeekNudge', nudgeMatch[1]);
+      }
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: 'Your Weekly MindMirror is Ready! 🧠',
+          body: 'Check out your mental performance insights for the week.',
+        },
+        trigger: { seconds: 1 },
+      });
+      return mindMirror;
+    }
+  } catch (err) {
+    console.error(`❌ Error generating ${type}:`, err);
+    return type === 'microInsight'
+      ? '🔍 Keep checking in to uncover patterns. What’s on your mind today?'
+      : 'No MindMirror yet.';
+  }
+};
+
 export default function MentalScoreScreen() {
   const navigation = useNavigation();
   const [energy, setEnergy] = useState(0);
@@ -26,9 +178,19 @@ export default function MentalScoreScreen() {
   const [weeklyMindMirror, setWeeklyMindMirror] = useState('No MindMirror yet.');
 
   useEffect(() => {
-    fetchCheckInData();
-    loadMindMirror();
-  }, []);
+    const fetchData = async () => {
+      await fetchCheckInData();
+      await triggerMindMirror();
+    };
+    fetchData();
+
+    // Listen for navigation focus to refresh data after check-in
+    const unsubscribe = navigation.addListener('focus', () => {
+      fetchCheckInData();
+    });
+
+    return unsubscribe;
+  }, [navigation]);
 
   const fetchCheckInData = async () => {
     try {
@@ -43,6 +205,7 @@ export default function MentalScoreScreen() {
         setClarity(100);
         setEmotion(100);
         setFocus(100);
+        setMicroInsight('🔍 Start checking in to uncover patterns. Ready to begin?');
         return;
       }
 
@@ -69,7 +232,6 @@ export default function MentalScoreScreen() {
       currentEnergy = Math.max(0, Math.round(currentEnergy));
       currentClarity = Math.max(0, Math.round(currentClarity));
       currentEmotion = Math.max(0, Math.round(currentEmotion));
-
       const currentFocus = Math.round(0.6 * currentClarity + 0.4 * currentEnergy);
 
       setEnergy(currentEnergy);
@@ -77,16 +239,29 @@ export default function MentalScoreScreen() {
       setEmotion(currentEmotion);
       setFocus(currentFocus);
 
-      await fetchGPTContent(currentEnergy, currentClarity, currentEmotion, currentFocus);
-
-      const todayDate = new Date();
-      const isSunday = todayDate.getDay() === 0;
-      const lastMindMirrorUpdate = await AsyncStorage.getItem('lastMindMirrorUpdate');
-      const alreadyUpdated = lastMindMirrorUpdate && new Date(lastMindMirrorUpdate).toDateString() === todayDate.toDateString();
-
-      if (isSunday && !alreadyUpdated) {
-        await generateMindMirror();
-        await AsyncStorage.setItem('lastMindMirrorUpdate', todayDate.toISOString());
+      // Get the latest check-in for insight generation (only for checkIn1 or checkIn3)
+      const latestEntry = sortedEntries[sortedEntries.length - 1];
+      if (latestEntry.window === 'checkIn1' || latestEntry.window === 'checkIn3') {
+        const insight = await generateInsights('microInsight', {
+          energy: currentEnergy,
+          clarity: currentClarity,
+          emotion: currentEmotion,
+          focus: currentFocus,
+          timestamp: latestEntry.timestamp,
+          note: latestEntry.note || '',
+          window: latestEntry.window,
+        });
+        setMicroInsight(insight);
+      } else {
+        // Check for the latest stored insight for today
+        const insightKeys = await AsyncStorage.getAllKeys();
+        const todayInsightKeys = insightKeys
+          .filter(key => key.startsWith(`${today}-microInsight-`))
+          .sort((a, b) => b.localeCompare(a)); // Sort by timestamp descending
+        if (todayInsightKeys.length > 0) {
+          const latestInsight = await AsyncStorage.getItem(todayInsightKeys[0]);
+          setMicroInsight(latestInsight || '🔍 Keep checking in to uncover patterns. What’s on your mind today?');
+        }
       }
     } catch (err) {
       console.error('❌ Error loading check-in data:', err);
@@ -94,42 +269,33 @@ export default function MentalScoreScreen() {
       setClarity(100);
       setEmotion(100);
       setFocus(100);
+      setMicroInsight('🔍 Keep checking in to uncover patterns. What’s on your mind today?');
     }
   };
 
-  const fetchGPTContent = async (energy, clarity, emotion, focus) => {
+  const triggerMindMirror = async () => {
     try {
-      const today = new Date().toISOString().split('T')[0];
-      const microInsight = await AsyncStorage.getItem(`${today}-microInsight`);
-      setMicroInsight(microInsight || 'No insight yet.');
-    } catch (err) {
-      console.error('❌ GPT error:', err);
-    }
-  };
-
-  const getWeeklyData = async () => {
-    try {
+      const today = new Date();
+      const isSunday = today.getDay() === 0;
+      const lastMindMirrorUpdate = await AsyncStorage.getItem('lastMindMirrorUpdate');
+      const alreadyUpdated = lastMindMirrorUpdate && new Date(lastMindMirrorUpdate).toDateString() === today.toDateString();
       const historyRaw = await AsyncStorage.getItem('checkInHistory');
       const history = historyRaw ? JSON.parse(historyRaw) : [];
-      
       const weekAgo = new Date();
       weekAgo.setDate(weekAgo.getDate() - 7);
-      
-      const weeklyEntries = history.filter(entry => 
-        new Date(entry.timestamp) >= weekAgo
-      );
+      const weeklyEntries = history.filter(entry => new Date(entry.timestamp) >= weekAgo);
 
-      const avg = arr => Math.round(arr.reduce((a, b) => a + b, 0) / arr.length);
-      
-      return {
-        weeklyEnergy: avg(weeklyEntries.map(h => h.energy || 0)),
-        weeklyClarity: avg(weeklyEntries.map(h => h.clarity || 0)),
-        weeklyEmotion: avg(weeklyEntries.map(h => h.emotion || 0)),
-        weeklyFocus: avg(weeklyEntries.map(h => h.focus || 0))
-      };
+      if (isSunday && !alreadyUpdated && weeklyEntries.length >= 3) {
+        const mindMirror = await generateInsights('mindMirror');
+        setWeeklyMindMirror(mindMirror);
+        await AsyncStorage.setItem('lastMindMirrorUpdate', today.toISOString());
+      } else {
+        const stored = await AsyncStorage.getItem(`mindMirror-${today}`);
+        if (stored) setWeeklyMindMirror(stored);
+      }
     } catch (err) {
-      console.error('❌ Error getting weekly data:', err);
-      return null;
+      console.error('❌ Error triggering MindMirror:', err);
+      setWeeklyMindMirror('No MindMirror yet.');
     }
   };
 
@@ -182,69 +348,25 @@ export default function MentalScoreScreen() {
       setEmotion(100);
       setFocus(100);
       setMicroInsight('Loading insight...');
+      setWeeklyMindMirror('No MindMirror yet.');
     } catch (err) {
       console.error('❌ Error clearing data:', err);
       Alert.alert('Error', 'Failed to clear data');
     }
   };
 
-  const generateMindMirror = async () => {
-    try {
-      const historyRaw = await AsyncStorage.getItem('checkInHistory');
-      const history = historyRaw ? JSON.parse(historyRaw) : [];
-
-      const weekAgo = new Date();
-      weekAgo.setDate(weekAgo.getDate() - 7);
-      const last7 = history.filter(entry => new Date(entry.timestamp) >= weekAgo);
-
-      const formatted = last7.map(entry => {
-        return `🕒 ${entry.timestamp.slice(0, 16)} → Energy: ${entry.energy}, Clarity: ${entry.clarity}, Emotion: ${entry.emotion}, Focus: ${entry.focus}, Note: ${entry.note || "No note"}`
-      }).join('\n');
-
-      const mindMirrorPrompt = `
-You are a weekly mental performance coach.
-
-Below is a user's check-in history for the past 7 days. Each includes energy, clarity, emotion, focus, and notes.
-
-Your job is to generate a Weekly MindMirror report in this format:
-
-📈 Strongest Day: [Highlight a day that stood out and why]  
-📉 Toughest Day: [Mention the dip and possible cause]  
-🔁 Pattern Noticed: [Find 1 behavioral/emotional trend]  
-🧠 Next Week's Tip: [Suggest 1 helpful change or experiment]
-
-Data:
-${formatted}
-`;
-
-      const gptRes = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${OPENAI_API_KEY}`,
-        },
-        body: JSON.stringify({
-          model: 'gpt-4o-mini',
-          messages: [
-            { role: 'system', content: 'You are a supportive self-reflection assistant.' },
-            { role: 'user', content: mindMirrorPrompt },
-          ],
-          temperature: 0.7,
-        }),
-      });
-
-      const json = await gptRes.json();
-      const mindMirror = json.choices?.[0]?.message?.content?.trim();
-      await AsyncStorage.setItem('weeklyMindMirror', mindMirror);
-      setWeeklyMindMirror(mindMirror || 'No MindMirror yet.');
-    } catch (err) {
-      console.error('❌ Error generating MindMirror:', err);
-    }
-  };
-
-  const loadMindMirror = async () => {
-    const stored = await AsyncStorage.getItem('weeklyMindMirror');
-    if (stored) setWeeklyMindMirror(stored);
+  const renderMarkdown = (text) => {
+    const lines = text.split('\n');
+    return lines.map((line, index) => {
+      if (line.startsWith('📈 **') || line.startsWith('📉 **') || line.startsWith('🔁 **') || line.startsWith('🧠 **')) {
+        return (
+          <Text key={index} style={styles.bold}>
+            {line.replace(/\*\*(.*?)\*\*/, '$1')}
+          </Text>
+        );
+      }
+      return <Text key={index} style={styles.cardText}>{line}</Text>;
+    });
   };
 
   useLayoutEffect(() => {
@@ -270,7 +392,7 @@ ${formatted}
           <Image source={require('./assets/mirror.png')} style={styles.cardIcon} />
           <Text style={styles.cardTitle}>Weekly MindMirror</Text>
         </View>
-        <Text style={styles.cardText}>{weeklyMindMirror}</Text>
+        {renderMarkdown(weeklyMindMirror)}
       </View>
 
       <View style={styles.card}>
@@ -319,12 +441,15 @@ ${formatted}
         </TouchableOpacity>
         <TouchableOpacity 
           onPress={resetAllData} 
-          style={[
-            styles.resetButton, 
-            { marginTop: 12, backgroundColor: '#dc2626' }
-          ]}
+          style={[styles.resetButton, { marginTop: 12, backgroundColor: '#dc2626' }]}
         >
           <Text style={styles.resetButtonText}>Reset All Data (Dev)</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          onPress={() => triggerMindMirror()} 
+          style={[styles.resetButton, { marginTop: 12, backgroundColor: '#10b981' }]}
+        >
+          <Text style={styles.resetButtonText}>Generate MindMirror (Dev)</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>
@@ -402,8 +527,10 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   bold: {
+    fontSize: 15,
     fontWeight: '600',
     color: '#000',
+    marginVertical: 4,
   },
   metricsSection: {
     backgroundColor: '#fff',
