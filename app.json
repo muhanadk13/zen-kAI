@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "zen-kAI",
-    "slug": "zen-kAI",
+    "slug": "zen-kai",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -13,14 +13,17 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.muhanadk13.zen-kai"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#ffffff",
+        "package": "com.yourname.zenai"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.muhanadk13.zenkAI"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -38,6 +41,7 @@
           "color": "#ffffff"
         }
       ]
-    ]
+    ],
+    "scheme": "zen-kai"
   }
 }
