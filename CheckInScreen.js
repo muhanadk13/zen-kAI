@@ -187,14 +187,15 @@ import React, { useState, useRef, useEffect } from 'react';
      }
 
      const styles = StyleSheet.create({
-       safe: {
-         flex: 1,
-         backgroundColor: '#f9fafb',
-       },
-       container: {
-         padding: 24,
-         paddingBottom: 40,
-       },
+      safe: {
+        flex: 1,
+        backgroundColor: '#F2F2F7',
+      },
+      container: {
+        padding: 24,
+        paddingBottom: 40,
+        backgroundColor: '#F2F2F7',
+      },
        title: {
          fontSize: 28,
          fontWeight: '700',

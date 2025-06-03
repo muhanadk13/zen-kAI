@@ -33,7 +33,7 @@ export default function TestInsightScreen() {
 const styles = StyleSheet.create({
   container: {
     padding: 24,
-    backgroundColor: '#f9fafb',
+    backgroundColor: '#F2F2F7',
     flexGrow: 1,
   },
   header: {
