@@ -102,7 +102,7 @@ export default function InsightPlaceholderScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB', // Light background for a clean look
+    backgroundColor: '#F2F2F7', // Light background for a clean look
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 20,
