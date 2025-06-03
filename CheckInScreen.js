@@ -45,14 +45,19 @@ import React, { useState, useRef, useEffect } from 'react';
          return 'checkIn3';
        };
 
-       const handleSliderChange = (value, setValue, lastRef) => {
-         setValue(value);
-         const rounded = Math.round(value);
-         if (Math.abs(rounded - lastRef.current) >= 5) {
-           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-           lastRef.current = rounded;
-         }
-       };
+      const milestones = [0, 25, 50, 75, 100];
+      const handleSliderChange = (value, setValue, lastRef) => {
+        setValue(value);
+        const rounded = Math.round(value);
+        if (Math.abs(rounded - lastRef.current) >= 5) {
+          if (milestones.some((m) => Math.abs(rounded - m) <= 2)) {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+          } else {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          }
+          lastRef.current = rounded;
+        }
+      };
 
        const handleSave = async () => {
          const timestamp = new Date().toISOString();
