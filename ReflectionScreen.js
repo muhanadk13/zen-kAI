@@ -112,6 +112,9 @@ export default function ReflectionScreen() {
       // Clear previous chat messages immediately
       setChatMessages([]);
 
+      // Record the start of a reflection session
+      await AsyncStorage.setItem('lastReflectionDate', new Date().toISOString());
+
       const historyRaw = await AsyncStorage.getItem('checkInHistory');
       const history = historyRaw ? JSON.parse(historyRaw) : [];
       const today = new Date().toISOString().split('T')[0];
@@ -226,7 +229,7 @@ export default function ReflectionScreen() {
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? '#1C1C1E' : '#F9FAFB' }]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? '#1C1C1E' : '#F2F2F7' }]}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={{ flex: 1 }}
