@@ -14,16 +14,15 @@ import React, { useEffect, useRef } from 'react';
 
      const Stack = createNativeStackNavigator();
 
-     function getNextOccurrence(hour, minute) {
-       const now = new Date();
-       const next = new Date(now);
-       next.setHours(hour, minute, 0, 0);
-       if (next <= now) {
-         next.setDate(next.getDate() + 1);
-       }
-       console.log(`🧠 getNextOccurrence(${hour}, ${minute}) → Now: ${now.toLocaleString()} | Next: ${next.toLocaleString()} | Delay: ${Math.floor((next - now) / 1000)}s`);
-       return next;
-     }
+    function getNextOccurrence(hour, minute) {
+      const now = new Date();
+      const next = new Date(now);
+      next.setHours(hour, minute, 0, 0);
+      if (next <= now) {
+        next.setDate(next.getDate() + 1);
+      }
+      return next;
+    }
 
      async function scheduleNotifications() {
        console.log('📆 Scheduling notifications...');
@@ -33,52 +32,29 @@ import React, { useEffect, useRef } from 'react';
          return;
        }
 
-       await Notifications.cancelAllScheduledNotificationsAsync();
-       console.log('🧹 Cleared all scheduled notifications.');
+      await Notifications.cancelAllScheduledNotificationsAsync();
+      console.log('🧹 Cleared all scheduled notifications.');
 
-       const triggers = [
-         { hour: 9, minute: 0, title: '🧘 Morning Check-In', body: 'Start your day with a check-in.', window: 'checkIn1' },
-         { hour: 16, minute: 0, title: '🌞 Afternoon Check-In', body: 'Complete your second check-in.', window: 'checkIn2' },
-         { hour: 23, minute: 18, title: '🌙 Evening Reflection', body: 'Finish with your final check-in.', window: 'checkIn3' },
-       ];
+      const triggers = [
+        { hour: 9, minute: 0, title: '🧘 Morning Check-In', body: 'Start your day with a check-in.', window: 'checkIn1' },
+        { hour: 16, minute: 0, title: '🌞 Afternoon Check-In', body: 'Complete your second check-in.', window: 'checkIn2' },
+        { hour: 23, minute: 18, title: '🌙 Evening Reflection', body: 'Finish with your final check-in.', window: 'checkIn3' },
+      ];
 
-       const idRecord = {};
-       for (const { hour, minute, title, body, window } of triggers) {
-         const triggerDate = getNextOccurrence(hour, minute);
-         const id = await Notifications.scheduleNotificationAsync({
-           content: { title, body, data: { screen: 'CheckIn', window } },
-           trigger: { date: triggerDate },
-         });
-         console.log(`✅ Scheduled ${window} at ${triggerDate.toLocaleString()} | ID: ${id}`);
-         idRecord[window] = id;
-       }
+      for (const { hour, minute, title, body, window } of triggers) {
+        const id = await Notifications.scheduleNotificationAsync({
+          content: { title, body, data: { screen: 'CheckIn', window } },
+          trigger: { hour, minute, repeats: true },
+        });
+        console.log(`✅ Scheduled repeating ${window} at ${hour}:${minute} | ID: ${id}`);
+      }
 
-       await AsyncStorage.setItem('notificationsScheduled', 'true');
-       await AsyncStorage.setItem('notificationIds', JSON.stringify(idRecord));
-       console.log(`📦 Stored notification IDs: ${JSON.stringify(idRecord)}`);
-     }
+      await AsyncStorage.setItem('notificationsScheduled', 'true');
+    }
 
-     async function rescheduleNotification(window, hour, minute) {
-       const triggerDate = getNextOccurrence(hour, minute);
-       console.log(`🔁 Rescheduling ${window} for ${triggerDate.toLocaleString()}`);
-
-       const content = {
-         checkIn1: { title: '🧘 Morning Check-In', body: 'Start your day with a check-in.' },
-         checkIn2: { title: '🌞 Afternoon Check-In', body: 'Complete your second check-in.' },
-         checkIn3: { title: '🌙 Evening Reflection', body: 'Finish with your final check-in.' },
-       }[window];
-
-       const newId = await Notifications.scheduleNotificationAsync({
-         content: { ...content, data: { screen: 'CheckIn', window } },
-         trigger: { date: triggerDate },
-       });
-
-       const stored = await AsyncStorage.getItem('notificationIds');
-       const ids = stored ? JSON.parse(stored) : {};
-       ids[window] = newId;
-       await AsyncStorage.setItem('notificationIds', JSON.stringify(ids));
-       console.log(`🆕 Rescheduled ${window} with ID: ${newId} | Updated IDs: ${JSON.stringify(ids)}`);
-     }
+    async function rescheduleNotification() {
+      // No-op with repeating notifications
+    }
 
      async function registerForPushNotificationsAsync() {
        console.log('🚀 Registering for push notifications...');
@@ -140,14 +116,11 @@ import React, { useEffect, useRef } from 'react';
 
            const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
              console.log('📨 Notification tapped:', response);
-             const { screen, window } = response.notification.request.content.data;
-             if (screen === 'CheckIn' && window) {
-               navigationRef.current?.navigate(screen, { window });
-               if (window === 'checkIn1') rescheduleNotification('checkIn1', 9, 0);
-               if (window === 'checkIn2') rescheduleNotification('checkIn2', 16, 0);
-               if (window === 'checkIn3') rescheduleNotification('checkIn3', 23, 18);
-             }
-           });
+            const { screen, window } = response.notification.request.content.data;
+            if (screen === 'CheckIn' && window) {
+              navigationRef.current?.navigate(screen, { window });
+            }
+          });
 
            Notifications.setNotificationHandler({
              handleNotification: async () => ({
