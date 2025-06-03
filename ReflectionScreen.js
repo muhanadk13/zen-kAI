@@ -112,6 +112,9 @@ export default function ReflectionScreen() {
       // Clear previous chat messages immediately
       setChatMessages([]);
 
+      // Record the start of a reflection session
+      await AsyncStorage.setItem('lastReflectionDate', new Date().toISOString());
+
       const historyRaw = await AsyncStorage.getItem('checkInHistory');
       const history = historyRaw ? JSON.parse(historyRaw) : [];
       const today = new Date().toISOString().split('T')[0];
