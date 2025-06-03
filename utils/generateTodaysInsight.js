@@ -6,7 +6,7 @@ const OPENAI_API_KEY = 'REMOVED-5S2cF3LsFrPCHXsmY9pXuHn4c9D5yc0y6CJF8yQ-n7MGfFlM
 
 // Function to generate Today's Insight using GPT
 export async function generateTodaysInsight(metrics) {
-  const { energy, clarity, emotion, focus } = metrics;
+  const { energy, clarity, emotion, focus, note, window } = metrics;
   const today = new Date().toISOString().split('T')[0];
   let insight = '';
 
@@ -35,16 +35,24 @@ export async function generateTodaysInsight(metrics) {
     // Calculate overall mental score
     const mentalScore = Math.round((energy + clarity + emotion + focus) / 4);
 
+    // Map check-in window to time of day
+    const windowDescription = {
+      checkIn1: 'morning',
+      checkIn2: 'afternoon',
+      checkIn3: 'evening',
+    }[window] || 'recent';
+
     // Prepare prompt for GPT
     const prompt = `
       You are an AI assistant generating a concise, personalized mental health insight for a user based on their daily check-in metrics. The insight should be encouraging, reflective, and include actionable advice. Use emojis (📈, 📉, 🔁, ⚡, 💡, 💚, 🎯) to make it engaging. Format the response with a trend statement, a bolded highlight (e.g., **Great job!**), and a tip if a metric is low (<35%). Keep it under 100 words.
 
-      Today's Metrics:
+      Today's Metrics (${windowDescription} check-in):
       - Energy: ${energy}% ⚡
       - Clarity: ${clarity}% 💡
       - Emotion: ${emotion}% 💚
       - Focus: ${focus}% 🎯
       - Mental Score: ${mentalScore}%
+      - Note: ${note || 'No note provided.'}
 
       Yesterday's Averages (if available):
       ${yesterdayAvg
@@ -54,7 +62,7 @@ export async function generateTodaysInsight(metrics) {
          - Focus: ${Math.round(yesterdayAvg.focus)}%`
         : 'No data available.'}
 
-      Generate an insight comparing today to yesterday (if data exists) and highlight the strongest/weakest metric.
+      Generate an insight comparing today to yesterday (if data exists), highlighting the strongest/weakest metric, and incorporating the user's note if provided.
     `;
 
     // Call OpenAI API
