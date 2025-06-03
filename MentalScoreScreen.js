@@ -13,7 +13,10 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { ProgressBar } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { generateTodaysInsight } from './utils/generateTodaysInsight'; // Corrected import path
+import {
+  generateTodaysInsight,
+  generateWeeklyMindMirror,
+} from './utils/generateTodaysInsight';
 
 export default function MentalScoreScreen() {
   const navigation = useNavigation();
@@ -118,6 +121,7 @@ export default function MentalScoreScreen() {
         focus: currentFocus,
         note: latestEntry.note || '',
         window: latestEntry.window,
+        timestamp: latestEntry.timestamp,
       });
       setMicroInsight(insight);
       // Schedule notification for insight
@@ -141,21 +145,23 @@ export default function MentalScoreScreen() {
   const triggerMindMirror = async () => {
     try {
       const today = new Date();
+      const todayStr = today.toISOString().split('T')[0];
       const isSunday = today.getDay() === 0;
       const lastMindMirrorUpdate = await AsyncStorage.getItem('lastMindMirrorUpdate');
       const alreadyUpdated = lastMindMirrorUpdate && new Date(lastMindMirrorUpdate).toDateString() === today.toDateString();
+
       const historyRaw = await AsyncStorage.getItem('checkInHistory');
       const history = historyRaw ? JSON.parse(historyRaw) : [];
       const weekAgo = new Date();
       weekAgo.setDate(weekAgo.getDate() - 7);
-      const weeklyEntries = history.filter(entry => new Date(entry.timestamp) >= weekAgo);
+      const weeklyEntries = history.filter((entry) => new Date(entry.timestamp) >= weekAgo);
 
       if (isSunday && !alreadyUpdated && weeklyEntries.length >= 3) {
-        const mindMirror = await generateInsights('mindMirror');
+        const mindMirror = await generateWeeklyMindMirror();
         setWeeklyMindMirror(mindMirror);
         await AsyncStorage.setItem('lastMindMirrorUpdate', today.toISOString());
       } else {
-        const stored = await AsyncStorage.getItem(`mindMirror-${today}`);
+        const stored = await AsyncStorage.getItem(`mindMirror-${todayStr}`);
         if (stored) setWeeklyMindMirror(stored);
       }
     } catch (err) {
@@ -361,7 +367,7 @@ const styles = StyleSheet.create({
   container: {
     marginTop: -20,
     paddingHorizontal: 24,
-    backgroundColor: '#f8f8f8',
+    backgroundColor: '#F2F2F7',
     paddingBottom: 40,
   },
   headerButton: {
