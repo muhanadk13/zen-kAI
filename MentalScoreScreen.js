@@ -13,7 +13,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { ProgressBar } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { generateTodaysInsight } from './utils/generateTodaysInsights'; // Import the new GPT-powered function
+import { generateTodaysInsight } from './utils/generateTodaysInsight'; // Corrected import path
 
 export default function MentalScoreScreen() {
   const navigation = useNavigation();
@@ -71,9 +71,6 @@ export default function MentalScoreScreen() {
 
       const todayEntries = history.filter((entry) => entry.timestamp.startsWith(today));
       const sortedEntries = todayEntries.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-      while (sortedEntries.length < 3) {
-        sortedEntries.push({ energy: null, clarity: null, emotion: null });
-      }
 
       if (sortedEntries.length === 0) {
         setEnergy(100);
@@ -112,28 +109,25 @@ export default function MentalScoreScreen() {
       setEmotion(currentEmotion);
       setFocus(currentFocus);
 
-      // Generate Today's Insight with GPT
+      // Generate Today's Insight with GPT after any check-in
       const latestEntry = sortedEntries[sortedEntries.length - 1];
-      if (latestEntry.window === 'checkIn1' || latestEntry.window === 'checkIn3') {
-        const insight = await generateTodaysInsight({
-          energy: currentEnergy,
-          clarity: currentClarity,
-          emotion: currentEmotion,
-          focus: currentFocus,
-        });
-        setMicroInsight(insight);
-        // Schedule notification for insight
-        await Notifications.scheduleNotificationAsync({
-          content: {
-            title: 'Your Daily Insight is Ready! 🧠',
-            body: 'Check out your mental performance insight for today.',
-          },
-          trigger: { seconds: 1 },
-        });
-      } else {
-        const todayInsight = await AsyncStorage.getItem(`todaysInsight-${today}`);
-        setMicroInsight(todayInsight || '🔍 Keep checking in to uncover patterns. What’s on your mind today?');
-      }
+      const insight = await generateTodaysInsight({
+        energy: currentEnergy,
+        clarity: currentClarity,
+        emotion: currentEmotion,
+        focus: currentFocus,
+        note: latestEntry.note || '',
+        window: latestEntry.window,
+      });
+      setMicroInsight(insight);
+      // Schedule notification for insight
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: 'Your Daily Insight is Ready! 🧠',
+          body: 'Check out your mental performance insight for today.',
+        },
+        trigger: { seconds: 1 },
+      });
     } catch (err) {
       console.error('❌ Error loading check-in data:', err);
       setEnergy(100);

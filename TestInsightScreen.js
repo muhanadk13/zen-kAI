@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView } from 'react-native';
-import { generateMicroInsight } from './utils/generateTodaysInsights';
+import { generateMicroInsight } from './utils/generateTodaysInsight';
 
 export default function TestInsightScreen() {
   const [insight, setInsight] = useState('No insight yet.');
