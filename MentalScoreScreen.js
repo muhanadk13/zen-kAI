@@ -31,43 +31,111 @@ export default function MentalScoreScreen() {
   const [weeklyMindMirror, setWeeklyMindMirror] = useState('No MindMirror yet.');
   const [streak, setStreak] = useState(0);
 
-  const energyAnim = useRef(new Animated.Value(0)).current;
-  const clarityAnim = useRef(new Animated.Value(0)).current;
-  const emotionAnim = useRef(new Animated.Value(0)).current;
-  const focusAnim = useRef(new Animated.Value(0)).current;
+  const energyAnim = useRef(new Animated.Value(-1)).current;
+  const clarityAnim = useRef(new Animated.Value(-1)).current;
+  const emotionAnim = useRef(new Animated.Value(-1)).current;
+  const focusAnim = useRef(new Animated.Value(-1)).current;
+  const scoreAnim = useRef(new Animated.Value(-1)).current;
+
+  const energyProgress = energyAnim.interpolate({
+    inputRange: [-1, 0, 100],
+    outputRange: [0, 0, 1],
+  });
+  const clarityProgress = clarityAnim.interpolate({
+    inputRange: [-1, 0, 100],
+    outputRange: [0, 0, 1],
+  });
+  const emotionProgress = emotionAnim.interpolate({
+    inputRange: [-1, 0, 100],
+    outputRange: [0, 0, 1],
+  });
+  const focusProgress = focusAnim.interpolate({
+    inputRange: [-1, 0, 100],
+    outputRange: [0, 0, 1],
+  });
+
+  const [displayEnergy, setDisplayEnergy] = useState(-1);
+  const [displayClarity, setDisplayClarity] = useState(-1);
+  const [displayEmotion, setDisplayEmotion] = useState(-1);
+  const [displayFocus, setDisplayFocus] = useState(-1);
+  const [displayScore, setDisplayScore] = useState(-1);
   const checkInButtonRef = useRef(null);
 
   useEffect(() => {
+    const id = scoreAnim.addListener(({ value }) =>
+      setDisplayScore(Math.round(value))
+    );
+    return () => scoreAnim.removeListener(id);
+  }, []);
+
+  useEffect(() => {
+    const id = energyAnim.addListener(({ value }) =>
+      setDisplayEnergy(Math.round(value))
+    );
+    return () => energyAnim.removeListener(id);
+  }, []);
+
+  useEffect(() => {
     Animated.timing(energyAnim, {
-      toValue: energy / 100,
-      duration: 800,
+      toValue: energy,
+      duration: 1500,
       useNativeDriver: false,
     }).start();
   }, [energy]);
 
   useEffect(() => {
+    const id = clarityAnim.addListener(({ value }) =>
+      setDisplayClarity(Math.round(value))
+    );
+    return () => clarityAnim.removeListener(id);
+  }, []);
+
+  useEffect(() => {
     Animated.timing(clarityAnim, {
-      toValue: clarity / 100,
-      duration: 800,
+      toValue: clarity,
+      duration: 1500,
       useNativeDriver: false,
     }).start();
   }, [clarity]);
 
   useEffect(() => {
+    const id = emotionAnim.addListener(({ value }) =>
+      setDisplayEmotion(Math.round(value))
+    );
+    return () => emotionAnim.removeListener(id);
+  }, []);
+
+  useEffect(() => {
     Animated.timing(emotionAnim, {
-      toValue: emotion / 100,
-      duration: 800,
+      toValue: emotion,
+      duration: 1500,
       useNativeDriver: false,
     }).start();
   }, [emotion]);
 
   useEffect(() => {
+    const id = focusAnim.addListener(({ value }) =>
+      setDisplayFocus(Math.round(value))
+    );
+    return () => focusAnim.removeListener(id);
+  }, []);
+
+  useEffect(() => {
     Animated.timing(focusAnim, {
-      toValue: focus / 100,
-      duration: 800,
+      toValue: focus,
+      duration: 1500,
       useNativeDriver: false,
     }).start();
   }, [focus]);
+
+  useEffect(() => {
+    const target = Math.round((energy + clarity + emotion + focus) / 4);
+    Animated.timing(scoreAnim, {
+      toValue: target,
+      duration: 1500,
+      useNativeDriver: false,
+    }).start();
+  }, [energy, clarity, emotion, focus]);
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -338,7 +406,7 @@ export default function MentalScoreScreen() {
     <ScrollView contentContainerStyle={styles.container}>
       <Animatable.View animation="fadeInDown" duration={800} style={styles.gaugeContainer}>
         <Image source={require('./assets/gauge.png')} style={styles.gaugeImage} resizeMode="contain" />
-        <Text style={styles.mentalScore}>{Math.round((energy + clarity + emotion + focus) / 4)}</Text>
+        <Text style={styles.mentalScore}>{displayScore}</Text>
         <Text style={styles.mentalScoreLabel}>MentalScore</Text>
       </Animatable.View>
 
@@ -365,22 +433,22 @@ export default function MentalScoreScreen() {
       <Animatable.View animation="fadeInUp" duration={600} delay={400} style={styles.metricsSection}>
         <View style={styles.row}>
           <View style={[styles.metricBox, styles.metricBoxLeft]}>
-            <Text style={styles.metricLabel}>⚡ Energy {energy}%</Text>
-            <ProgressBar progress={energyAnim} color="#C3B1E1" style={styles.bar} />
+            <Text style={styles.metricLabel}>⚡ Energy {displayEnergy}%</Text>
+            <ProgressBar progress={energyProgress} color="#C3B1E1" style={styles.bar} />
           </View>
           <View style={styles.metricBox}>
-            <Text style={styles.metricLabel}>💡 Clarity {clarity}%</Text>
-            <ProgressBar progress={clarityAnim} color="#f5c065" style={styles.bar} />
+            <Text style={styles.metricLabel}>💡 Clarity {displayClarity}%</Text>
+            <ProgressBar progress={clarityProgress} color="#f5c065" style={styles.bar} />
           </View>
         </View>
         <View style={styles.row}>
           <View style={[styles.metricBox, styles.metricBoxLeft]}>
-            <Text style={styles.metricLabel}>💚 Emotion {emotion}%</Text>
-            <ProgressBar progress={emotionAnim} color="#7fe87a" style={styles.bar} />
+            <Text style={styles.metricLabel}>💚 Emotion {displayEmotion}%</Text>
+            <ProgressBar progress={emotionProgress} color="#7fe87a" style={styles.bar} />
           </View>
           <View style={styles.metricBox}>
-            <Text style={styles.metricLabel}>🎯 Focus {focus}%</Text>
-          <ProgressBar progress={focusAnim} color="#60a5fa" style={styles.bar} />
+            <Text style={styles.metricLabel}>🎯 Focus {displayFocus}%</Text>
+          <ProgressBar progress={focusProgress} color="#60a5fa" style={styles.bar} />
           </View>
         </View>
       </Animatable.View>
