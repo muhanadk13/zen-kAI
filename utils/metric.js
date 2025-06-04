@@ -144,7 +144,7 @@ export async function getMissedCheckInFlags() {
 
 export async function getMostVolatileDay() {
   const week = await getLastNDays(7);
-  if (!week.length) return 'No data yet.';
+  if (week.length < 6) return 'No data yet.';
   const byDate = {};
   week.forEach((e) => {
     const d = e.timestamp.split('T')[0];
