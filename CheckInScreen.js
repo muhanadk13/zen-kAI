@@ -97,7 +97,6 @@ const handleSave = async () => {
            const history = historyRaw ? JSON.parse(historyRaw) : [];
            history.push(entry);
           await AsyncStorage.setItem('checkInHistory', JSON.stringify(history));
-          console.log('✅ Saved check-in:', entry);
 
           await Haptics.notificationAsync(
             Haptics.NotificationFeedbackType.Success
@@ -114,12 +113,6 @@ const handleSave = async () => {
         }
        };
 
-       const showHistory = async () => {
-         const raw = await AsyncStorage.getItem('checkInHistory');
-         const parsed = raw ? JSON.parse(raw) : [];
-         Alert.alert('Check-In History', 'Check console for details.');
-         console.log('📅 Check-In History:', parsed);
-       };
 
        return (
          <SafeAreaView style={styles.safe}>
@@ -145,8 +138,8 @@ const handleSave = async () => {
                    thumbTintColor="#10b981"
                  />
                  <View style={styles.range}>
-                   <Text style={styles.rangeText}>Low</Text>
-                   <Text style={styles.rangeText}>High</Text>
+                   <Text style={styles.rangeText}>Depleted</Text>
+                   <Text style={styles.rangeText}>Energized</Text>
                  </View>
 
                  <Text style={styles.label}>Clarity</Text>
@@ -161,8 +154,8 @@ const handleSave = async () => {
                    thumbTintColor="#3b82f6"
                  />
                  <View style={styles.range}>
-                   <Text style={styles.rangeText}>Cloudy</Text>
-                   <Text style={styles.rangeText}>Clear</Text>
+                   <Text style={styles.rangeText}>Foggy</Text>
+                   <Text style={styles.rangeText}>Focused</Text>
                  </View>
 
                  <Text style={styles.label}>Emotion</Text>
@@ -177,18 +170,19 @@ const handleSave = async () => {
                    thumbTintColor="#fbbf24"
                  />
                  <View style={styles.range}>
-                   <Text style={styles.rangeText}>Low</Text>
-                   <Text style={styles.rangeText}>High</Text>
+                   <Text style={styles.rangeText}>Down</Text>
+                   <Text style={styles.rangeText}>Upbeat</Text>
                  </View>
 
-                <Text style={styles.label}>Notes</Text>
+                <Text style={styles.label}>Notes (Optional)</Text>
                 <TextInput
                   style={styles.input}
                   placeholder="Your thoughts..."
                   placeholderTextColor="#999"
                   value={note}
-                  onChangeText={setNote}
+                  onChangeText={(text) => setNote(text.slice(0, 250))}
                   multiline
+                  maxLength={250}
                 />
 
                  <Animatable.View
@@ -223,13 +217,6 @@ const handleSave = async () => {
                    </Animated.View>
                  </Animatable.View>
 
-                 <TouchableOpacity
-                   style={[styles.button, { backgroundColor: '#A0AEC0', marginTop: 14 }]}
-                   onPress={showHistory}
-                   activeOpacity={0.7}
-                 >
-                   <Text style={styles.buttonText}>📅 Show History (Dev)</Text>
-                 </TouchableOpacity>
 
                  <View style={styles.footer}>
                    <Image source={require('./assets/lock.png')} style={styles.lockIcon} />
