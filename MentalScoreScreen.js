@@ -34,11 +34,12 @@ const AnimatedProgressBar = ({ progress, color }) => {
 
 export default function MentalScoreScreen() {
   const navigation = useNavigation();
-  const [energy, setEnergy] = useState(0);
-  const [clarity, setClarity] = useState(0);
-  const [emotion, setEmotion] = useState(0);
-  const [focus, setFocus] = useState(0);
-  const [score, setScore] = useState(0); // Define score state
+  const BASELINE = 75;
+  const [energy, setEnergy] = useState(BASELINE);
+  const [clarity, setClarity] = useState(BASELINE);
+  const [emotion, setEmotion] = useState(BASELINE);
+  const [focus, setFocus] = useState(BASELINE);
+  const [score, setScore] = useState(BASELINE); // Define score state
   const [microInsight, setMicroInsight] = useState('Loading insight...');
   const [weeklyMindMirror, setWeeklyMindMirror] = useState('No MindMirror yet.');
   const [streak, setStreak] = useState(0);
@@ -207,30 +208,26 @@ export default function MentalScoreScreen() {
       const sortedEntries = todayEntries.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 
       if (sortedEntries.length === 0) {
-        setEnergy(100);
-        setClarity(100);
-        setEmotion(100);
-        setFocus(100);
-        setScore(100);
+        setEnergy(BASELINE);
+        setClarity(BASELINE);
+        setEmotion(BASELINE);
+        setFocus(BASELINE);
+        setScore(BASELINE);
         setMicroInsight('🔍 Start checking in to uncover patterns. Ready to begin?');
         return;
       }
 
-      let currentEnergy = 100;
-      let currentClarity = 100;
-      let currentEmotion = 100;
+      let currentEnergy = BASELINE;
+      let currentClarity = BASELINE;
+      let currentEmotion = BASELINE;
 
-      const impactPerCheckIn = 33.3;
+      const impactPerCheckIn = 20;
 
       sortedEntries.forEach((entry) => {
         if (entry.energy != null) {
-          const energyImpact = ((100 - entry.energy) * impactPerCheckIn) / 100;
-          const clarityImpact = ((100 - entry.clarity) * impactPerCheckIn) / 100;
-          const emotionImpact = ((100 - entry.emotion) * impactPerCheckIn) / 100;
-
-          currentEnergy -= energyImpact;
-          currentClarity -= clarityImpact;
-          currentEmotion -= emotionImpact;
+          currentEnergy += ((entry.energy - currentEnergy) * impactPerCheckIn) / 100;
+          currentClarity += ((entry.clarity - currentClarity) * impactPerCheckIn) / 100;
+          currentEmotion += ((entry.emotion - currentEmotion) * impactPerCheckIn) / 100;
         }
       });
 
@@ -270,11 +267,11 @@ export default function MentalScoreScreen() {
       });
     } catch (err) {
       console.error('❌ Error loading check-in data:', err);
-      setEnergy(100);
-      setClarity(100);
-      setEmotion(100);
-      setFocus(100);
-      setScore(100);
+      setEnergy(BASELINE);
+      setClarity(BASELINE);
+      setEmotion(BASELINE);
+      setFocus(BASELINE);
+      setScore(BASELINE);
       setMicroInsight(
         '🔍 Keep checking in to uncover patterns. What’s on your mind today?'
       );
@@ -392,10 +389,10 @@ export default function MentalScoreScreen() {
       await AsyncStorage.clear();
       console.log('✅ All data cleared successfully');
       Alert.alert('Reset Complete', 'All app data has been cleared.');
-      setEnergy(100);
-      setClarity(100);
-      setEmotion(100);
-      setFocus(100);
+      setEnergy(BASELINE);
+      setClarity(BASELINE);
+      setEmotion(BASELINE);
+      setFocus(BASELINE);
       setMicroInsight('Loading insight...');
       setWeeklyMindMirror('No MindMirror yet.');
     } catch (err) {
