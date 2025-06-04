@@ -39,7 +39,7 @@ import React, { useEffect, useRef } from 'react';
        const triggers = [
          { hour: 9, minute: 0, title: '🧘 Morning Check-In', body: 'Start your day with a check-in.', window: 'checkIn1' },
          { hour: 16, minute: 0, title: '🌞 Afternoon Check-In', body: 'Complete your second check-in.', window: 'checkIn2' },
-         { hour: 23, minute: 18, title: '🌙 Evening Reflection', body: 'Finish with your final check-in.', window: 'checkIn3' },
+         { hour: 20, minute: 0, title: '🌙 Evening Reflection', body: 'Finish with your final check-in.', window: 'checkIn3' },
        ];
 
        const idRecord = {};
