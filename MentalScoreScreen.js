@@ -15,6 +15,7 @@ import { useNavigation } from '@react-navigation/native';
 import * as Animatable from 'react-native-animatable';
 import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import LinearGradient from 'react-native-linear-gradient';
 import {
   generateTodaysInsight,
   generateWeeklyMindMirror,
@@ -433,7 +434,8 @@ export default function MentalScoreScreen() {
   }, [navigation]);
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <LinearGradient colors={['#e0eafc', '#cfdef3']} style={{ flex: 1 }}>
+      <ScrollView contentContainerStyle={styles.container}>
       <Animatable.View animation="fadeInDown" duration={800} style={styles.gaugeContainer}>
         <Image source={require('./assets/gauge.png')} style={styles.gaugeImage} resizeMode="contain" />
         <Text style={styles.mentalScore}>{displayScore}</Text>
@@ -509,7 +511,8 @@ export default function MentalScoreScreen() {
           <Text style={styles.resetButtonText}>Generate MindMirror (Dev)</Text>
         </TouchableOpacity>
       </View>
-    </ScrollView>
+      </ScrollView>
+    </LinearGradient>
   );
 }
 
@@ -517,7 +520,6 @@ const styles = StyleSheet.create({
   container: {
     marginTop: -20,
     paddingHorizontal: 24,
-    backgroundColor: '#F2F2F7',
     paddingBottom: 40,
   },
   headerButton: {

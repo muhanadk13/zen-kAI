@@ -19,6 +19,7 @@ import React, { useState, useRef, useEffect } from 'react';
      import { useNavigation, useRoute } from '@react-navigation/native';
      import * as Haptics from 'expo-haptics';
 import * as Animatable from 'react-native-animatable';
+import LinearGradient from 'react-native-linear-gradient';
      import AsyncStorage from '@react-native-async-storage/async-storage';
 
      export default function CheckInScreen() {
@@ -131,6 +132,7 @@ const handleSave = async () => {
 
 
        return (
+         <LinearGradient colors={['#e0eafc', '#cfdef3']} style={{ flex: 1 }}>
          <SafeAreaView style={styles.safe}>
            <KeyboardAvoidingView
              style={{ flex: 1 }}
@@ -259,18 +261,17 @@ const handleSave = async () => {
              </ScrollView>
            </KeyboardAvoidingView>
          </SafeAreaView>
+         </LinearGradient>
        );
      }
 
      const styles = StyleSheet.create({
       safe: {
         flex: 1,
-        backgroundColor: '#F2F2F7',
       },
       container: {
         padding: 24,
         paddingBottom: 120,
-        backgroundColor: '#F2F2F7',
       },
        title: {
          fontSize: 28,

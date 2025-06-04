@@ -21,6 +21,7 @@ import { useColorScheme } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import * as Animatable from 'react-native-animatable';
 import ConfettiCannon from 'react-native-confetti-cannon';
+import LinearGradient from 'react-native-linear-gradient';
 
 const OPENAI_API_KEY = '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';
 
@@ -243,7 +244,11 @@ export default function ReflectionScreen() {
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? '#1C1C1E' : '#F2F2F7' }]}>
+      <LinearGradient
+        colors={isDarkMode ? ['#0f0f0f', '#1c1c1e'] : ['#e0eafc', '#cfdef3']}
+        style={{ flex: 1 }}
+      >
+      <SafeAreaView style={[styles.container]}> 
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={{ flex: 1 }}
@@ -318,6 +323,7 @@ export default function ReflectionScreen() {
           />
         )}
       </SafeAreaView>
+      </LinearGradient>
     </TouchableWithoutFeedback>
   );
 }
