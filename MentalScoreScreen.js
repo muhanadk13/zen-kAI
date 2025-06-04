@@ -47,6 +47,11 @@ export default function MentalScoreScreen() {
   const emotionAnim = useRef(new Animated.Value(-1)).current;
   const focusAnim = useRef(new Animated.Value(-1)).current;
   const scoreAnim = useRef(new Animated.Value(-1)).current;
+<<<<<<< HEAD
+=======
+  const prevScore = useRef(-1);
+  const [score, setScore] = useState(-1);
+>>>>>>> dfaqn9-codex/enhance-animations-and-haptics
 
   const energyProgress = energyAnim.interpolate({
     inputRange: [-1, 0, 100],
@@ -141,12 +146,21 @@ export default function MentalScoreScreen() {
 
   useEffect(() => {
     const target = Math.round((energy + clarity + emotion + focus) / 4);
+    setScore(target);
+  }, [energy, clarity, emotion, focus]);
+
+  useEffect(() => {
+    if (score < 0) return;
+    if (prevScore.current > -1 && score < prevScore.current) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    prevScore.current = score;
     Animated.timing(scoreAnim, {
-      toValue: target,
+      toValue: score,
       duration: 1500,
       useNativeDriver: false,
     }).start();
-  }, [energy, clarity, emotion, focus]);
+  }, [score]);
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -200,6 +214,7 @@ export default function MentalScoreScreen() {
         setClarity(100);
         setEmotion(100);
         setFocus(100);
+        setScore(100);
         setMicroInsight('🔍 Start checking in to uncover patterns. Ready to begin?');
         return;
       }
@@ -226,11 +241,15 @@ export default function MentalScoreScreen() {
       currentClarity = Math.max(0, Math.round(currentClarity));
       currentEmotion = Math.max(0, Math.round(currentEmotion));
       const currentFocus = Math.round(0.6 * currentClarity + 0.4 * currentEnergy);
+      const computedScore = Math.round(
+        (currentEnergy + currentClarity + currentEmotion + currentFocus) / 4
+      );
 
       setEnergy(currentEnergy);
       setClarity(currentClarity);
       setEmotion(currentEmotion);
       setFocus(currentFocus);
+      setScore(computedScore);
 
       // Generate Today's Insight with GPT after any check-in
       const latestEntry = sortedEntries[sortedEntries.length - 1];
@@ -258,7 +277,10 @@ export default function MentalScoreScreen() {
       setClarity(100);
       setEmotion(100);
       setFocus(100);
-      setMicroInsight('🔍 Keep checking in to uncover patterns. What’s on your mind today?');
+      setScore(100);
+      setMicroInsight(
+        '🔍 Keep checking in to uncover patterns. What’s on your mind today?'
+      );
     }
   };
 
