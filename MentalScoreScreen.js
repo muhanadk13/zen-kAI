@@ -73,6 +73,7 @@ export default function MentalScoreScreen() {
   const [displayFocus, setDisplayFocus] = useState(-1);
   const [displayScore, setDisplayScore] = useState(-1);
   const checkInButtonRef = useRef(null);
+  const prevDisplayScore = useRef(-1);
 
   useEffect(() => {
     const id = scoreAnim.addListener(({ value }) =>
@@ -80,6 +81,13 @@ export default function MentalScoreScreen() {
     );
     return () => scoreAnim.removeListener(id);
   }, []);
+
+  useEffect(() => {
+    if (prevDisplayScore.current > -1 && displayScore < prevDisplayScore.current) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    prevDisplayScore.current = displayScore;
+  }, [displayScore]);
 
   useEffect(() => {
     const id = energyAnim.addListener(({ value }) =>
