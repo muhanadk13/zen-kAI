@@ -38,12 +38,33 @@ export async function generateTodaysInsight(metrics) {
     const { avg: weekAvg, std: weekStd } = calculateWeekStats(last7Days);
     const emotionStreak = calculateEmotionStreak(history);
     const streakCount = calculateCheckInStreak(history);
+
+    // Compare this week's averages to the week prior
+    const twoWeeksAgo = new Date();
+    twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+    const last14Days = history.filter((e) => new Date(e.timestamp) >= twoWeeksAgo);
+    const prev7Days = last14Days.filter((e) => new Date(e.timestamp) < weekAgo);
+    const { avg: prevWeekAvg } = calculateWeekStats(prev7Days);
+
+    const weeklyShift =
+      weekAvg && prevWeekAvg
+        ? {
+            energy: weekAvg.energy - prevWeekAvg.energy,
+            clarity: weekAvg.clarity - prevWeekAvg.clarity,
+            emotion: weekAvg.emotion - prevWeekAvg.emotion,
+            focus: weekAvg.focus - prevWeekAvg.focus,
+          }
+        : null;
     const lastReflection = await AsyncStorage.getItem('lastReflectionDate');
     const lastReflectionDaysAgo = lastReflection
       ? Math.floor((Date.now() - new Date(lastReflection)) / (1000 * 60 * 60 * 24))
       : 'N/A';
     const importantInfoRaw = await AsyncStorage.getItem('importantInfo');
     const importantInfo = importantInfoRaw ? JSON.parse(importantInfoRaw).slice(-3).join('; ') : '';
+    const recentNotes = history.slice(-3)
+      .map((e) => e.note)
+      .filter(Boolean)
+      .join('; ');
 
     // Calculate yesterday's averages
     const yesterday = new Date();
@@ -98,6 +119,16 @@ export async function generateTodaysInsight(metrics) {
          - Emotion Stability: ${emotionStreak} days consistent`
         : 'No data available.'}
 
+      Weekly Shift:
+      ${weeklyShift
+        ? `- Energy: ${formatChange(weeklyShift.energy)}
+         - Clarity: ${formatChange(weeklyShift.clarity)}
+         - Emotion: ${formatChange(weeklyShift.emotion)}
+         - Focus: ${formatChange(weeklyShift.focus)}`
+        : 'No data available.'}
+
+      Recent Notes: ${recentNotes || 'None'}
+
       Engagement:
       - Check-In Streak: ${streakCount} days
       - Last Reflection: ${lastReflectionDaysAgo} days ago
@@ -145,6 +176,11 @@ export async function generateTodaysInsight(metrics) {
 // Helper function to calculate focus based on clarity and energy
 function calculateFocus(clarity, energy) {
   return Math.round(0.6 * clarity + 0.4 * energy);
+}
+
+function formatChange(num) {
+  const sign = num >= 0 ? '+' : '';
+  return `${sign}${Math.round(num)}%`;
 }
 
 // Calculate averages and standard deviation for a set of entries
