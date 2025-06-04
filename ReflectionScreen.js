@@ -18,6 +18,7 @@ import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useColorScheme } from 'react-native';
 import { useNavigation } from '@react-navigation/native'; // Import useNavigation
+import ConfettiCannon from 'react-native-confetti-cannon';
 
 const OPENAI_API_KEY = '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';
 
@@ -27,6 +28,7 @@ export default function ReflectionScreen() {
   const [message, setMessage] = useState('');
   const [chatMessages, setChatMessages] = useState([]);
   const [isAIResponding, setIsAIResponding] = useState(false); // Track AI response state
+  const [showConfetti, setShowConfetti] = useState(false);
   const scrollViewRef = useRef();
   const colorScheme = useColorScheme();
   const isDarkMode = colorScheme === 'dark';
@@ -185,11 +187,12 @@ export default function ReflectionScreen() {
       newChatMessages[newChatMessages.length - 1].fromUser;
   
     if (hasRespondedToFinalQuestion) {
-      // Clear visual chat messages after responding to the final question
+      setShowConfetti(true);
       setTimeout(() => {
-        setChatMessages([]); // Clear visual chat messages
-        navigation.navigate('MentalScore'); // Navigate after delay
-      }, 1000); // Delay for navigation
+        setChatMessages([]);
+        navigation.navigate('MentalScore');
+        setShowConfetti(false);
+      }, 3000);
       return;
     }
   
@@ -292,6 +295,13 @@ export default function ReflectionScreen() {
             </Pressable>
           </View>
         </KeyboardAvoidingView>
+      {showConfetti && (
+        <ConfettiCannon
+          count={120}
+          origin={{ x: 200, y: 0 }}
+          fadeOut
+        />
+      )}
       </SafeAreaView>
     </TouchableWithoutFeedback>
   );

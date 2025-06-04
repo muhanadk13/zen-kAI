@@ -291,7 +291,8 @@ export default function MentalScoreScreen() {
       </View>
 
       <View style={styles.streakContainer}>
-        <Text style={styles.streakText}>🔥 {streak} Day Streak</Text>
+        <Text style={styles.streakText}>🔥 {streak}-Day Streak</Text>
+        {streak > 0 && <Text style={styles.streakSub}>Keep going!</Text>}
       </View>
 
       <View style={styles.card}>
@@ -410,6 +411,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: '#FF4500',
+  },
+  streakSub: {
+    marginLeft: 8,
+    fontSize: 16,
+    color: '#FF4500',
+    fontWeight: '500',
   },
   card: {
     backgroundColor: '#fff',

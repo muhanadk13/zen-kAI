@@ -38,6 +38,7 @@ export async function generateTodaysInsight(metrics) {
     const { avg: weekAvg, std: weekStd } = calculateWeekStats(last7Days);
     const emotionStreak = calculateEmotionStreak(history);
     const streakCount = calculateCheckInStreak(history);
+    const recurring = findRecurringPattern(history);
     const lastReflection = await AsyncStorage.getItem('lastReflectionDate');
     const lastReflectionDaysAgo = lastReflection
       ? Math.floor((Date.now() - new Date(lastReflection)) / (1000 * 60 * 60 * 24))
@@ -74,7 +75,7 @@ export async function generateTodaysInsight(metrics) {
 
     // Prepare prompt for GPT
     const prompt = `
-      You are an AI assistant generating a concise, personalized mental health insight. Use the data provided to surface a surprising pattern and give one short actionable suggestion. Keep the response under 100 words and include relevant emojis.
+      You are a high-energy coach creating a very short, data-driven insight similar to a WHOOP summary. Mention one key trend and end with a motivating nudge. Keep it under 40 words with an emoji.
 
       Today's Metrics (${windowDescription} check-in):
       - Energy: ${energy}% ⚡
@@ -103,6 +104,7 @@ export async function generateTodaysInsight(metrics) {
       - Last Reflection: ${lastReflectionDaysAgo} days ago
 
       Past Reflections: ${importantInfo || 'None'}
+      Recurring Pattern: ${recurring ? `${recurring.day} ${recurring.time} mood ${Math.round(recurring.avg)}%` : 'None'}
 
       Generate the insight now.
     `;
@@ -113,10 +115,10 @@ export async function generateTodaysInsight(metrics) {
       {
         model: 'gpt-4o-mini',
         messages: [
-          { role: 'system', content: 'You are a helpful mental health assistant.' },
+          { role: 'system', content: 'Speak like a concise performance coach. Deliver insights in under 40 words with one emoji. Focus on data trends.' },
           { role: 'user', content: prompt },
         ],
-        max_tokens: 150,
+        max_tokens: 60,
         temperature: 0.7,
       },
       {
@@ -212,6 +214,29 @@ function calculateCheckInStreak(entries) {
     }
   }
   return streak;
+}
+
+// Identify a day and time window with consistently low emotion
+function findRecurringPattern(entries) {
+  if (!entries.length) return null;
+  const buckets = {};
+  entries.forEach((e) => {
+    const day = new Date(e.timestamp).toLocaleDateString('en-US', { weekday: 'long' });
+    const time = { checkIn1: 'morning', checkIn2: 'afternoon', checkIn3: 'evening' }[e.window] || 'unknown';
+    const key = `${day}-${time}`;
+    if (!buckets[key]) buckets[key] = { sum: 0, count: 0 };
+    buckets[key].sum += e.emotion || 0;
+    buckets[key].count += 1;
+  });
+  let worst = null;
+  Object.entries(buckets).forEach(([k, v]) => {
+    const avg = v.sum / v.count;
+    if (!worst || avg < worst.avg) {
+      const [day, time] = k.split('-');
+      worst = { day, time, avg };
+    }
+  });
+  return worst;
 }
 
 // Generate a weekly MindMirror summary using GPT
