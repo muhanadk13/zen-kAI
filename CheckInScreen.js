@@ -10,13 +10,14 @@ import React, { useState, useRef, useEffect } from 'react';
        ScrollView,
        KeyboardAvoidingView,
        Platform,
+       Animated,
        Keyboard,
        Alert,
      } from 'react-native';
      import Slider from '@react-native-community/slider';
      import { useNavigation, useRoute } from '@react-navigation/native';
      import * as Haptics from 'expo-haptics';
-     import * as Animatable from 'react-native-animatable';
+import * as Animatable from 'react-native-animatable';
      import AsyncStorage from '@react-native-async-storage/async-storage';
 
      export default function CheckInScreen() {
@@ -28,8 +29,10 @@ import React, { useState, useRef, useEffect } from 'react';
        const [note, setNote] = useState('');
        const scrollRef = useRef();
        const lastEnergy = useRef(50);
-       const lastClarity = useRef(50);
-       const lastEmotion = useRef(50);
+      const lastClarity = useRef(50);
+      const lastEmotion = useRef(50);
+      const saveButtonRef = useRef(null);
+      const scaleAnim = useRef(new Animated.Value(1)).current;
 
        useEffect(() => {
          const keyboardDidShow = Keyboard.addListener('keyboardDidShow', () => {
@@ -74,7 +77,7 @@ const handleSliderChange = (value, setValue, lastRef) => {
 };
        
 
-       const handleSave = async () => {
+const handleSave = async () => {
          const timestamp = new Date().toISOString();
          const today = timestamp.split('T')[0];
          const window = route.params?.window || getCheckInWindow();
@@ -93,15 +96,22 @@ const handleSliderChange = (value, setValue, lastRef) => {
            const historyRaw = await AsyncStorage.getItem('checkInHistory');
            const history = historyRaw ? JSON.parse(historyRaw) : [];
            history.push(entry);
-           await AsyncStorage.setItem('checkInHistory', JSON.stringify(history));
-           console.log('✅ Saved check-in:', entry);
+          await AsyncStorage.setItem('checkInHistory', JSON.stringify(history));
+          console.log('✅ Saved check-in:', entry);
+
+          await Haptics.notificationAsync(
+            Haptics.NotificationFeedbackType.Success
+          );
 
            // Navigate directly to MentalScoreScreen or ReflectionScreen
            navigation.navigate(window === 'checkIn3' ? 'Reflection' : 'MentalScore');
-         } catch (err) {
-           console.error('❌ Error saving check-in:', err);
-           Alert.alert('Error', 'Failed to save check-in.');
-         }
+        } catch (err) {
+          console.error('❌ Error saving check-in:', err);
+          await Haptics.notificationAsync(
+            Haptics.NotificationFeedbackType.Error
+          );
+          Alert.alert('Error', 'Failed to save check-in.');
+        }
        };
 
        const showHistory = async () => {
@@ -171,20 +181,46 @@ const handleSliderChange = (value, setValue, lastRef) => {
                    <Text style={styles.rangeText}>High</Text>
                  </View>
 
-                 <Text style={styles.label}>Notes</Text>
-                 <TextInput
-                   style={styles.input}
-                   placeholder="Your thoughts..."
-                   placeholderTextColor="#999"
-                   value={note}
-                   onChangeText={setNote}
-                   multiline
-                 />
+                <Text style={styles.label}>Notes</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Your thoughts..."
+                  placeholderTextColor="#999"
+                  value={note}
+                  onChangeText={setNote}
+                  multiline
+                />
 
-                 <Animatable.View animation="fadeInUp" duration={600} delay={400}>
-                   <TouchableOpacity style={styles.button} onPress={handleSave} activeOpacity={0.7}>
-                     <Text style={styles.buttonText}>Save Check-In</Text>
-                   </TouchableOpacity>
+                 <Animatable.View
+                   ref={saveButtonRef}
+                   animation="fadeInUp"
+                   duration={600}
+                   delay={400}
+                 >
+                   <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+                     <TouchableOpacity
+                       style={styles.button}
+                       onPress={async () => {
+                         Animated.sequence([
+                           Animated.timing(scaleAnim, {
+                             toValue: 1.08,
+                             duration: 100,
+                             useNativeDriver: true,
+                           }),
+                           Animated.timing(scaleAnim, {
+                             toValue: 1,
+                             duration: 100,
+                             useNativeDriver: true,
+                           }),
+                         ]).start();
+                         await Haptics.selectionAsync();
+                         await handleSave();
+                       }}
+                       activeOpacity={0.7}
+                     >
+                       <Text style={styles.buttonText}>Save Check-In</Text>
+                     </TouchableOpacity>
+                   </Animated.View>
                  </Animatable.View>
 
                  <TouchableOpacity
