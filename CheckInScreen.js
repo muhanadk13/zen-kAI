@@ -44,15 +44,35 @@ import React, { useState, useRef, useEffect } from 'react';
          if (hour >= 12 && hour < 17) return 'checkIn2';
          return 'checkIn3';
        };
+       const milestones = [0, 25, 50, 75, 100];
 
-       const handleSliderChange = (value, setValue, lastRef) => {
-         setValue(value);
-         const rounded = Math.round(value);
-         if (Math.abs(rounded - lastRef.current) >= 5) {
-           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-           lastRef.current = rounded;
-         }
-       };
+const handleSliderChange = (value, setValue, lastRef) => {
+  const rounded = Math.round(value);
+
+  // Check if the value is near a milestone
+  const isNearMilestone = milestones.some((m) => Math.abs(rounded - m) <= 1);
+
+  // If near a milestone, make the slider "stick" slightly
+  if (isNearMilestone) {
+    const nearestMilestone = milestones.reduce((prev, curr) =>
+      Math.abs(curr - rounded) < Math.abs(prev - rounded) ? curr : prev
+    );
+
+    // Adjust the value to stay closer to the milestone
+    const adjustedValue = Math.abs(rounded - nearestMilestone) <= 2 ? nearestMilestone : rounded;
+    setValue(adjustedValue);
+
+    // Trigger medium haptic feedback only when sliding on a milestone
+    if (lastRef.current !== nearestMilestone) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      lastRef.current = nearestMilestone;
+    }
+  } else {
+    setValue(value);
+    lastRef.current = rounded; // Update lastRef to avoid repeated haptics
+  }
+};
+       
 
        const handleSave = async () => {
          const timestamp = new Date().toISOString();
