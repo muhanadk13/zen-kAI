@@ -19,7 +19,18 @@ export function calculateMentalScore(energyScores, clarityScores, emotionScores)
 export async function saveCheckIn(checkIn) {
   const date = checkIn.date || new Date().toISOString().split('T')[0];
   const key = `memory-${date}`;
-  await AsyncStorage.setItem(key, JSON.stringify(checkIn));
+
+  const enhanced = {
+    ...checkIn,
+    focus:
+      checkIn.focus != null
+        ? checkIn.focus
+        : calculateFocus(checkIn.clarity || 0, checkIn.energy || 0),
+    noteLength: checkIn.notes ? checkIn.notes.length : 0,
+    timestamp: checkIn.timestamp || new Date().toISOString(),
+  };
+
+  await AsyncStorage.setItem(key, JSON.stringify(enhanced));
 }
 
 export async function scanWeeklyPatterns() {
@@ -54,4 +65,29 @@ export async function scanWeeklyPatterns() {
   });
   
   return result;
+}
+
+export async function gatherExtendedStats() {
+  const keys = await AsyncStorage.getAllKeys();
+  const memoryKeys = keys.filter((k) => k.startsWith('memory-'));
+  const items = await AsyncStorage.multiGet(memoryKeys);
+  const data = items.map(([, value]) => JSON.parse(value));
+
+  const last7 = data.filter(
+    (d) => new Date(d.date) >= new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+  );
+
+  const checkInCount = last7.length;
+  const avgNoteLength =
+    last7.reduce((sum, e) => sum + (e.noteLength || 0), 0) / (checkInCount || 1);
+
+  const windowCounts = {};
+  last7.forEach((e) => {
+    if (e.window) windowCounts[e.window] = (windowCounts[e.window] || 0) + 1;
+  });
+  const mostCommonWindow = Object.entries(windowCounts).sort(
+    (a, b) => b[1] - a[1]
+  )[0]?.[0];
+
+  return { checkInCount, avgNoteLength: Math.round(avgNoteLength), mostCommonWindow };
 }

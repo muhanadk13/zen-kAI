@@ -109,17 +109,19 @@ const handleSave = async () => {
              return;
            }
 
-           await AsyncStorage.setItem(key, JSON.stringify(entry));
-           const historyRaw = await AsyncStorage.getItem('checkInHistory');
-           const history = historyRaw ? JSON.parse(historyRaw) : [];
-          history.push(entry);
-         await AsyncStorage.setItem('checkInHistory', JSON.stringify(history));
-          await saveCheckIn({
+          await AsyncStorage.setItem(key, JSON.stringify(entry));
+          const historyRaw = await AsyncStorage.getItem('checkInHistory');
+          const history = historyRaw ? JSON.parse(historyRaw) : [];
+         history.push(entry);
+        await AsyncStorage.setItem('checkInHistory', JSON.stringify(history));
+         await saveCheckIn({
             date: today,
             energy,
             clarity,
             emotion,
             notes: note,
+            window,
+            timestamp,
           });
 
           await Haptics.notificationAsync(
