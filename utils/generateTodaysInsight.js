@@ -254,6 +254,42 @@ function calculateCheckInStreak(entries) {
   return streak;
 }
 
+// Create a compact summary of today's check-ins versus yesterday
+export function generateMicroInsight(checkIns = [], yesterday = {}) {
+  const valid = checkIns.filter(
+    (e) => e.energy != null && e.clarity != null && e.emotion != null
+  );
+  if (!valid.length) return 'No data.';
+
+  const sums = { energy: 0, clarity: 0, emotion: 0 };
+  valid.forEach((e) => {
+    sums.energy += e.energy;
+    sums.clarity += e.clarity;
+    sums.emotion += e.emotion;
+  });
+
+  const avg = {
+    energy: Math.round(sums.energy / valid.length),
+    clarity: Math.round(sums.clarity / valid.length),
+    emotion: Math.round(sums.emotion / valid.length),
+  };
+  const focus = calculateFocus(avg.clarity, avg.energy);
+
+  const deltas = {
+    energy: avg.energy - (yesterday.energy ?? avg.energy),
+    clarity: avg.clarity - (yesterday.clarity ?? avg.clarity),
+    emotion: avg.emotion - (yesterday.emotion ?? avg.emotion),
+  };
+
+  const parts = [
+    `E:${avg.energy}${formatChange(deltas.energy)}`,
+    `C:${avg.clarity}${formatChange(deltas.clarity)}`,
+    `Em:${avg.emotion}${formatChange(deltas.emotion)}`,
+    `F:${focus}`,
+  ];
+  return parts.join(' | ');
+}
+
 // Generate a weekly MindMirror summary using GPT
 export async function generateWeeklyMindMirror() {
   try {
