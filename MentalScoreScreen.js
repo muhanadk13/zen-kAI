@@ -511,6 +511,14 @@ export default function MentalScoreScreen() {
 
   useLayoutEffect(() => {
     navigation.setOptions({
+      headerLeft: () => (
+        <Animatable.Text
+          onPress={() => navigation.navigate('History')}
+          style={styles.headerButton}
+        >
+          History
+        </Animatable.Text>
+      ),
       headerRight: () => (
         <Animatable.Text
           ref={checkInButtonRef}
