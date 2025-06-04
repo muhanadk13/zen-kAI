@@ -9,6 +9,7 @@ import React, { useState, useRef, useEffect } from 'react';
        SafeAreaView,
        ScrollView,
        KeyboardAvoidingView,
+       LayoutAnimation,
        Platform,
        Animated,
        Keyboard,
@@ -35,10 +36,24 @@ import * as Animatable from 'react-native-animatable';
       const scaleAnim = useRef(new Animated.Value(1)).current;
 
        useEffect(() => {
-         const keyboardDidShow = Keyboard.addListener('keyboardDidShow', () => {
-           scrollRef.current?.scrollTo({ y: 0, animated: true });
+         const show = Keyboard.addListener('keyboardWillShow', () => {
+           if (Platform.OS === 'ios') {
+             LayoutAnimation.configureNext(
+               LayoutAnimation.Presets.easeInEaseOut
+             );
+           }
          });
-         return () => keyboardDidShow.remove();
+         const hide = Keyboard.addListener('keyboardWillHide', () => {
+           if (Platform.OS === 'ios') {
+             LayoutAnimation.configureNext(
+               LayoutAnimation.Presets.easeInEaseOut
+             );
+           }
+         });
+         return () => {
+           show.remove();
+           hide.remove();
+         };
        }, []);
 
        const getCheckInWindow = () => {
@@ -119,10 +134,15 @@ const handleSave = async () => {
            <KeyboardAvoidingView
              style={{ flex: 1 }}
              behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-             keyboardVerticalOffset={80}
+            keyboardVerticalOffset={60}
            >
              <ScrollView ref={scrollRef} contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-               <Animatable.View animation="fadeInUp" duration={600} delay={100}>
+               <Animatable.View
+                 animation="fadeInUp"
+                 duration={600}
+                 easing="ease-out"
+                 delay={100}
+               >
                  <Text style={styles.title}>Daily Check-In</Text>
                  <Text style={styles.subtitle}>Reflect on your current state.</Text>
 
@@ -181,6 +201,12 @@ const handleSave = async () => {
                   placeholderTextColor="#999"
                   value={note}
                   onChangeText={(text) => setNote(text.slice(0, 250))}
+                  onFocus={() =>
+                    setTimeout(
+                      () => scrollRef.current?.scrollToEnd({ animated: true }),
+                      100
+                    )
+                  }
                   multiline
                   maxLength={250}
                 />
@@ -189,6 +215,7 @@ const handleSave = async () => {
                    ref={saveButtonRef}
                    animation="fadeInUp"
                    duration={600}
+                   easing="ease-out"
                    delay={400}
                  >
                    <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
@@ -236,7 +263,7 @@ const handleSave = async () => {
       },
       container: {
         padding: 24,
-        paddingBottom: 40,
+        paddingBottom: 120,
         backgroundColor: '#F2F2F7',
       },
        title: {
