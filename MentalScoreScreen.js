@@ -76,18 +76,16 @@ export default function MentalScoreScreen() {
   const prevDisplayScore = useRef(-1);
 
   useEffect(() => {
-    const id = scoreAnim.addListener(({ value }) =>
-      setDisplayScore(Math.round(value))
-    );
+    const id = scoreAnim.addListener(({ value }) => {
+      const rounded = Math.round(value);
+      setDisplayScore(rounded);
+      if (prevDisplayScore.current > -1 && rounded < prevDisplayScore.current) {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+      prevDisplayScore.current = rounded;
+    });
     return () => scoreAnim.removeListener(id);
   }, []);
-
-  useEffect(() => {
-    if (prevDisplayScore.current > -1 && displayScore < prevDisplayScore.current) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    prevDisplayScore.current = displayScore;
-  }, [displayScore]);
 
   useEffect(() => {
     const id = energyAnim.addListener(({ value }) =>
