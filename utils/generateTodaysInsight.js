@@ -36,7 +36,9 @@ export async function generateTodaysInsight(metrics) {
     const weekAgo = new Date();
     weekAgo.setDate(weekAgo.getDate() - 7);
     const last7Days = history.filter((e) => new Date(e.timestamp) >= weekAgo);
-    const { avg: weekAvg, std: weekStd } = calculateWeekStats(last7Days);
+    const weekStats =
+      last7Days.length >= 7 ? calculateWeekStats(last7Days) : { avg: null, std: null };
+    const { avg: weekAvg, std: weekStd } = weekStats;
     const emotionStreak = calculateEmotionStreak(history);
     const streakCount = calculateCheckInStreak(history);
     const extended = await gatherExtendedStats();
@@ -46,7 +48,9 @@ export async function generateTodaysInsight(metrics) {
     twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
     const last14Days = history.filter((e) => new Date(e.timestamp) >= twoWeeksAgo);
     const prev7Days = last14Days.filter((e) => new Date(e.timestamp) < weekAgo);
-    const { avg: prevWeekAvg } = calculateWeekStats(prev7Days);
+    const prevWeekStats =
+      prev7Days.length >= 7 ? calculateWeekStats(prev7Days) : { avg: null, std: null };
+    const { avg: prevWeekAvg } = prevWeekStats;
 
     const weeklyShift =
       weekAvg && prevWeekAvg
@@ -96,8 +100,26 @@ export async function generateTodaysInsight(metrics) {
     }[window] || 'recent';
 
     // Prepare prompt for GPT
+    const yesterdayBlock = yesterdayAvg
+      ? `Yesterday's Averages:\n- Energy: ${Math.round(yesterdayAvg.energy)}%\n- Clarity: ${Math.round(yesterdayAvg.clarity)}%\n- Emotion: ${Math.round(yesterdayAvg.emotion)}%\n- Focus: ${Math.round(yesterdayAvg.focus)}%`
+      : '';
+
+    const sevenDayBlock = weekAvg
+      ? `7-Day Trends:\n- Clarity: Avg ${Math.round(weekAvg.clarity)}% ±${Math.round(
+          weekStd.clarity || 0
+        )}\n- Emotion Stability: ${emotionStreak} days consistent`
+      : '';
+
+    const weeklyShiftBlock = weeklyShift
+      ? `Weekly Shift:\n- Energy: ${formatChange(weeklyShift.energy)}\n- Clarity: ${formatChange(
+          weeklyShift.clarity
+        )}\n- Emotion: ${formatChange(weeklyShift.emotion)}\n- Focus: ${formatChange(
+          weeklyShift.focus
+        )}`
+      : '';
+
     const prompt = `
-      You are an AI assistant generating a concise, personalized mental health insight. Use the data provided to surface a surprising pattern and give one short actionable suggestion. Keep the response under 100 words and include relevant emojis.
+      You are an AI assistant generating a very short mental health insight. Return one or two sentences, styled like Whoop. Keep it under 30 words. If there are fewer than 7 days of data, do not mention weekly averages. Use relevant emojis.
 
       Today's Metrics (${windowDescription} check-in):
       - Energy: ${energy}% ⚡
@@ -106,30 +128,10 @@ export async function generateTodaysInsight(metrics) {
       - Focus: ${focus}% 🎯
       - Mental Score: ${mentalScore}%
       - Note: ${note || 'No note provided.'}
-
-      Yesterday's Averages:
-      ${yesterdayAvg
-        ? `- Energy: ${Math.round(yesterdayAvg.energy)}%
-         - Clarity: ${Math.round(yesterdayAvg.clarity)}%
-         - Emotion: ${Math.round(yesterdayAvg.emotion)}%
-         - Focus: ${Math.round(yesterdayAvg.focus)}%`
-        : 'No data available.'}
-
-      7-Day Trends:
-      ${weekAvg
-        ? `- Clarity: Avg ${Math.round(weekAvg.clarity)}% ±${Math.round(weekStd.clarity || 0)}
-         - Emotion Stability: ${emotionStreak} days consistent`
-        : 'No data available.'}
-
-      Weekly Shift:
-      ${weeklyShift
-        ? `- Energy: ${formatChange(weeklyShift.energy)}
-         - Clarity: ${formatChange(weeklyShift.clarity)}
-         - Emotion: ${formatChange(weeklyShift.emotion)}
-         - Focus: ${formatChange(weeklyShift.focus)}`
-        : 'No data available.'}
-
-      Recent Notes: ${recentNotes || 'None'}
+      ${yesterdayBlock ? `\n\n${yesterdayBlock}` : ''}
+      ${sevenDayBlock ? `\n\n${sevenDayBlock}` : ''}
+      ${weeklyShiftBlock ? `\n\n${weeklyShiftBlock}` : ''}
+      \nRecent Notes: ${recentNotes || 'None'}
 
       Engagement:
       - Check-In Streak: ${streakCount} days

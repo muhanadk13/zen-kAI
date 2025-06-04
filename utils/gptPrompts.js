@@ -1,7 +1,7 @@
 export function microInsightPrompt(currentCheckIn, yesterdayCheckIn) {
   const { energy, clarity, emotion } = currentCheckIn;
   const { energy: yEnergy, clarity: yClarity, emotion: yEmotion } = yesterdayCheckIn;
-  return `Compare these two check-ins and give 1 sentence about what changed or stayed consistent.\n\nYesterday: Energy ${yEnergy}, Clarity ${yClarity}, Emotion ${yEmotion}\nToday: Energy ${energy}, Clarity ${clarity}, Emotion ${emotion}`;
+  return `Compare these two check-ins and reply with one short sentence (under 20 words) about what changed or stayed consistent.\n\nYesterday: Energy ${yEnergy}, Clarity ${yClarity}, Emotion ${yEmotion}\nToday: Energy ${energy}, Clarity ${clarity}, Emotion ${emotion}`;
 }
 
 export function dailyReflectionPrompt(checkIns) {
