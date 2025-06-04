@@ -1,6 +1,6 @@
 import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
-import React, { useLayoutEffect, useEffect, useState } from 'react';
+import React, { useLayoutEffect, useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,9 +9,12 @@ import {
   Image,
   TouchableOpacity,
   Alert,
+  Animated,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { ProgressBar } from 'react-native-paper';
+import * as Animatable from 'react-native-animatable';
+import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   generateTodaysInsight,
@@ -27,6 +30,44 @@ export default function MentalScoreScreen() {
   const [microInsight, setMicroInsight] = useState('Loading insight...');
   const [weeklyMindMirror, setWeeklyMindMirror] = useState('No MindMirror yet.');
   const [streak, setStreak] = useState(0);
+
+  const energyAnim = useRef(new Animated.Value(0)).current;
+  const clarityAnim = useRef(new Animated.Value(0)).current;
+  const emotionAnim = useRef(new Animated.Value(0)).current;
+  const focusAnim = useRef(new Animated.Value(0)).current;
+  const checkInButtonRef = useRef(null);
+
+  useEffect(() => {
+    Animated.timing(energyAnim, {
+      toValue: energy / 100,
+      duration: 800,
+      useNativeDriver: false,
+    }).start();
+  }, [energy]);
+
+  useEffect(() => {
+    Animated.timing(clarityAnim, {
+      toValue: clarity / 100,
+      duration: 800,
+      useNativeDriver: false,
+    }).start();
+  }, [clarity]);
+
+  useEffect(() => {
+    Animated.timing(emotionAnim, {
+      toValue: emotion / 100,
+      duration: 800,
+      useNativeDriver: false,
+    }).start();
+  }, [emotion]);
+
+  useEffect(() => {
+    Animated.timing(focusAnim, {
+      toValue: focus / 100,
+      duration: 800,
+      useNativeDriver: false,
+    }).start();
+  }, [focus]);
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -209,6 +250,8 @@ export default function MentalScoreScreen() {
   };
 
   const handleCheckInPress = async () => {
+    checkInButtonRef.current?.rubberBand(600);
+    await Haptics.selectionAsync();
     const today = new Date().toISOString().split('T')[0];
     const window = getCheckInWindow();
     const key = `${today}-${window}`;
@@ -222,26 +265,31 @@ export default function MentalScoreScreen() {
   };
 
   const resetCheckIn3 = async () => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     const today = new Date().toISOString().split('T')[0];
     await AsyncStorage.removeItem(`${today}-checkIn3`);
     Alert.alert('✅ Reset Complete', 'Check-In 3 has been cleared.');
   };
 
   const devLaunchCheckIn3 = () => {
+    Haptics.selectionAsync();
     navigation.navigate('CheckIn', { window: 'checkIn3' });
   };
 
   const resetCheckIn1 = async () => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     const today = new Date().toISOString().split('T')[0];
     await AsyncStorage.removeItem(`${today}-checkIn1`);
     Alert.alert('✅ Reset Complete', 'Check-In 1 has been cleared.');
   };
 
   const devLaunchCheckIn1 = () => {
+    Haptics.selectionAsync();
     navigation.navigate('CheckIn', { window: 'checkIn1' });
   };
 
   const resetAllData = async () => {
+    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
     try {
       await AsyncStorage.clear();
       console.log('✅ All data cleared successfully');
@@ -275,63 +323,67 @@ export default function MentalScoreScreen() {
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
-        <TouchableOpacity onPress={handleCheckInPress}>
-          <Text style={styles.headerButton}>Check In</Text>
-        </TouchableOpacity>
+        <Animatable.Text
+          ref={checkInButtonRef}
+          onPress={handleCheckInPress}
+          style={styles.headerButton}
+        >
+          Check In
+        </Animatable.Text>
       ),
     });
   }, [navigation]);
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.gaugeContainer}>
+      <Animatable.View animation="fadeInDown" duration={800} style={styles.gaugeContainer}>
         <Image source={require('./assets/gauge.png')} style={styles.gaugeImage} resizeMode="contain" />
         <Text style={styles.mentalScore}>{Math.round((energy + clarity + emotion + focus) / 4)}</Text>
         <Text style={styles.mentalScoreLabel}>MentalScore</Text>
-      </View>
+      </Animatable.View>
 
       <View style={styles.streakContainer}>
         <Text style={styles.streakText}>🔥 {streak} Day Streak</Text>
       </View>
 
-      <View style={styles.card}>
+      <Animatable.View animation="fadeInUp" duration={600} style={styles.card}>
         <View style={styles.cardHeader}>
           <Image source={require('./assets/mirror.png')} style={styles.cardIcon} />
           <Text style={styles.cardTitle}>Weekly MindMirror</Text>
         </View>
         {renderMarkdown(weeklyMindMirror)}
-      </View>
+      </Animatable.View>
 
-      <View style={styles.card}>
+      <Animatable.View animation="fadeInUp" duration={600} delay={200} style={styles.card}>
         <View style={styles.cardHeader}>
           <Image source={require('./assets/advice.png')} style={styles.cardIcon} />
           <Text style={styles.cardTitle}>Today’s Insight</Text>
         </View>
         <Text style={styles.cardText}>{microInsight}</Text>
-      </View>
+      </Animatable.View>
 
-      <View style={styles.metricsSection}>
+      <Animatable.View animation="fadeInUp" duration={600} delay={400} style={styles.metricsSection}>
         <View style={styles.row}>
           <View style={[styles.metricBox, styles.metricBoxLeft]}>
             <Text style={styles.metricLabel}>⚡ Energy {energy}%</Text>
-            <ProgressBar progress={energy / 100} color="#C3B1E1" style={styles.bar} />
+            <ProgressBar progress={energyAnim} color="#C3B1E1" style={styles.bar} />
           </View>
           <View style={styles.metricBox}>
             <Text style={styles.metricLabel}>💡 Clarity {clarity}%</Text>
-            <ProgressBar progress={clarity / 100} color="#f5c065" style={styles.bar} />
+            <ProgressBar progress={clarityAnim} color="#f5c065" style={styles.bar} />
           </View>
         </View>
         <View style={styles.row}>
           <View style={[styles.metricBox, styles.metricBoxLeft]}>
             <Text style={styles.metricLabel}>💚 Emotion {emotion}%</Text>
-            <ProgressBar progress={emotion / 100} color="#7fe87a" style={styles.bar} />
+            <ProgressBar progress={emotionAnim} color="#7fe87a" style={styles.bar} />
           </View>
           <View style={styles.metricBox}>
             <Text style={styles.metricLabel}>🎯 Focus {focus}%</Text>
-            <ProgressBar progress={focus / 100} color="#60a5fa" style={styles.bar} />
+          <ProgressBar progress={focusAnim} color="#60a5fa" style={styles.bar} />
           </View>
         </View>
-      </View>
+      </Animatable.View>
 
       <View style={styles.resetContainer}>
         <TouchableOpacity onPress={resetCheckIn3} style={styles.resetButton}>
