@@ -17,6 +17,7 @@ import React, { useState, useRef, useEffect } from 'react';
      import { useNavigation, useRoute } from '@react-navigation/native';
      import * as Haptics from 'expo-haptics';
      import * as Animatable from 'react-native-animatable';
+     const AnimatedTextInput = Animatable.createAnimatableComponent(TextInput);
      import AsyncStorage from '@react-native-async-storage/async-storage';
 
      export default function CheckInScreen() {
@@ -31,6 +32,7 @@ import React, { useState, useRef, useEffect } from 'react';
       const lastClarity = useRef(50);
       const lastEmotion = useRef(50);
       const saveButtonRef = useRef(null);
+      const noteInputRef = useRef(null);
 
        useEffect(() => {
          const keyboardDidShow = Keyboard.addListener('keyboardDidShow', () => {
@@ -180,12 +182,16 @@ const handleSave = async () => {
                  </View>
 
                  <Text style={styles.label}>Notes</Text>
-                 <TextInput
+                 <AnimatedTextInput
+                   ref={noteInputRef}
                    style={styles.input}
                    placeholder="Your thoughts..."
                    placeholderTextColor="#999"
                    value={note}
-                   onChangeText={setNote}
+                   onChangeText={(text) => {
+                     setNote(text);
+                     noteInputRef.current?.pulse(300);
+                   }}
                    multiline
                  />
 
