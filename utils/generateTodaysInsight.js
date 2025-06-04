@@ -6,6 +6,7 @@ const OPENAI_API_KEY = 'sk-proj-5S2cF3LsFrPCHXsmY9pXuHn4c9D5yc0y6CJF8yQ-n7MGfFlM
 
 // Function to generate Today's Insight using GPT
 export async function generateTodaysInsight(metrics) {
+  const compiledHistory = await AsyncStorage.getItem('compiledHistory');
   const { energy, clarity, emotion, focus, note, window, timestamp } = metrics;
   const today = new Date().toISOString().split('T')[0];
   let insight = '';
@@ -95,48 +96,51 @@ export async function generateTodaysInsight(metrics) {
 
     // Prepare prompt for GPT
     const prompt = `
-      You are an AI assistant generating a concise, personalized mental health insight. Use the data provided to surface a surprising pattern and give one short actionable suggestion. Keep the response under 100 words and include relevant emojis.
+You are an AI assistant generating a concise, personalized mental health insight based on a user’s mental patterns.
 
-      Today's Metrics (${windowDescription} check-in):
-      - Energy: ${energy}% ⚡
-      - Clarity: ${clarity}% 💡
-      - Emotion: ${emotion}% 💚
-      - Focus: ${focus}% 🎯
-      - Mental Score: ${mentalScore}%
-      - Note: ${note || 'No note provided.'}
+Start with a surprising insight (1 sentence). Then give one actionable suggestion. Keep it under 100 words and include emojis.
 
-      Yesterday's Averages:
-      ${yesterdayAvg
-        ? `- Energy: ${Math.round(yesterdayAvg.energy)}%
-         - Clarity: ${Math.round(yesterdayAvg.clarity)}%
-         - Emotion: ${Math.round(yesterdayAvg.emotion)}%
-         - Focus: ${Math.round(yesterdayAvg.focus)}%`
-        : 'No data available.'}
+User's latest check-in (${windowDescription} check-in):
+- Energy: ${energy}% ⚡
+- Clarity: ${clarity}% 💡
+- Emotion: ${emotion}% 💚
+- Focus: ${focus}% 🎯
+- Mental Score: ${mentalScore}%
+- Note: ${note || 'No note provided.'}
 
-      7-Day Trends:
-      ${weekAvg
-        ? `- Clarity: Avg ${Math.round(weekAvg.clarity)}% ±${Math.round(weekStd.clarity || 0)}
-         - Emotion Stability: ${emotionStreak} days consistent`
-        : 'No data available.'}
+Context:
+- Yesterday's Averages:
+${yesterdayAvg
+  ? `  - Energy: ${Math.round(yesterdayAvg.energy)}%
+  - Clarity: ${Math.round(yesterdayAvg.clarity)}%
+  - Emotion: ${Math.round(yesterdayAvg.emotion)}%
+  - Focus: ${Math.round(yesterdayAvg.focus)}%`
+  : '  No data available.'}
 
-      Weekly Shift:
-      ${weeklyShift
-        ? `- Energy: ${formatChange(weeklyShift.energy)}
-         - Clarity: ${formatChange(weeklyShift.clarity)}
-         - Emotion: ${formatChange(weeklyShift.emotion)}
-         - Focus: ${formatChange(weeklyShift.focus)}`
-        : 'No data available.'}
+- 7-Day Averages:
+${weekAvg
+  ? `  - Clarity: ${Math.round(weekAvg.clarity)}% ±${Math.round(weekStd.clarity || 0)}%
+  - Emotion Stability: ${emotionStreak} days`
+  : '  No data available.'}
 
-      Recent Notes: ${recentNotes || 'None'}
+- Weekly Shift:
+${weeklyShift
+  ? `  - Energy: ${formatChange(weeklyShift.energy)}
+  - Clarity: ${formatChange(weeklyShift.clarity)}
+  - Emotion: ${formatChange(weeklyShift.emotion)}
+  - Focus: ${formatChange(weeklyShift.focus)}`
+  : '  No data available.'}
 
-      Engagement:
-      - Check-In Streak: ${streakCount} days
-      - Last Reflection: ${lastReflectionDaysAgo} days ago
+- Engagement:
+  - Streak: ${streakCount} days
+  - Last Reflection: ${lastReflectionDaysAgo} days ago
 
-      Past Reflections: ${importantInfo || 'None'}
+🧠 Full 30-Day Log (for deeper pattern matching):
+${compiledHistory || 'No long-term data yet.'}
 
-      Generate the insight now.
-    `;
+Now, return a 1-paragraph insight followed by a 1-sentence motivational push.
+`;
+
 
     // Call OpenAI API
     const response = await axios.post(
