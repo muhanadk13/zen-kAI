@@ -24,12 +24,12 @@ import ConfettiCannon from 'react-native-confetti-cannon';
 
 const OPENAI_API_KEY = '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';
 
-// System prompt to keep replies short and inquisitive
+// System prompt to keep replies concise and reflective
 const BASE_SYSTEM_MESSAGE = {
   role: 'system',
   content:
     'You are zen-kAI, a calm, emotionally intelligent assistant focused on self-awareness. ' +
-    'Reply in two short sentences: observe or notice a pattern, then ask a brief question to draw out more detail. Never offer advice.',
+    'Reply in two short sentences. The second sentence must be a question inviting reflection. Never offer advice.',
 };
 
 export default function ReflectionScreen() {

@@ -101,58 +101,30 @@ export async function generateTodaysInsight(metrics) {
     }[window] || 'recent';
 
     // Prepare prompt for GPT
-    const prompt = `
-      You are an AI assistant generating a concise, personalized mental health insight. Use the data provided to surface a surprising pattern and give one short actionable suggestion. Keep the response under 100 words and include relevant emojis.
-
-      Today's Metrics (${windowDescription} check-in):
-      - Energy: ${energy}% ⚡
-      - Clarity: ${clarity}% 💡
-      - Emotion: ${emotion}% 💚
-      - Focus: ${focus}% 🎯
-      - Mental Score: ${mentalScore}%
-      - Note: ${note || 'No note provided.'}
-
-      Yesterday's Averages:
-      ${yesterdayAvg
-        ? `- Energy: ${Math.round(yesterdayAvg.energy)}%
-         - Clarity: ${Math.round(yesterdayAvg.clarity)}%
-         - Emotion: ${Math.round(yesterdayAvg.emotion)}%
-         - Focus: ${Math.round(yesterdayAvg.focus)}%`
-        : 'No data available.'}
-
-      7-Day Trends:
-      ${weekAvg
-        ? `- Clarity: Avg ${Math.round(weekAvg.clarity)}% ±${Math.round(weekStd.clarity || 0)}
-         - Emotion Stability: ${emotionStreak} days consistent`
-        : 'No data available.'}
-
-      Weekly Shift:
-      ${weeklyShift
-        ? `- Energy: ${formatChange(weeklyShift.energy)}
-         - Clarity: ${formatChange(weeklyShift.clarity)}
-         - Emotion: ${formatChange(weeklyShift.emotion)}
-         - Focus: ${formatChange(weeklyShift.focus)}`
-        : 'No data available.'}
-
-      Recent Notes: ${recentNotes || 'None'}
-
-      Correlations:
-      - Energy & Clarity: ${formatCorrelation(energyClarityCorr)}
-      - Energy & Emotion: ${formatCorrelation(energyEmotionCorr)}
-      - Clarity & Emotion: ${formatCorrelation(clarityEmotionCorr)}
-
-      Evening Dip:
-      - Clarity: ${clarityEveningDrop ? formatChange(clarityEveningDrop) : 'n/a'}
-      - Emotion: ${emotionEveningDrop ? formatChange(emotionEveningDrop) : 'n/a'}
-
-      Engagement:
-      - Check-In Streak: ${streakCount} days
-      - Last Reflection: ${lastReflectionDaysAgo} days ago
-
-      Past Reflections: ${importantInfo || 'None'}
-
-      Generate the insight now.
-    `;
+    const prompt = `You are a sharp, almost clinical observer who crafts one-sentence insights.` +
+      ` Insight = (Pattern) + (Root Cause) + (Consequences) + (Emotion Punch).` +
+      ` Use only the data provided, no emojis, keep it under 35 words.` +
+      `\nData:` +
+      `\n- Energy: ${energy}` +
+      `\n- Clarity: ${clarity}` +
+      `\n- Emotion: ${emotion}` +
+      `\n- Focus: ${focus}` +
+      `\n- Mental Score: ${mentalScore}` +
+      `\n- Note: ${note || 'none'}` +
+      `\n- Yesterday Avg: ${yesterdayAvg ? Math.round(yesterdayAvg.energy) + '/' + Math.round(yesterdayAvg.clarity) + '/' + Math.round(yesterdayAvg.emotion) + '/' + Math.round(yesterdayAvg.focus) : 'n/a'}` +
+      `\n- Week Avg Clarity: ${weekAvg ? Math.round(weekAvg.clarity) : 'n/a'}` +
+      `\n- Emotion Streak: ${emotionStreak}` +
+      `\n- Weekly Shift: ${weeklyShift ? formatChange(weeklyShift.energy) + ',' + formatChange(weeklyShift.clarity) + ',' + formatChange(weeklyShift.emotion) + ',' + formatChange(weeklyShift.focus) : 'n/a'}` +
+      `\n- Recent Notes: ${recentNotes || 'none'}` +
+      `\n- Correlation EC: ${formatCorrelation(energyClarityCorr)}` +
+      `\n- Correlation EE: ${formatCorrelation(energyEmotionCorr)}` +
+      `\n- Correlation CE: ${formatCorrelation(clarityEmotionCorr)}` +
+      `\n- Evening Drop Clarity: ${clarityEveningDrop ? formatChange(clarityEveningDrop) : 'n/a'}` +
+      `\n- Evening Drop Emotion: ${emotionEveningDrop ? formatChange(emotionEveningDrop) : 'n/a'}` +
+      `\n- Check-In Streak: ${streakCount}` +
+      `\n- Last Reflection: ${lastReflectionDaysAgo}` +
+      `\n- Past Reflections: ${importantInfo || 'none'}` +
+      `\nCraft the single whoop insight now.`;
 
     // Call OpenAI API
     const response = await axios.post(
