@@ -200,44 +200,25 @@ export default function MentalScoreScreen() {
       const historyRaw = await AsyncStorage.getItem('checkInHistory');
       const history = historyRaw ? JSON.parse(historyRaw) : [];
       const today = new Date().toISOString().split('T')[0];
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      const yesterdayStr = yesterday.toISOString().split('T')[0];
-
       const todayEntries = history.filter((entry) => entry.timestamp.startsWith(today));
       const sortedEntries = todayEntries.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 
       if (sortedEntries.length === 0) {
-        setEnergy(100);
-        setClarity(100);
-        setEmotion(100);
-        setFocus(100);
-        setScore(100);
+        setEnergy(50);
+        setClarity(50);
+        setEmotion(50);
+        setFocus(50);
+        setScore(50);
         setMicroInsight('🔍 Start checking in to uncover patterns. Ready to begin?');
         return;
       }
 
-      let currentEnergy = 100;
-      let currentClarity = 100;
-      let currentEmotion = 100;
+      const avg = (arr, key) => arr.reduce((sum, e) => sum + (e[key] ?? 50), 0) / arr.length;
 
-      const impactPerCheckIn = 33.3;
+      const currentEnergy = Math.round(avg(sortedEntries, 'energy'));
+      const currentClarity = Math.round(avg(sortedEntries, 'clarity'));
+      const currentEmotion = Math.round(avg(sortedEntries, 'emotion'));
 
-      sortedEntries.forEach((entry) => {
-        if (entry.energy != null) {
-          const energyImpact = ((100 - entry.energy) * impactPerCheckIn) / 100;
-          const clarityImpact = ((100 - entry.clarity) * impactPerCheckIn) / 100;
-          const emotionImpact = ((100 - entry.emotion) * impactPerCheckIn) / 100;
-
-          currentEnergy -= energyImpact;
-          currentClarity -= clarityImpact;
-          currentEmotion -= emotionImpact;
-        }
-      });
-
-      currentEnergy = Math.max(0, Math.round(currentEnergy));
-      currentClarity = Math.max(0, Math.round(currentClarity));
-      currentEmotion = Math.max(0, Math.round(currentEmotion));
       const currentFocus = Math.round(0.6 * currentClarity + 0.4 * currentEnergy);
       const computedScore = calculateMentalScore(
         [currentEnergy],
@@ -273,11 +254,11 @@ export default function MentalScoreScreen() {
       });
     } catch (err) {
       console.error('❌ Error loading check-in data:', err);
-      setEnergy(100);
-      setClarity(100);
-      setEmotion(100);
-      setFocus(100);
-      setScore(100);
+      setEnergy(50);
+      setClarity(50);
+      setEmotion(50);
+      setFocus(50);
+      setScore(50);
       setMicroInsight(
         '🔍 Keep checking in to uncover patterns. What’s on your mind today?'
       );
