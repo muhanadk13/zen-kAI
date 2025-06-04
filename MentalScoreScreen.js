@@ -473,7 +473,7 @@ export default function MentalScoreScreen() {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Animatable.View animation="fadeInDown" duration={800} style={styles.gaugeContainer}>
-        <ScoreCircle score={displayScore} />
+        <ScoreCircle score={displayScore} size={170} />
         <Text style={styles.mentalScore}>{displayScore}</Text>
         <Text style={styles.mentalScoreLabel}>MentalScore</Text>
       </Animatable.View>
@@ -569,12 +569,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 28,
     position: 'relative',
-    width: 200,
-    height: 200,
+    alignSelf: 'center',
+    width: 170,
+    height: 170,
   },
   gaugeSvg: {
-    width: 200,
-    height: 200,
+    width: 170,
+    height: 170,
+    alignSelf: 'center',
   },
   mentalScore: {
     position: 'absolute',
