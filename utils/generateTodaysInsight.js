@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import { gatherExtendedStats } from './metrics';
 
 // OpenAI API key (ensure this is securely stored in production)
 const OPENAI_API_KEY = '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';
@@ -38,6 +39,7 @@ export async function generateTodaysInsight(metrics) {
     const { avg: weekAvg, std: weekStd } = calculateWeekStats(last7Days);
     const emotionStreak = calculateEmotionStreak(history);
     const streakCount = calculateCheckInStreak(history);
+    const extended = await gatherExtendedStats();
 
     // Compare this week's averages to the week prior
     const twoWeeksAgo = new Date();
@@ -132,6 +134,11 @@ export async function generateTodaysInsight(metrics) {
       Engagement:
       - Check-In Streak: ${streakCount} days
       - Last Reflection: ${lastReflectionDaysAgo} days ago
+
+      Additional Stats:
+      - Check-Ins this week: ${extended.checkInCount}
+      - Avg Note Length: ${extended.avgNoteLength} chars
+      - Common Window: ${extended.mostCommonWindow || 'N/A'}
 
       Past Reflections: ${importantInfo || 'None'}
 
