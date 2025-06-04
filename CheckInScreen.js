@@ -28,8 +28,9 @@ import React, { useState, useRef, useEffect } from 'react';
        const [note, setNote] = useState('');
        const scrollRef = useRef();
        const lastEnergy = useRef(50);
-       const lastClarity = useRef(50);
-       const lastEmotion = useRef(50);
+      const lastClarity = useRef(50);
+      const lastEmotion = useRef(50);
+      const saveButtonRef = useRef(null);
 
        useEffect(() => {
          const keyboardDidShow = Keyboard.addListener('keyboardDidShow', () => {
@@ -74,7 +75,7 @@ const handleSliderChange = (value, setValue, lastRef) => {
 };
        
 
-       const handleSave = async () => {
+const handleSave = async () => {
          const timestamp = new Date().toISOString();
          const today = timestamp.split('T')[0];
          const window = route.params?.window || getCheckInWindow();
@@ -93,15 +94,22 @@ const handleSliderChange = (value, setValue, lastRef) => {
            const historyRaw = await AsyncStorage.getItem('checkInHistory');
            const history = historyRaw ? JSON.parse(historyRaw) : [];
            history.push(entry);
-           await AsyncStorage.setItem('checkInHistory', JSON.stringify(history));
-           console.log('✅ Saved check-in:', entry);
+          await AsyncStorage.setItem('checkInHistory', JSON.stringify(history));
+          console.log('✅ Saved check-in:', entry);
+
+          await Haptics.notificationAsync(
+            Haptics.NotificationFeedbackType.Success
+          );
 
            // Navigate directly to MentalScoreScreen or ReflectionScreen
            navigation.navigate(window === 'checkIn3' ? 'Reflection' : 'MentalScore');
-         } catch (err) {
-           console.error('❌ Error saving check-in:', err);
-           Alert.alert('Error', 'Failed to save check-in.');
-         }
+        } catch (err) {
+          console.error('❌ Error saving check-in:', err);
+          await Haptics.notificationAsync(
+            Haptics.NotificationFeedbackType.Error
+          );
+          Alert.alert('Error', 'Failed to save check-in.');
+        }
        };
 
        const showHistory = async () => {
@@ -181,8 +189,20 @@ const handleSliderChange = (value, setValue, lastRef) => {
                    multiline
                  />
 
-                 <Animatable.View animation="fadeInUp" duration={600} delay={400}>
-                   <TouchableOpacity style={styles.button} onPress={handleSave} activeOpacity={0.7}>
+                 <Animatable.View
+                   ref={saveButtonRef}
+                   animation="fadeInUp"
+                   duration={600}
+                   delay={400}
+                 >
+                   <TouchableOpacity
+                     style={styles.button}
+                     onPress={async () => {
+                       saveButtonRef.current?.pulse(400);
+                       await handleSave();
+                     }}
+                     activeOpacity={0.7}
+                   >
                      <Text style={styles.buttonText}>Save Check-In</Text>
                    </TouchableOpacity>
                  </Animatable.View>
