@@ -190,7 +190,8 @@ const handleSave = async () => {
                    value={note}
                    onChangeText={(text) => {
                      setNote(text);
-                     noteInputRef.current?.pulse(300);
+                     // Subtle wave effect on each keystroke
+                     noteInputRef.current?.rubberBand(400);
                    }}
                    multiline
                  />
@@ -203,10 +204,11 @@ const handleSave = async () => {
                  >
                    <TouchableOpacity
                      style={styles.button}
-                     onPress={async () => {
-                       saveButtonRef.current?.pulse(400);
-                       await handleSave();
-                     }}
+                    onPress={async () => {
+                      saveButtonRef.current?.jello(400);
+                      await Haptics.selectionAsync();
+                      await handleSave();
+                    }}
                      activeOpacity={0.7}
                    >
                      <Text style={styles.buttonText}>Save Check-In</Text>
