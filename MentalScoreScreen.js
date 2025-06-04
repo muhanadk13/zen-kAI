@@ -33,11 +33,15 @@ const AnimatedProgressBar = ({ progress, color }) => {
   );
 };
 
-const getScoreColor = (score) => {
-  if (score > 75) return '#4CD964';
-  if (score > 50) return '#FFCC00';
-  return '#FF3B30';
-};
+export const getScoreColor = (score) => {
+    if (score <= 20) return '#FF3B30';      // Bright Red
+    if (score <= 40) return '#FF9500';      // Orange
+    if (score <= 55) return '#FFCC00';      // Yellow
+    if (score <= 70) return '#AEF359';      // Lime Green
+    if (score <= 85) return '#4CD964';      // Soft Green
+    return '#2ECC71';                       // Darker Green
+  };
+  
 
 const ScoreCircle = ({ score, size = 200, strokeWidth = 18 }) => {
   const radius = (size - strokeWidth) / 2;
@@ -553,13 +557,12 @@ export default function MentalScoreScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: -20,
+    marginTop: 30,
     paddingHorizontal: 24,
     backgroundColor: '#F2F2F7',
     paddingBottom: 40,
   },
   headerButton: {
-    marginRight: 16,
     fontSize: 16,
     fontWeight: '600',
     color: '#2563eb',
@@ -573,22 +576,19 @@ const styles = StyleSheet.create({
     width: 170,
     height: 170,
   },
-  gaugeSvg: {
-    width: 170,
-    height: 170,
-    alignSelf: 'center',
-  },
+
   mentalScore: {
     position: 'absolute',
-    fontSize: 48,
+    fontSize: 45,
     fontWeight: '700',
     color: '#000',
+    marginBottom: 22,
   },
   mentalScoreLabel: {
     position: 'absolute',
     top: '60%',
     fontSize: 16,
-    fontWeight: '400',
+    fontWeight: '500',
     color: '#555',
     textAlign: 'center',
   },
@@ -602,6 +602,8 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: '#FF4500',
+    marginTop: -10,
+    
   },
   card: {
     backgroundColor: '#fff',
