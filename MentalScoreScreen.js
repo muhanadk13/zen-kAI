@@ -19,6 +19,7 @@ import {
   generateTodaysInsight,
   generateWeeklyMindMirror,
 } from './utils/generateTodaysInsight';
+import { calculateMentalScore } from './utils/metrics';
 
 const AnimatedProgressBar = ({ progress, color }) => {
   const width = progress.interpolate({
@@ -238,8 +239,10 @@ export default function MentalScoreScreen() {
       currentClarity = Math.max(0, Math.round(currentClarity));
       currentEmotion = Math.max(0, Math.round(currentEmotion));
       const currentFocus = Math.round(0.6 * currentClarity + 0.4 * currentEnergy);
-      const computedScore = Math.round(
-        (currentEnergy + currentClarity + currentEmotion + currentFocus) / 4
+      const computedScore = calculateMentalScore(
+        [currentEnergy],
+        [currentClarity],
+        [currentEmotion]
       );
 
       setEnergy(currentEnergy);

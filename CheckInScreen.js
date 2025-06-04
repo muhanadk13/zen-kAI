@@ -19,7 +19,8 @@ import React, { useState, useRef, useEffect } from 'react';
      import { useNavigation, useRoute } from '@react-navigation/native';
      import * as Haptics from 'expo-haptics';
 import * as Animatable from 'react-native-animatable';
-     import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { saveCheckIn } from './utils/metrics';
 
      export default function CheckInScreen() {
        const navigation = useNavigation();
@@ -111,8 +112,15 @@ const handleSave = async () => {
            await AsyncStorage.setItem(key, JSON.stringify(entry));
            const historyRaw = await AsyncStorage.getItem('checkInHistory');
            const history = historyRaw ? JSON.parse(historyRaw) : [];
-           history.push(entry);
-          await AsyncStorage.setItem('checkInHistory', JSON.stringify(history));
+          history.push(entry);
+         await AsyncStorage.setItem('checkInHistory', JSON.stringify(history));
+          await saveCheckIn({
+            date: today,
+            energy,
+            clarity,
+            emotion,
+            notes: note,
+          });
 
           await Haptics.notificationAsync(
             Haptics.NotificationFeedbackType.Success

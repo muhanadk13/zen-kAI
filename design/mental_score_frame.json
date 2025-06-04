@@ -1,0 +1,51 @@
+{
+  "document": {
+    "type": "DOCUMENT",
+    "children": [
+      {
+        "id": "0:1",
+        "type": "PAGE",
+        "name": "MentalScoreScreen",
+        "children": [
+          {
+            "id": "1:1",
+            "type": "FRAME",
+            "name": "MentalScore",
+            "absoluteBoundingBox": {
+              "x": 0,
+              "y": 0,
+              "width": 375,
+              "height": 812
+            },
+            "fills": [
+              { "type": "SOLID", "color": { "r": 0.992, "g": 0.992, "b": 0.992 } }
+            ],
+            "children": [
+              {
+                "id": "1:2",
+                "type": "TEXT",
+                "characters": "Daily Check-In",
+                "style": { "fontFamily": "SF Pro", "fontWeight": 700, "fontSize": 24, "fill": "#111827" },
+                "absoluteBoundingBox": { "x": 24, "y": 24, "width": 200, "height": 28 }
+              },
+              {
+                "id": "1:3",
+                "type": "TEXT",
+                "characters": "Energy",
+                "style": { "fontFamily": "SF Pro", "fontWeight": 600, "fontSize": 18, "fill": "#111827" },
+                "absoluteBoundingBox": { "x": 24, "y": 72, "width": 100, "height": 20 }
+              },
+              {
+                "id": "1:4",
+                "type": "RECTANGLE",
+                "name": "EnergySlider",
+                "absoluteBoundingBox": { "x": 24, "y": 98, "width": 327, "height": 48 },
+                "fills": [ { "type": "SOLID", "color": { "r": 0.156, "g": 0.78, "b": 0.435 } } ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
