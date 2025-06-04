@@ -520,7 +520,7 @@ const styles = StyleSheet.create({
   container: {
     marginTop: -20,
     paddingHorizontal: 24,
-    backgroundColor: '#F2F2F7',
+    backgroundColor: '#f5f5f5',
     paddingBottom: 40,
   },
   headerButton: {
