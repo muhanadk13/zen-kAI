@@ -38,12 +38,40 @@ export async function generateTodaysInsight(metrics) {
     const { avg: weekAvg, std: weekStd } = calculateWeekStats(last7Days);
     const emotionStreak = calculateEmotionStreak(history);
     const streakCount = calculateCheckInStreak(history);
+
+    // Compare this week's averages to the week prior
+    const twoWeeksAgo = new Date();
+    twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+    const last14Days = history.filter((e) => new Date(e.timestamp) >= twoWeeksAgo);
+    const prev7Days = last14Days.filter((e) => new Date(e.timestamp) < weekAgo);
+    const { avg: prevWeekAvg } = calculateWeekStats(prev7Days);
+
+    const weeklyShift =
+      weekAvg && prevWeekAvg
+        ? {
+            energy: weekAvg.energy - prevWeekAvg.energy,
+            clarity: weekAvg.clarity - prevWeekAvg.clarity,
+            emotion: weekAvg.emotion - prevWeekAvg.emotion,
+            focus: weekAvg.focus - prevWeekAvg.focus,
+          }
+        : null;
     const lastReflection = await AsyncStorage.getItem('lastReflectionDate');
     const lastReflectionDaysAgo = lastReflection
       ? Math.floor((Date.now() - new Date(lastReflection)) / (1000 * 60 * 60 * 24))
       : 'N/A';
     const importantInfoRaw = await AsyncStorage.getItem('importantInfo');
     const importantInfo = importantInfoRaw ? JSON.parse(importantInfoRaw).slice(-3).join('; ') : '';
+    const recentNotes = history.slice(-3)
+      .map((e) => e.note)
+      .filter(Boolean)
+      .join('; ');
+
+    const energyClarityCorr = calculateCorrelation(history, 'energy', 'clarity');
+    const energyEmotionCorr = calculateCorrelation(history, 'energy', 'emotion');
+    const clarityEmotionCorr = calculateCorrelation(history, 'clarity', 'emotion');
+
+    const clarityEveningDrop = calculateEveningDifference(history, 'clarity');
+    const emotionEveningDrop = calculateEveningDifference(history, 'emotion');
 
     // Calculate yesterday's averages
     const yesterday = new Date();
@@ -73,39 +101,30 @@ export async function generateTodaysInsight(metrics) {
     }[window] || 'recent';
 
     // Prepare prompt for GPT
-    const prompt = `
-      You are an AI assistant generating a concise, personalized mental health insight. Use the data provided to surface a surprising pattern and give one short actionable suggestion. Keep the response under 100 words and include relevant emojis.
-
-      Today's Metrics (${windowDescription} check-in):
-      - Energy: ${energy}% ⚡
-      - Clarity: ${clarity}% 💡
-      - Emotion: ${emotion}% 💚
-      - Focus: ${focus}% 🎯
-      - Mental Score: ${mentalScore}%
-      - Note: ${note || 'No note provided.'}
-
-      Yesterday's Averages:
-      ${yesterdayAvg
-        ? `- Energy: ${Math.round(yesterdayAvg.energy)}%
-         - Clarity: ${Math.round(yesterdayAvg.clarity)}%
-         - Emotion: ${Math.round(yesterdayAvg.emotion)}%
-         - Focus: ${Math.round(yesterdayAvg.focus)}%`
-        : 'No data available.'}
-
-      7-Day Trends:
-      ${weekAvg
-        ? `- Clarity: Avg ${Math.round(weekAvg.clarity)}% ±${Math.round(weekStd.clarity || 0)}
-         - Emotion Stability: ${emotionStreak} days consistent`
-        : 'No data available.'}
-
-      Engagement:
-      - Check-In Streak: ${streakCount} days
-      - Last Reflection: ${lastReflectionDaysAgo} days ago
-
-      Past Reflections: ${importantInfo || 'None'}
-
-      Generate the insight now.
-    `;
+    const prompt = `You are a sharp, almost clinical observer who crafts one-sentence insights.` +
+      ` Insight = (Pattern) + (Root Cause) + (Consequences) + (Emotion Punch).` +
+      ` Use only the data provided, no emojis, keep it under 35 words.` +
+      `\nData:` +
+      `\n- Energy: ${energy}` +
+      `\n- Clarity: ${clarity}` +
+      `\n- Emotion: ${emotion}` +
+      `\n- Focus: ${focus}` +
+      `\n- Mental Score: ${mentalScore}` +
+      `\n- Note: ${note || 'none'}` +
+      `\n- Yesterday Avg: ${yesterdayAvg ? Math.round(yesterdayAvg.energy) + '/' + Math.round(yesterdayAvg.clarity) + '/' + Math.round(yesterdayAvg.emotion) + '/' + Math.round(yesterdayAvg.focus) : 'n/a'}` +
+      `\n- Week Avg Clarity: ${weekAvg ? Math.round(weekAvg.clarity) : 'n/a'}` +
+      `\n- Emotion Streak: ${emotionStreak}` +
+      `\n- Weekly Shift: ${weeklyShift ? formatChange(weeklyShift.energy) + ',' + formatChange(weeklyShift.clarity) + ',' + formatChange(weeklyShift.emotion) + ',' + formatChange(weeklyShift.focus) : 'n/a'}` +
+      `\n- Recent Notes: ${recentNotes || 'none'}` +
+      `\n- Correlation EC: ${formatCorrelation(energyClarityCorr)}` +
+      `\n- Correlation EE: ${formatCorrelation(energyEmotionCorr)}` +
+      `\n- Correlation CE: ${formatCorrelation(clarityEmotionCorr)}` +
+      `\n- Evening Drop Clarity: ${clarityEveningDrop ? formatChange(clarityEveningDrop) : 'n/a'}` +
+      `\n- Evening Drop Emotion: ${emotionEveningDrop ? formatChange(emotionEveningDrop) : 'n/a'}` +
+      `\n- Check-In Streak: ${streakCount}` +
+      `\n- Last Reflection: ${lastReflectionDaysAgo}` +
+      `\n- Past Reflections: ${importantInfo || 'none'}` +
+      `\nCraft the single whoop insight now.`;
 
     // Call OpenAI API
     const response = await axios.post(
@@ -145,6 +164,51 @@ export async function generateTodaysInsight(metrics) {
 // Helper function to calculate focus based on clarity and energy
 function calculateFocus(clarity, energy) {
   return Math.round(0.6 * clarity + 0.4 * energy);
+}
+
+function formatChange(num) {
+  const sign = num >= 0 ? '+' : '';
+  return `${sign}${Math.round(num)}%`;
+}
+
+function formatCorrelation(num) {
+  if (num === null) return 'n/a';
+  const sign = num >= 0 ? '+' : '';
+  return `${sign}${num.toFixed(2)}`;
+}
+
+function calculateCorrelation(entries, keyA, keyB) {
+  if (!entries.length) return null;
+  const n = entries.length;
+  let sumA = 0,
+    sumB = 0,
+    sumAB = 0,
+    sumASq = 0,
+    sumBSq = 0;
+  entries.forEach((e) => {
+    const a = e[keyA] || 0;
+    const b = e[keyB] || 0;
+    sumA += a;
+    sumB += b;
+    sumAB += a * b;
+    sumASq += a * a;
+    sumBSq += b * b;
+  });
+  const numerator = n * sumAB - sumA * sumB;
+  const denominator = Math.sqrt(
+    (n * sumASq - sumA * sumA) * (n * sumBSq - sumB * sumB)
+  );
+  return denominator === 0 ? 0 : numerator / denominator;
+}
+
+function calculateEveningDifference(entries, key) {
+  const evening = entries.filter((e) => new Date(e.timestamp).getHours() >= 19);
+  const day = entries.filter((e) => new Date(e.timestamp).getHours() < 19);
+  if (!evening.length || !day.length) return null;
+  const avgE =
+    evening.reduce((sum, e) => sum + (e[key] || 0), 0) / evening.length;
+  const avgD = day.reduce((sum, e) => sum + (e[key] || 0), 0) / day.length;
+  return avgE - avgD;
 }
 
 // Calculate averages and standard deviation for a set of entries
