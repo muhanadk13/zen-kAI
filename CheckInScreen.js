@@ -17,12 +17,7 @@ import React, { useState, useRef, useEffect } from 'react';
      import Slider from '@react-native-community/slider';
      import { useNavigation, useRoute } from '@react-navigation/native';
      import * as Haptics from 'expo-haptics';
-<<<<<<< HEAD
-     import * as Animatable from 'react-native-animatable';
-     const AnimatedTextInput = Animatable.createAnimatableComponent(TextInput);
-=======
 import * as Animatable from 'react-native-animatable';
->>>>>>> dfaqn9-codex/enhance-animations-and-haptics
      import AsyncStorage from '@react-native-async-storage/async-storage';
 
      export default function CheckInScreen() {
@@ -37,11 +32,7 @@ import * as Animatable from 'react-native-animatable';
       const lastClarity = useRef(50);
       const lastEmotion = useRef(50);
       const saveButtonRef = useRef(null);
-<<<<<<< HEAD
-      const noteInputRef = useRef(null);
-=======
       const scaleAnim = useRef(new Animated.Value(1)).current;
->>>>>>> dfaqn9-codex/enhance-animations-and-haptics
 
        useEffect(() => {
          const keyboardDidShow = Keyboard.addListener('keyboardDidShow', () => {
@@ -206,19 +197,6 @@ const handleSave = async () => {
                    duration={600}
                    delay={400}
                  >
-<<<<<<< HEAD
-                   <TouchableOpacity
-                     style={styles.button}
-                    onPress={async () => {
-                      saveButtonRef.current?.jello(400);
-                      await Haptics.selectionAsync();
-                      await handleSave();
-                    }}
-                     activeOpacity={0.7}
-                   >
-                     <Text style={styles.buttonText}>Save Check-In</Text>
-                   </TouchableOpacity>
-=======
                    <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
                      <TouchableOpacity
                        style={styles.button}
@@ -243,7 +221,6 @@ const handleSave = async () => {
                        <Text style={styles.buttonText}>Save Check-In</Text>
                      </TouchableOpacity>
                    </Animated.View>
->>>>>>> dfaqn9-codex/enhance-animations-and-haptics
                  </Animatable.View>
 
                  <TouchableOpacity

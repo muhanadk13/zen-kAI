@@ -38,6 +38,7 @@ export default function MentalScoreScreen() {
   const [clarity, setClarity] = useState(0);
   const [emotion, setEmotion] = useState(0);
   const [focus, setFocus] = useState(0);
+  const [score, setScore] = useState(0); // Define score state
   const [microInsight, setMicroInsight] = useState('Loading insight...');
   const [weeklyMindMirror, setWeeklyMindMirror] = useState('No MindMirror yet.');
   const [streak, setStreak] = useState(0);
@@ -47,11 +48,7 @@ export default function MentalScoreScreen() {
   const emotionAnim = useRef(new Animated.Value(-1)).current;
   const focusAnim = useRef(new Animated.Value(-1)).current;
   const scoreAnim = useRef(new Animated.Value(-1)).current;
-<<<<<<< HEAD
-=======
-  const prevScore = useRef(-1);
-  const [score, setScore] = useState(-1);
->>>>>>> dfaqn9-codex/enhance-animations-and-haptics
+  const prevScore = useRef(-1); // Define prevScore ref
 
   const energyProgress = energyAnim.interpolate({
     inputRange: [-1, 0, 100],
@@ -146,7 +143,7 @@ export default function MentalScoreScreen() {
 
   useEffect(() => {
     const target = Math.round((energy + clarity + emotion + focus) / 4);
-    setScore(target);
+    setScore(target); // Update score state
   }, [energy, clarity, emotion, focus]);
 
   useEffect(() => {
