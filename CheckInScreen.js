@@ -29,11 +29,12 @@ import * as Animatable from 'react-native-animatable';
        const [emotion, setEmotion] = useState(50);
        const [note, setNote] = useState('');
        const scrollRef = useRef();
-       const lastEnergy = useRef(50);
+      const lastEnergy = useRef(50);
       const lastClarity = useRef(50);
       const lastEmotion = useRef(50);
       const saveButtonRef = useRef(null);
       const scaleAnim = useRef(new Animated.Value(1)).current;
+      const noteLayoutY = useRef(0);
 
        useEffect(() => {
          const show = Keyboard.addListener('keyboardWillShow', () => {
@@ -134,7 +135,7 @@ const handleSave = async () => {
            <KeyboardAvoidingView
              style={{ flex: 1 }}
              behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            keyboardVerticalOffset={60}
+            keyboardVerticalOffset={100}
            >
              <ScrollView ref={scrollRef} contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
                <Animatable.View
@@ -201,11 +202,16 @@ const handleSave = async () => {
                   placeholderTextColor="#999"
                   value={note}
                   onChangeText={(text) => setNote(text.slice(0, 250))}
+                  onLayout={(e) => {
+                    noteLayoutY.current = e.nativeEvent.layout.y;
+                  }}
                   onFocus={() =>
-                    setTimeout(
-                      () => scrollRef.current?.scrollToEnd({ animated: true }),
-                      100
-                    )
+                    setTimeout(() => {
+                      scrollRef.current?.scrollTo({
+                        y: noteLayoutY.current - 20,
+                        animated: true,
+                      });
+                    }, 100)
                   }
                   multiline
                   maxLength={250}
