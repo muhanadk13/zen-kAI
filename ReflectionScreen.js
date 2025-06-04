@@ -24,6 +24,14 @@ import ConfettiCannon from 'react-native-confetti-cannon';
 
 const OPENAI_API_KEY = 'REMOVED-5S2cF3LsFrPCHXsmY9pXuHn4c9D5yc0y6CJF8yQ-n7MGfFlM118VY8Fimuo7v-nUhQIBvTd28_T3BlbkFJpOH-UrEDOxvwe66hZyi-kg4q-GrthddA5naQ7KEEJ_UabWh5GhA21HK6e_7m2tOIejJo0F2zIA';
 
+// System prompt to keep replies short and inquisitive
+const BASE_SYSTEM_MESSAGE = {
+  role: 'system',
+  content:
+    'You are zen-kAI, a calm, emotionally intelligent assistant. ' +
+    'Acknowledge the user in one short line and always finish with a thoughtful question.',
+};
+
 export default function ReflectionScreen() {
   const navigation = useNavigation(); // Access navigation object
 
@@ -130,15 +138,11 @@ export default function ReflectionScreen() {
       };
 
       const initialMessages = [
-        {
-            role: 'system',
-            content: `You are zen-kAI, a calm, emotionally intelligent assistant. Your goal is to help the user reflect, not explain. Each message must be extremely short: 1 sentence to acknowledge what they said or point out a recent trend, followed by 1 short, emotionally aware question. Avoid lecturing or giving reasons. Keep the tone simple and warm. Reference today's check-ins casually, like “check-in 2 showed high clarity.” Never exceed a few words.`
-          }
-          ,
+        BASE_SYSTEM_MESSAGE,
         {
           role: 'user',
           content: `Here are my check-ins:
-        
+
         Today's: ${JSON.stringify(context.today)}
         
         Previous days: ${JSON.stringify(context.previousDays)}
@@ -211,6 +215,7 @@ export default function ReflectionScreen() {
     }
   
     const messages = [
+      BASE_SYSTEM_MESSAGE,
       ...newChatMessages.map((msg) => ({
         role: msg.fromUser ? 'user' : 'assistant',
         content: msg.text,
