@@ -66,6 +66,13 @@ export async function generateTodaysInsight(metrics) {
       .filter(Boolean)
       .join('; ');
 
+    const energyClarityCorr = calculateCorrelation(history, 'energy', 'clarity');
+    const energyEmotionCorr = calculateCorrelation(history, 'energy', 'emotion');
+    const clarityEmotionCorr = calculateCorrelation(history, 'clarity', 'emotion');
+
+    const clarityEveningDrop = calculateEveningDifference(history, 'clarity');
+    const emotionEveningDrop = calculateEveningDifference(history, 'emotion');
+
     // Calculate yesterday's averages
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
@@ -129,6 +136,15 @@ export async function generateTodaysInsight(metrics) {
 
       Recent Notes: ${recentNotes || 'None'}
 
+      Correlations:
+      - Energy & Clarity: ${formatCorrelation(energyClarityCorr)}
+      - Energy & Emotion: ${formatCorrelation(energyEmotionCorr)}
+      - Clarity & Emotion: ${formatCorrelation(clarityEmotionCorr)}
+
+      Evening Dip:
+      - Clarity: ${clarityEveningDrop ? formatChange(clarityEveningDrop) : 'n/a'}
+      - Emotion: ${emotionEveningDrop ? formatChange(emotionEveningDrop) : 'n/a'}
+
       Engagement:
       - Check-In Streak: ${streakCount} days
       - Last Reflection: ${lastReflectionDaysAgo} days ago
@@ -181,6 +197,46 @@ function calculateFocus(clarity, energy) {
 function formatChange(num) {
   const sign = num >= 0 ? '+' : '';
   return `${sign}${Math.round(num)}%`;
+}
+
+function formatCorrelation(num) {
+  if (num === null) return 'n/a';
+  const sign = num >= 0 ? '+' : '';
+  return `${sign}${num.toFixed(2)}`;
+}
+
+function calculateCorrelation(entries, keyA, keyB) {
+  if (!entries.length) return null;
+  const n = entries.length;
+  let sumA = 0,
+    sumB = 0,
+    sumAB = 0,
+    sumASq = 0,
+    sumBSq = 0;
+  entries.forEach((e) => {
+    const a = e[keyA] || 0;
+    const b = e[keyB] || 0;
+    sumA += a;
+    sumB += b;
+    sumAB += a * b;
+    sumASq += a * a;
+    sumBSq += b * b;
+  });
+  const numerator = n * sumAB - sumA * sumB;
+  const denominator = Math.sqrt(
+    (n * sumASq - sumA * sumA) * (n * sumBSq - sumB * sumB)
+  );
+  return denominator === 0 ? 0 : numerator / denominator;
+}
+
+function calculateEveningDifference(entries, key) {
+  const evening = entries.filter((e) => new Date(e.timestamp).getHours() >= 19);
+  const day = entries.filter((e) => new Date(e.timestamp).getHours() < 19);
+  if (!evening.length || !day.length) return null;
+  const avgE =
+    evening.reduce((sum, e) => sum + (e[key] || 0), 0) / evening.length;
+  const avgD = day.reduce((sum, e) => sum + (e[key] || 0), 0) / day.length;
+  return avgE - avgD;
 }
 
 // Calculate averages and standard deviation for a set of entries

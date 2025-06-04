@@ -28,8 +28,8 @@ const OPENAI_API_KEY = 'sk-proj-5S2cF3LsFrPCHXsmY9pXuHn4c9D5yc0y6CJF8yQ-n7MGfFlM
 const BASE_SYSTEM_MESSAGE = {
   role: 'system',
   content:
-    'You are zen-kAI, a calm, emotionally intelligent assistant. ' +
-    'Acknowledge the user in one short line and always finish with a thoughtful question.',
+    'You are zen-kAI, a calm, emotionally intelligent assistant focused on self-awareness. ' +
+    'Reply in two short sentences: observe or notice a pattern, then ask a brief question to draw out more detail. Never offer advice.',
 };
 
 export default function ReflectionScreen() {
