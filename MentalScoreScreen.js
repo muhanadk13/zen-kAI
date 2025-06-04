@@ -12,7 +12,6 @@ import {
   Animated,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { ProgressBar } from 'react-native-paper';
 import * as Animatable from 'react-native-animatable';
 import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -20,6 +19,18 @@ import {
   generateTodaysInsight,
   generateWeeklyMindMirror,
 } from './utils/generateTodaysInsight';
+
+const AnimatedProgressBar = ({ progress, color }) => {
+  const width = progress.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0%', '100%'],
+  });
+  return (
+    <View style={styles.barBackground}>
+      <Animated.View style={[styles.barFill, { backgroundColor: color, width }]} />
+    </View>
+  );
+};
 
 export default function MentalScoreScreen() {
   const navigation = useNavigation();
@@ -434,21 +445,21 @@ export default function MentalScoreScreen() {
         <View style={styles.row}>
           <View style={[styles.metricBox, styles.metricBoxLeft]}>
             <Text style={styles.metricLabel}>⚡ Energy {displayEnergy}%</Text>
-            <ProgressBar progress={energyProgress} color="#C3B1E1" style={styles.bar} />
+            <AnimatedProgressBar progress={energyProgress} color="#C3B1E1" />
           </View>
           <View style={styles.metricBox}>
             <Text style={styles.metricLabel}>💡 Clarity {displayClarity}%</Text>
-            <ProgressBar progress={clarityProgress} color="#f5c065" style={styles.bar} />
+            <AnimatedProgressBar progress={clarityProgress} color="#f5c065" />
           </View>
         </View>
         <View style={styles.row}>
           <View style={[styles.metricBox, styles.metricBoxLeft]}>
             <Text style={styles.metricLabel}>💚 Emotion {displayEmotion}%</Text>
-            <ProgressBar progress={emotionProgress} color="#7fe87a" style={styles.bar} />
+            <AnimatedProgressBar progress={emotionProgress} color="#7fe87a" />
           </View>
           <View style={styles.metricBox}>
             <Text style={styles.metricLabel}>🎯 Focus {displayFocus}%</Text>
-          <ProgressBar progress={focusProgress} color="#60a5fa" style={styles.bar} />
+          <AnimatedProgressBar progress={focusProgress} color="#60a5fa" />
           </View>
         </View>
       </Animatable.View>
@@ -598,10 +609,15 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     color: '#000',
   },
-  bar: {
+  barBackground: {
     height: 10,
     borderRadius: 5,
     backgroundColor: '#e0e0e0',
+    overflow: 'hidden',
+  },
+  barFill: {
+    height: '100%',
+    borderRadius: 5,
   },
   resetContainer: {
     alignItems: 'center',
