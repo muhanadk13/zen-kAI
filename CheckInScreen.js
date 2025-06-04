@@ -10,14 +10,19 @@ import React, { useState, useRef, useEffect } from 'react';
        ScrollView,
        KeyboardAvoidingView,
        Platform,
+       Animated,
        Keyboard,
        Alert,
      } from 'react-native';
      import Slider from '@react-native-community/slider';
      import { useNavigation, useRoute } from '@react-navigation/native';
      import * as Haptics from 'expo-haptics';
+<<<<<<< HEAD
      import * as Animatable from 'react-native-animatable';
      const AnimatedTextInput = Animatable.createAnimatableComponent(TextInput);
+=======
+import * as Animatable from 'react-native-animatable';
+>>>>>>> dfaqn9-codex/enhance-animations-and-haptics
      import AsyncStorage from '@react-native-async-storage/async-storage';
 
      export default function CheckInScreen() {
@@ -32,7 +37,11 @@ import React, { useState, useRef, useEffect } from 'react';
       const lastClarity = useRef(50);
       const lastEmotion = useRef(50);
       const saveButtonRef = useRef(null);
+<<<<<<< HEAD
       const noteInputRef = useRef(null);
+=======
+      const scaleAnim = useRef(new Animated.Value(1)).current;
+>>>>>>> dfaqn9-codex/enhance-animations-and-haptics
 
        useEffect(() => {
          const keyboardDidShow = Keyboard.addListener('keyboardDidShow', () => {
@@ -181,20 +190,15 @@ const handleSave = async () => {
                    <Text style={styles.rangeText}>High</Text>
                  </View>
 
-                 <Text style={styles.label}>Notes</Text>
-                 <AnimatedTextInput
-                   ref={noteInputRef}
-                   style={styles.input}
-                   placeholder="Your thoughts..."
-                   placeholderTextColor="#999"
-                   value={note}
-                   onChangeText={(text) => {
-                     setNote(text);
-                     // Subtle wave effect on each keystroke
-                     noteInputRef.current?.rubberBand(400);
-                   }}
-                   multiline
-                 />
+                <Text style={styles.label}>Notes</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Your thoughts..."
+                  placeholderTextColor="#999"
+                  value={note}
+                  onChangeText={setNote}
+                  multiline
+                />
 
                  <Animatable.View
                    ref={saveButtonRef}
@@ -202,6 +206,7 @@ const handleSave = async () => {
                    duration={600}
                    delay={400}
                  >
+<<<<<<< HEAD
                    <TouchableOpacity
                      style={styles.button}
                     onPress={async () => {
@@ -213,6 +218,32 @@ const handleSave = async () => {
                    >
                      <Text style={styles.buttonText}>Save Check-In</Text>
                    </TouchableOpacity>
+=======
+                   <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+                     <TouchableOpacity
+                       style={styles.button}
+                       onPress={async () => {
+                         Animated.sequence([
+                           Animated.timing(scaleAnim, {
+                             toValue: 1.08,
+                             duration: 100,
+                             useNativeDriver: true,
+                           }),
+                           Animated.timing(scaleAnim, {
+                             toValue: 1,
+                             duration: 100,
+                             useNativeDriver: true,
+                           }),
+                         ]).start();
+                         await Haptics.selectionAsync();
+                         await handleSave();
+                       }}
+                       activeOpacity={0.7}
+                     >
+                       <Text style={styles.buttonText}>Save Check-In</Text>
+                     </TouchableOpacity>
+                   </Animated.View>
+>>>>>>> dfaqn9-codex/enhance-animations-and-haptics
                  </Animatable.View>
 
                  <TouchableOpacity
