@@ -11,6 +11,7 @@ import {
   Alert,
   Animated,
 } from 'react-native';
+import Svg, { Circle } from 'react-native-svg';
 import { useNavigation } from '@react-navigation/native';
 import * as Animatable from 'react-native-animatable';
 import * as Haptics from 'expo-haptics';
@@ -29,6 +30,46 @@ const AnimatedProgressBar = ({ progress, color }) => {
     <View style={styles.barBackground}>
       <Animated.View style={[styles.barFill, { backgroundColor: color, width }]} />
     </View>
+  );
+};
+
+const getScoreColor = (score) => {
+  if (score > 75) return '#4CD964';
+  if (score > 50) return '#FFCC00';
+  return '#FF3B30';
+};
+
+const ScoreCircle = ({ score, size = 200, strokeWidth = 18 }) => {
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const progress = (score / 100) * circumference;
+  const cx = size / 2;
+  const cy = size / 2;
+
+  return (
+    <Svg width={size} height={size} style={styles.gaugeSvg}>
+      <Circle
+        cx={cx}
+        cy={cy}
+        r={radius}
+        stroke="#e6e6e6"
+        strokeWidth={strokeWidth}
+        fill="none"
+      />
+      <Circle
+        cx={cx}
+        cy={cy}
+        r={radius}
+        stroke={getScoreColor(score)}
+        strokeWidth={strokeWidth}
+        strokeDasharray={`${progress} ${circumference - progress}`}
+        strokeLinecap="round"
+        rotation="-90"
+        originX={cx}
+        originY={cy}
+        fill="none"
+      />
+    </Svg>
   );
 };
 
@@ -432,7 +473,7 @@ export default function MentalScoreScreen() {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Animatable.View animation="fadeInDown" duration={800} style={styles.gaugeContainer}>
-        <Image source={require('./assets/gauge.png')} style={styles.gaugeImage} resizeMode="contain" />
+        <ScoreCircle score={displayScore} />
         <Text style={styles.mentalScore}>{displayScore}</Text>
         <Text style={styles.mentalScoreLabel}>MentalScore</Text>
       </Animatable.View>
@@ -528,24 +569,26 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 28,
     position: 'relative',
+    width: 200,
+    height: 200,
   },
-  gaugeImage: {
-    width: 360,
-    height: 240,
+  gaugeSvg: {
+    width: 200,
+    height: 200,
   },
   mentalScore: {
     position: 'absolute',
-    top: '38%',
     fontSize: 48,
     fontWeight: '700',
     color: '#000',
-    marginTop: 30,
   },
   mentalScoreLabel: {
+    position: 'absolute',
+    top: '60%',
     fontSize: 16,
     fontWeight: '400',
     color: '#555',
-    marginTop: -70,
+    textAlign: 'center',
   },
   streakContainer: {
     flexDirection: 'row',
