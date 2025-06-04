@@ -89,11 +89,11 @@ export default function MentalScoreScreen() {
   const [weeklyMindMirror, setWeeklyMindMirror] = useState('No MindMirror yet.');
   const [streak, setStreak] = useState(0);
 
-  const energyAnim = useRef(new Animated.Value(-1)).current;
-  const clarityAnim = useRef(new Animated.Value(-1)).current;
-  const emotionAnim = useRef(new Animated.Value(-1)).current;
-  const focusAnim = useRef(new Animated.Value(-1)).current;
-  const scoreAnim = useRef(new Animated.Value(-1)).current;
+  const energyAnim = useRef(new Animated.Value(BASELINE)).current;
+  const clarityAnim = useRef(new Animated.Value(BASELINE)).current;
+  const emotionAnim = useRef(new Animated.Value(BASELINE)).current;
+  const focusAnim = useRef(new Animated.Value(BASELINE)).current;
+  const scoreAnim = useRef(new Animated.Value(BASELINE)).current;
   const prevScore = useRef(-1); // Define prevScore ref
 
   const energyProgress = energyAnim.interpolate({
@@ -226,6 +226,25 @@ export default function MentalScoreScreen() {
 
   useEffect(() => {
     const fetchData = async () => {
+      try {
+        const stored = await AsyncStorage.getItem('lastMetrics');
+        if (stored) {
+          const metrics = JSON.parse(stored);
+          energyAnim.setValue(metrics.energy);
+          clarityAnim.setValue(metrics.clarity);
+          emotionAnim.setValue(metrics.emotion);
+          focusAnim.setValue(metrics.focus);
+          scoreAnim.setValue(metrics.score);
+          setEnergy(metrics.energy);
+          setClarity(metrics.clarity);
+          setEmotion(metrics.emotion);
+          setFocus(metrics.focus);
+          setScore(metrics.score);
+        }
+      } catch (err) {
+        console.error('❌ Error loading last metrics:', err);
+      }
+
       await fetchCheckInData();
       await triggerMindMirror();
       await calculateStreak();
@@ -258,6 +277,16 @@ export default function MentalScoreScreen() {
         setEmotion(BASELINE);
         setFocus(BASELINE);
         setScore(BASELINE);
+        await AsyncStorage.setItem(
+          'lastMetrics',
+          JSON.stringify({
+            energy: BASELINE,
+            clarity: BASELINE,
+            emotion: BASELINE,
+            focus: BASELINE,
+            score: BASELINE,
+          })
+        );
         setMicroInsight('🔍 Start checking in to uncover patterns. Ready to begin?');
         return;
       }
@@ -289,6 +318,16 @@ export default function MentalScoreScreen() {
       setEmotion(currentEmotion);
       setFocus(currentFocus);
       setScore(computedScore);
+      await AsyncStorage.setItem(
+        'lastMetrics',
+        JSON.stringify({
+          energy: currentEnergy,
+          clarity: currentClarity,
+          emotion: currentEmotion,
+          focus: currentFocus,
+          score: computedScore,
+        })
+      );
 
       // Generate Today's Insight with GPT after any check-in
       const latestEntry = sortedEntries[sortedEntries.length - 1];
@@ -317,6 +356,16 @@ export default function MentalScoreScreen() {
       setEmotion(BASELINE);
       setFocus(BASELINE);
       setScore(BASELINE);
+      await AsyncStorage.setItem(
+        'lastMetrics',
+        JSON.stringify({
+          energy: BASELINE,
+          clarity: BASELINE,
+          emotion: BASELINE,
+          focus: BASELINE,
+          score: BASELINE,
+        })
+      );
       setMicroInsight(
         '🔍 Keep checking in to uncover patterns. What’s on your mind today?'
       );
