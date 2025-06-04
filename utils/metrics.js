@@ -42,11 +42,16 @@ export async function scanWeeklyPatterns() {
   });
   const result = {};
   Object.entries(grouped).forEach(([day, vals]) => {
-    result[day] = {
-      energy: Math.round(vals.energy / vals.count),
-      clarity: Math.round(vals.clarity / vals.count),
-      emotion: Math.round(vals.emotion / vals.count),
-    };
+    if (vals.count === 0) {
+      result[day] = { energy: null, clarity: null, emotion: null }; // or 0 or "N/A"
+    } else {
+      result[day] = {
+        energy: Math.round(vals.energy / vals.count),
+        clarity: Math.round(vals.clarity / vals.count),
+        emotion: Math.round(vals.emotion / vals.count),
+      };
+    }
   });
+  
   return result;
 }
