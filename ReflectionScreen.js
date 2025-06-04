@@ -40,6 +40,7 @@ export default function ReflectionScreen() {
   const [isAIResponding, setIsAIResponding] = useState(false); // Track AI response state
   const [showConfetti, setShowConfetti] = useState(false);
   const scrollViewRef = useRef();
+  const sendButtonRef = useRef(null);
   const colorScheme = useColorScheme();
   const isDarkMode = colorScheme === 'dark';
 
@@ -164,8 +165,9 @@ export default function ReflectionScreen() {
 
   const handleSend = async () => {
     if (isAIResponding) return;
-  
+
     await Haptics.selectionAsync();
+    sendButtonRef.current?.rubberBand(400);
   
     const userMessage = message.trim();
     if (!userMessage) return;
@@ -298,11 +300,13 @@ export default function ReflectionScreen() {
               style={styles.sendButton}
               disabled={isAIResponding} // Disable button while AI is responding
             >
-              <Ionicons
-                name="arrow-up-circle"
-                size={43}
-                color={isAIResponding ? '#A9A9A9' : isDarkMode ? '#0A84FF' : '#007AFF'}
-              />
+              <Animatable.View ref={sendButtonRef}>
+                <Ionicons
+                  name="arrow-up-circle"
+                  size={43}
+                  color={isAIResponding ? '#A9A9A9' : isDarkMode ? '#0A84FF' : '#007AFF'}
+                />
+              </Animatable.View>
             </Pressable>
           </View>
         </KeyboardAvoidingView>
