@@ -127,7 +127,7 @@ Delivery: No fluff, no emojis, no formatting
 
 Action Step: End with a 10-words-or-less command
 
-Once there is enough data from days and weeks I need you to dive deep and really notice trends.
+Once thesre is enough data from days and weeks I need you to dive deep and really notice trends.
 
 🎯 Your Goal
 Make the user pause.
