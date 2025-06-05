@@ -48,10 +48,11 @@ function formatCompiledHistory(days) {
             ) / length
           )
         : 'N/A';
+      const tagSummary = [...new Set(day.entries.flatMap((e) => e.tags || []))];
       lines.push(
         `  Avg Energy ${avg('energy')}, Clarity ${avg('clarity')}, Emotion ${avg(
           'emotion'
-        )}, Focus ${focus} — Tags: N/A`
+        )}, Focus ${focus} — Tags: ${tagSummary.length ? tagSummary.join(', ') : 'None'}`
       );
     }
     lines.push('');
@@ -113,7 +114,9 @@ export default function HistoryScreen() {
                       - {e.window} @ {formatTime(e.timestamp)}: Energy {e.energy}, Clarity {e.clarity}, Emotion {e.emotion}
                     </Text>
                     <Text style={styles.note}>Note: {e.note || 'None'}</Text>
-                    <Text style={styles.tags}>Tags: N/A</Text>
+                    <Text style={styles.tags}>
+                      Tags: {e.tags && e.tags.length ? e.tags.join(', ') : 'None'}
+                    </Text>
                   </View>
                 ))
             ) : (
@@ -124,7 +127,8 @@ export default function HistoryScreen() {
               Avg Energy {day.entries.length ? Math.round(day.entries.reduce((s, e) => s + (e.energy || 0), 0) / day.entries.length) : 'N/A'},
               Clarity {day.entries.length ? Math.round(day.entries.reduce((s, e) => s + (e.clarity || 0), 0) / day.entries.length) : 'N/A'},
               Emotion {day.entries.length ? Math.round(day.entries.reduce((s, e) => s + (e.emotion || 0), 0) / day.entries.length) : 'N/A'},
-              Focus {day.entries.length ? Math.round(day.entries.reduce((s, e) => s + calcFocus(e.clarity || 0, e.energy || 0), 0) / day.entries.length) : 'N/A'} — Tags: N/A
+              Focus {day.entries.length ? Math.round(day.entries.reduce((s, e) => s + calcFocus(e.clarity || 0, e.energy || 0), 0) / day.entries.length) : 'N/A'} —
+              Tags: {day.entries.length ? [...new Set(day.entries.flatMap(e => e.tags || []))].join(', ') || 'None' : 'N/A'}
             </Text>
           )}
         </View>
