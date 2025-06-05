@@ -28,3 +28,12 @@ export async function addUserTag(tag) {
   }
   return tags;
 }
+
+export async function removeUserTag(tag) {
+  const trimmed = tag.trim();
+  if (!trimmed) return getUserTags();
+  const tags = await getUserTags();
+  const filtered = tags.filter((t) => t !== trimmed);
+  await AsyncStorage.setItem(USER_TAGS_KEY, JSON.stringify(filtered));
+  return filtered;
+}

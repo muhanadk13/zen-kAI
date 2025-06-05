@@ -6,9 +6,16 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
+  KeyboardAvoidingView,
+  TouchableWithoutFeedback,
+  Keyboard,
   StyleSheet,
+  Platform,
 } from 'react-native';
-import { defaultTags, getUserTags, addUserTag } from './utils/tags';
+import * as Haptics from 'expo-haptics';
+import * as Animatable from 'react-native-animatable';
+import ConfettiCannon from 'react-native-confetti-cannon';
+import { defaultTags, getUserTags, addUserTag, removeUserTag } from './utils/tags';
 
 export default function TagSelectorModal({
   visible,
@@ -19,6 +26,7 @@ export default function TagSelectorModal({
   const [userTags, setUserTags] = useState([]);
   const [search, setSearch] = useState('');
   const [custom, setCustom] = useState('');
+  const [showConfetti, setShowConfetti] = useState(false);
 
   useEffect(() => {
     if (visible) {
@@ -26,47 +34,92 @@ export default function TagSelectorModal({
     }
   }, [visible]);
 
+  useEffect(() => {
+    if (showConfetti) {
+      const timer = setTimeout(() => setShowConfetti(false), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [showConfetti]);
+
   const handleAddCustom = async () => {
-    const updated = await addUserTag(custom);
+    const trimmed = custom.trim();
+    if (!trimmed) return;
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const updated = await addUserTag(trimmed);
     setUserTags(updated);
-    if (custom.trim()) toggleTag(custom.trim());
+    toggleTag(trimmed);
     setCustom('');
+    setShowConfetti(true);
   };
 
-  const renderTag = (tag) => {
+  const highlightTag = (t) => {
+    if (!search) return t;
+    const lower = t.toLowerCase();
+    const idx = lower.indexOf(search.toLowerCase());
+    if (idx === -1) return t;
+    return (
+      <>
+        {t.slice(0, idx)}
+        <Text style={styles.highlight}>{t.slice(idx, idx + search.length)}</Text>
+        {t.slice(idx + search.length)}
+      </>
+    );
+  };
+
+  const renderTag = (tag, user = false) => {
     if (search && !tag.toLowerCase().includes(search.toLowerCase())) return null;
     const selected = selectedTags.includes(tag);
+    const handlePress = () => {
+      toggleTag(tag);
+      Haptics.selectionAsync();
+    };
+    const handleLongPress = async () => {
+      if (!user) return;
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+      const updated = await removeUserTag(tag);
+      setUserTags(updated);
+      if (selected) toggleTag(tag);
+    };
     return (
-      <TouchableOpacity
-        key={tag}
-        style={[styles.tag, selected && styles.tagSelected]}
-        onPress={() => toggleTag(tag)}
-      >
-        <Text style={[styles.tagText, selected && styles.tagTextSelected]}>{tag}</Text>
-      </TouchableOpacity>
+      <Animatable.View key={tag} animation="fadeIn" duration={300} style={styles.tagWrapper}>
+        <TouchableOpacity
+          style={[styles.tag, selected && styles.tagSelected]}
+          onPress={handlePress}
+          onLongPress={handleLongPress}
+        >
+          <Text style={[styles.tagText, selected && styles.tagTextSelected]}>
+            {highlightTag(tag)}
+          </Text>
+        </TouchableOpacity>
+      </Animatable.View>
     );
   };
 
   return (
     <Modal visible={visible} animationType="slide">
-      <View style={styles.modal}>
-        <Text style={styles.header}>Add Tags</Text>
-        <TextInput
-          style={styles.search}
-          placeholder="Search tags"
-          placeholderTextColor="#999"
-          value={search}
-          onChangeText={setSearch}
-        />
-        <ScrollView contentContainerStyle={styles.scroll}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+          <View style={styles.modal}>
+            <Text style={styles.header}>Add Tags</Text>
+            <TextInput
+              style={styles.search}
+              placeholder="Search tags"
+              placeholderTextColor="#999"
+              value={search}
+              onChangeText={setSearch}
+            />
+            <ScrollView contentContainerStyle={styles.scroll}>
           <Text style={styles.section}>Emotions</Text>
-          <View style={styles.tagRow}>{defaultTags.emotions.map(renderTag)}</View>
+          <View style={styles.tagRow}>{defaultTags.emotions.map((t) => renderTag(t))}</View>
           <Text style={styles.section}>Activities</Text>
-          <View style={styles.tagRow}>{defaultTags.activities.map(renderTag)}</View>
+          <View style={styles.tagRow}>{defaultTags.activities.map((t) => renderTag(t))}</View>
           <Text style={styles.section}>Themes</Text>
-          <View style={styles.tagRow}>{defaultTags.themes.map(renderTag)}</View>
+          <View style={styles.tagRow}>{defaultTags.themes.map((t) => renderTag(t))}</View>
           <Text style={styles.section}>My Tags</Text>
-          <View style={styles.tagRow}>{userTags.map(renderTag)}</View>
+          <View style={styles.tagRow}>{userTags.map((t) => renderTag(t, true))}</View>
           <View style={styles.customRow}>
             <TextInput
               style={styles.input}
@@ -80,10 +133,19 @@ export default function TagSelectorModal({
             </TouchableOpacity>
           </View>
         </ScrollView>
-        <TouchableOpacity style={styles.done} onPress={onClose}>
-          <Text style={styles.doneText}>Done</Text>
-        </TouchableOpacity>
-      </View>
+            <TouchableOpacity style={styles.done} onPress={onClose}>
+              <Text style={styles.doneText}>Done</Text>
+            </TouchableOpacity>
+            {showConfetti && (
+              <ConfettiCannon
+                count={20}
+                origin={{ x: 160, y: 0 }}
+                fadeOut
+              />
+            )}
+          </View>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
@@ -102,6 +164,7 @@ const styles = StyleSheet.create({
   scroll: { paddingBottom: 40 },
   section: { fontSize: 16, fontWeight: '600', marginVertical: 8 },
   tagRow: { flexDirection: 'row', flexWrap: 'wrap' },
+  tagWrapper: { margin: 2 },
   tag: {
     backgroundColor: '#E5E5EA',
     borderRadius: 14,
@@ -112,6 +175,10 @@ const styles = StyleSheet.create({
   tagSelected: { backgroundColor: '#3b82f6' },
   tagText: { color: '#111' },
   tagTextSelected: { color: '#fff' },
+  highlight: {
+    backgroundColor: '#fde68a',
+    borderRadius: 3,
+  },
   customRow: { flexDirection: 'row', alignItems: 'center', marginTop: 8 },
   input: {
     flex: 1,
