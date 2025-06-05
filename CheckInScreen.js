@@ -148,158 +148,165 @@ const handleSave = async () => {
 
 
        return (
-         <SafeAreaView style={styles.safe}>
-           <KeyboardAvoidingView
-             style={{ flex: 1 }}
-             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            keyboardVerticalOffset={100}
-           >
-             <ScrollView ref={scrollRef} contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-               <Animatable.View
-                 animation="fadeInUp"
-                 duration={600}
-                 easing="ease-out"
-                 delay={100}
-               >
-                 <Text style={styles.title}>Daily Check-In</Text>
-                 <Text style={styles.subtitle}>Reflect on your current state.</Text>
+  <>
+    <SafeAreaView style={styles.safe}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={100}
+      >
+        <ScrollView
+          ref={scrollRef}
+          contentContainerStyle={styles.container}
+          keyboardShouldPersistTaps="handled"
+        >
+          <Animatable.View
+            animation="fadeInUp"
+            duration={600}
+            easing="ease-out"
+            delay={100}
+          >
+            <Text style={styles.title}>Daily Check-In</Text>
+            <Text style={styles.subtitle}>Reflect on your current state.</Text>
 
-                 <Text style={styles.label}>Energy</Text>
-                 <Slider
-                   style={styles.slider}
-                   minimumValue={0}
-                   maximumValue={100}
-                   value={energy}
-                   onValueChange={(val) => handleSliderChange(val, setEnergy, lastEnergy)}
-                   minimumTrackTintColor="#34d399"
-                   maximumTrackTintColor="#e5e7eb"
-                   thumbTintColor="#10b981"
-                 />
-                 <View style={styles.range}>
-                   <Text style={styles.rangeText}>Depleted</Text>
-                   <Text style={styles.rangeText}>Energized</Text>
-                 </View>
+            {/* Sliders and other components */}
+            <Text style={styles.label}>Energy</Text>
+            <Slider
+              style={styles.slider}
+              minimumValue={0}
+              maximumValue={100}
+              value={energy}
+              onValueChange={(val) => handleSliderChange(val, setEnergy, lastEnergy)}
+              minimumTrackTintColor="#34d399"
+              maximumTrackTintColor="#e5e7eb"
+              thumbTintColor="#10b981"
+            />
+            <View style={styles.range}>
+              <Text style={styles.rangeText}>Depleted</Text>
+              <Text style={styles.rangeText}>Energized</Text>
+            </View>
 
-                 <Text style={styles.label}>Clarity</Text>
-                 <Slider
-                   style={styles.slider}
-                   minimumValue={0}
-                   maximumValue={100}
-                   value={clarity}
-                   onValueChange={(val) => handleSliderChange(val, setClarity, lastClarity)}
-                   minimumTrackTintColor="#60a5fa"
-                   maximumTrackTintColor="#e5e7eb"
-                   thumbTintColor="#3b82f6"
-                 />
-                 <View style={styles.range}>
-                   <Text style={styles.rangeText}>Foggy</Text>
-                   <Text style={styles.rangeText}>Focused</Text>
-                 </View>
+            {/* Other sliders and inputs */}
+            <Text style={styles.label}>Clarity</Text>
+            <Slider
+              style={styles.slider}
+              minimumValue={0}
+              maximumValue={100}
+              value={clarity}
+              onValueChange={(val) => handleSliderChange(val, setClarity, lastClarity)}
+              minimumTrackTintColor="#60a5fa"
+              maximumTrackTintColor="#e5e7eb"
+              thumbTintColor="#3b82f6"
+            />
+            <View style={styles.range}>
+              <Text style={styles.rangeText}>Foggy</Text>
+              <Text style={styles.rangeText}>Focused</Text>
+            </View>
 
-                 <Text style={styles.label}>Emotion</Text>
-                 <Slider
-                   style={styles.slider}
-                   minimumValue={0}
-                   maximumValue={100}
-                   value={emotion}
-                   onValueChange={(val) => handleSliderChange(val, setEmotion, lastEmotion)}
-                   minimumTrackTintColor="#fcd34d"
-                   maximumTrackTintColor="#e5e7eb"
-                   thumbTintColor="#fbbf24"
-                 />
-                 <View style={styles.range}>
-                   <Text style={styles.rangeText}>Down</Text>
-                   <Text style={styles.rangeText}>Upbeat</Text>
-                 </View>
+            <Text style={styles.label}>Emotion</Text>
+            <Slider
+              style={styles.slider}
+              minimumValue={0}
+              maximumValue={100}
+              value={emotion}
+              onValueChange={(val) => handleSliderChange(val, setEmotion, lastEmotion)}
+              minimumTrackTintColor="#fcd34d"
+              maximumTrackTintColor="#e5e7eb"
+              thumbTintColor="#fbbf24"
+            />
+            <View style={styles.range}>
+              <Text style={styles.rangeText}>Down</Text>
+              <Text style={styles.rangeText}>Upbeat</Text>
+            </View>
 
-                <Text style={styles.label}>Notes (Optional)</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Your thoughts..."
-                  placeholderTextColor="#999"
-                  value={note}
-                  onChangeText={(text) => setNote(text.slice(0, 250))}
-                  onLayout={(e) => {
-                    noteLayoutY.current = e.nativeEvent.layout.y;
-                  }}
-                  onFocus={() =>
-                    setTimeout(() => {
-                      scrollRef.current?.scrollTo({
-                        y: noteLayoutY.current - 20,
-                        animated: true,
-                      });
-                    }, 100)
-                  }
-                  multiline
-                  maxLength={250}
-                />
+            <Text style={styles.label}>Notes (Optional)</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Your thoughts..."
+              placeholderTextColor="#999"
+              value={note}
+              onChangeText={(text) => setNote(text.slice(0, 250))}
+              onLayout={(e) => {
+                noteLayoutY.current = e.nativeEvent.layout.y;
+              }}
+              onFocus={() =>
+                setTimeout(() => {
+                  scrollRef.current?.scrollTo({
+                    y: noteLayoutY.current - 20,
+                    animated: true,
+                  });
+                }, 100)
+              }
+              multiline
+              maxLength={250}
+            />
 
-                <TouchableOpacity
-                  style={styles.tagButton}
-                  onPress={() => setTagModalVisible(true)}
-                >
-                  <Text style={styles.tagButtonText}>+ Add Tags</Text>
-                </TouchableOpacity>
-                <View style={styles.tagList}>
-                  {selectedTags.map((t) => (
-                    <View key={t} style={styles.tagChip}>
-                      <Text style={styles.tagChipText}>{t}</Text>
-                      <TouchableOpacity onPress={() => toggleTag(t)}>
-                        <Text style={styles.removeTag}>×</Text>
-                      </TouchableOpacity>
-                    </View>
-                  ))}
+            <TouchableOpacity
+              style={styles.tagButton}
+              onPress={() => setTagModalVisible(true)}
+            >
+              <Text style={styles.tagButtonText}>+ Add Tags</Text>
+            </TouchableOpacity>
+            <View style={styles.tagList}>
+              {selectedTags.map((t) => (
+                <View key={t} style={styles.tagChip}>
+                  <Text style={styles.tagChipText}>{t}</Text>
+                  <TouchableOpacity onPress={() => toggleTag(t)}>
+                    <Text style={styles.removeTag}>×</Text>
+                  </TouchableOpacity>
                 </View>
+              ))}
+            </View>
 
-                 <Animatable.View
-                   ref={saveButtonRef}
-                   animation="fadeInUp"
-                   duration={600}
-                   easing="ease-out"
-                   delay={400}
-                 >
-                   <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
-                     <TouchableOpacity
-                       style={styles.button}
-                       onPress={async () => {
-                         Animated.sequence([
-                           Animated.timing(scaleAnim, {
-                             toValue: 1.08,
-                             duration: 100,
-                             useNativeDriver: true,
-                           }),
-                           Animated.timing(scaleAnim, {
-                             toValue: 1,
-                             duration: 100,
-                             useNativeDriver: true,
-                           }),
-                         ]).start();
-                         await Haptics.selectionAsync();
-                         await handleSave();
-                       }}
-                       activeOpacity={0.7}
-                     >
-                       <Text style={styles.buttonText}>Save Check-In</Text>
-                     </TouchableOpacity>
-                   </Animated.View>
-                 </Animatable.View>
+            <Animatable.View
+              ref={saveButtonRef}
+              animation="fadeInUp"
+              duration={600}
+              easing="ease-out"
+              delay={400}
+            >
+              <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+                <TouchableOpacity
+                  style={styles.button}
+                  onPress={async () => {
+                    Animated.sequence([
+                      Animated.timing(scaleAnim, {
+                        toValue: 1.08,
+                        duration: 100,
+                        useNativeDriver: true,
+                      }),
+                      Animated.timing(scaleAnim, {
+                        toValue: 1,
+                        duration: 100,
+                        useNativeDriver: true,
+                      }),
+                    ]).start();
+                    await Haptics.selectionAsync();
+                    await handleSave();
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.buttonText}>Save Check-In</Text>
+                </TouchableOpacity>
+              </Animated.View>
+            </Animatable.View>
 
-
-                 <View style={styles.footer}>
-                   <Image source={require('./assets/lock.png')} style={styles.lockIcon} />
-                   <Text style={styles.footerText}>Private — stored on your device</Text>
-                 </View>
-               </Animatable.View>
-             </ScrollView>
-           </KeyboardAvoidingView>
-         </SafeAreaView>
-        <TagSelectorModal
-          visible={tagModalVisible}
-          onClose={() => setTagModalVisible(false)}
-          selectedTags={selectedTags}
-          toggleTag={toggleTag}
-        />
-      );
+            <View style={styles.footer}>
+              <Image source={require('./assets/lock.png')} style={styles.lockIcon} />
+              <Text style={styles.footerText}>Private — stored on your device</Text>
+            </View>
+          </Animatable.View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
+    <TagSelectorModal
+      visible={tagModalVisible}
+      onClose={() => setTagModalVisible(false)}
+      selectedTags={selectedTags}
+      toggleTag={toggleTag}
+    />
+  </>
+);
     }
 
      const styles = StyleSheet.create({
