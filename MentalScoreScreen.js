@@ -337,6 +337,7 @@ export default function MentalScoreScreen() {
         emotion: currentEmotion,
         focus: currentFocus,
         note: latestEntry.note || '',
+        tags: latestEntry.tags || [],
         window: latestEntry.window,
         timestamp: latestEntry.timestamp,
       });
