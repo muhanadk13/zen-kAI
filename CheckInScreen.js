@@ -20,6 +20,7 @@ import React, { useState, useRef, useEffect } from 'react';
      import * as Haptics from 'expo-haptics';
 import * as Animatable from 'react-native-animatable';
      import AsyncStorage from '@react-native-async-storage/async-storage';
+import TagSelectorModal from './TagSelectorModal';
 
      export default function CheckInScreen() {
        const navigation = useNavigation();
@@ -27,7 +28,9 @@ import * as Animatable from 'react-native-animatable';
        const [energy, setEnergy] = useState(50);
        const [clarity, setClarity] = useState(50);
        const [emotion, setEmotion] = useState(50);
-       const [note, setNote] = useState('');
+      const [note, setNote] = useState('');
+      const [selectedTags, setSelectedTags] = useState([]);
+      const [tagModalVisible, setTagModalVisible] = useState(false);
        const scrollRef = useRef();
       const lastEnergy = useRef(50);
       const lastClarity = useRef(50);
@@ -91,6 +94,12 @@ const handleSliderChange = (value, setValue, lastRef) => {
     lastRef.current = rounded; // Update lastRef to avoid repeated haptics
   }
 };
+
+const toggleTag = (tag) => {
+  setSelectedTags((prev) =>
+    prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+  );
+};
        
 
 const handleSave = async () => {
@@ -98,7 +107,15 @@ const handleSave = async () => {
          const today = timestamp.split('T')[0];
          const window = route.params?.window || getCheckInWindow();
 
-         const entry = { energy, clarity, emotion, note, window, timestamp };
+         const entry = {
+           energy,
+           clarity,
+           emotion,
+           note,
+           window,
+           timestamp,
+           tags: selectedTags,
+         };
 
          try {
            const key = `${today}-${window}`;
@@ -217,6 +234,23 @@ const handleSave = async () => {
                   maxLength={250}
                 />
 
+                <TouchableOpacity
+                  style={styles.tagButton}
+                  onPress={() => setTagModalVisible(true)}
+                >
+                  <Text style={styles.tagButtonText}>+ Add Tags</Text>
+                </TouchableOpacity>
+                <View style={styles.tagList}>
+                  {selectedTags.map((t) => (
+                    <View key={t} style={styles.tagChip}>
+                      <Text style={styles.tagChipText}>{t}</Text>
+                      <TouchableOpacity onPress={() => toggleTag(t)}>
+                        <Text style={styles.removeTag}>×</Text>
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </View>
+
                  <Animatable.View
                    ref={saveButtonRef}
                    animation="fadeInUp"
@@ -259,8 +293,14 @@ const handleSave = async () => {
              </ScrollView>
            </KeyboardAvoidingView>
          </SafeAreaView>
-       );
-     }
+        <TagSelectorModal
+          visible={tagModalVisible}
+          onClose={() => setTagModalVisible(false)}
+          selectedTags={selectedTags}
+          toggleTag={toggleTag}
+        />
+      );
+    }
 
      const styles = StyleSheet.create({
       safe: {
@@ -303,20 +343,56 @@ const handleSave = async () => {
          fontSize: 13,
          color: '#6b7280',
        },
-       input: {
-         backgroundColor: '#f3f4f6',
-         borderRadius: 12,
-         padding: 14,
-         fontSize: 15,
-         color: '#111827',
-         marginBottom: 24,
-         minHeight: 80,
-       },
-       button: {
-         backgroundColor: '#3b82f6',
-         paddingVertical: 16,
-         borderRadius: 12,
-         alignItems: 'center',
+      input: {
+        backgroundColor: '#f3f4f6',
+        borderRadius: 12,
+        padding: 14,
+        fontSize: 15,
+        color: '#111827',
+        marginBottom: 24,
+        minHeight: 80,
+      },
+      tagButton: {
+        backgroundColor: '#e5e7eb',
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+        borderRadius: 12,
+        alignSelf: 'flex-start',
+        marginBottom: 12,
+      },
+      tagButtonText: {
+        color: '#111827',
+        fontWeight: '600',
+      },
+      tagList: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        marginBottom: 12,
+      },
+      tagChip: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#e5e5ea',
+        borderRadius: 16,
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        margin: 4,
+      },
+      tagChipText: {
+        color: '#111827',
+        marginRight: 4,
+      },
+      removeTag: {
+        color: '#6b7280',
+        fontSize: 16,
+        paddingLeft: 4,
+        paddingRight: 2,
+      },
+      button: {
+        backgroundColor: '#3b82f6',
+        paddingVertical: 16,
+        borderRadius: 12,
+        alignItems: 'center',
          shadowColor: '#000',
          shadowOpacity: 0.05,
          shadowOffset: { width: 0, height: 4 },
