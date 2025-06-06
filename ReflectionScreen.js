@@ -22,8 +22,7 @@ import { useNavigation } from '@react-navigation/native';
 import * as Animatable from 'react-native-animatable';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import { markReflectionComplete } from './utils/scoring';
-
-const OPENAI_API_KEY = 'REMOVED-5S2cF3LsFrPCHXsmY9pXuHn4c9D5yc0y6CJF8yQ-n7MGfFlM118VY8Fimuo7v-nUhQIBvTd28_T3BlbkFJpOH-UrEDOxvwe66hZyi-kg4q-GrthddA5naQ7KEEJ_UabWh5GhA21HK6e_7m2tOIejJo0F2zIA';
+import { OPENAI_API_KEY } from './utils/apiKey';
 
 // System prompt to keep replies short and inquisitive
 const BASE_SYSTEM_MESSAGE = {

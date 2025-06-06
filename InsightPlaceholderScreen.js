@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { OPENAI_API_KEY } from './utils/apiKey';
 
 export default function InsightPlaceholderScreen({ navigation }) {
   const fadeAnim = useRef(new Animated.Value(0)).current; // Use useRef for Animated.Value
@@ -32,7 +33,7 @@ export default function InsightPlaceholderScreen({ navigation }) {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              Authorization: `Bearer REMOVED-5S2cF3LsFrPCHXsmY9pXuHn4c9D5yc0y6CJF8yQ-n7MGfFlM118VY8Fimuo7v-nUhQIBvTd28_T3BlbkFJpOH-UrEDOxvwe66hZyi-kg4q-GrthddA5naQ7KEEJ_UabWh5GhA21HK6e_7m2tOIejJo0F2zIA`,
+              Authorization: `Bearer ${OPENAI_API_KEY}`,
             },
             body: JSON.stringify({
               model: 'gpt-4o-mini',
