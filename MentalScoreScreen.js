@@ -22,6 +22,7 @@ import {
 import { markInsightRead, getCurrentScores, xpForLevel } from './utils/scoring';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle } from 'react-native-svg';
+import ConfettiCannon from 'react-native-confetti-cannon';
 
 const AnimatedProgressBar = ({ progress, color }) => {
   const width = progress.interpolate({
@@ -128,6 +129,8 @@ export default function MentalScoreScreen() {
   const xpBarRef = useRef(null);
   const prevXp = useRef(0);
   const [xpDelta, setXpDelta] = useState(0);
+  const [showLevelConfetti, setShowLevelConfetti] = useState(false);
+  const prevLevel = useRef(0);
 
   useEffect(() => {
     if (microInsight && microInsight !== 'Loading insight...') {
@@ -162,6 +165,17 @@ export default function MentalScoreScreen() {
       prevXp.current = xp.xpToday;
     }
   }, [xp.xpToday]);
+
+  useEffect(() => {
+    if (xp.level > prevLevel.current) {
+      setShowLevelConfetti(true);
+      Haptics.notificationAsync(
+        Haptics.NotificationFeedbackType.Success
+      );
+      setTimeout(() => setShowLevelConfetti(false), 1600);
+    }
+    prevLevel.current = xp.level;
+  }, [xp.level]);
 
   const energyAnim = useRef(new Animated.Value(BASELINE)).current;
   const clarityAnim = useRef(new Animated.Value(BASELINE)).current;
@@ -617,6 +631,13 @@ export default function MentalScoreScreen() {
         <Animatable.Text ref={xpGainRef} style={styles.xpGainText}>
           +{xpDelta}
         </Animatable.Text>
+        {showLevelConfetti && (
+          <ConfettiCannon
+            count={60}
+            origin={{ x: 160, y: 0 }}
+            fadeOut
+          />
+        )}
       </Animatable.View>
 
 
