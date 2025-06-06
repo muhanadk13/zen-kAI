@@ -7,6 +7,9 @@ const TRAIT_XP_KEY = 'traitXP';
 const MIND_GRADE_KEY = 'weeklyMindGrade';
 const XP_KEY = 'xpData';
 const DAILY_GOAL_KEY = 'dailyGoal';
+const LAST_CHECKIN_KEY = 'lastCheckIn';
+const CURRENT_STREAK_KEY = 'currentStreak';
+const LONGEST_STREAK_KEY = 'longestStreak';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -106,14 +109,27 @@ export async function updateXP(amount = 10) {
 }
 
 export function levelFromXP(xp) {
-  return Math.floor(xp / 100) + 1;
+  return Math.floor(Math.sqrt(xp / 10));
+}
+
+export function xpForLevel(level) {
+  return 10 * level * level;
+}
+
+export function xpStats(total) {
+  const level = levelFromXP(total);
+  const currentXP = xpForLevel(level);
+  const nextXP = xpForLevel(level + 1);
+  const progress = Math.round(((total - currentXP) / (nextXP - currentXP)) * 100);
+  return { level, progress };
 }
 
 export async function getXP() {
   const raw = await AsyncStorage.getItem(XP_KEY);
-  if (!raw) return { xpToday: 0, total: 0, level: 1 };
+  if (!raw) return { xpToday: 0, total: 0, level: 0, progress: 0 };
   const data = JSON.parse(raw);
-  return { ...data, level: levelFromXP(data.total) };
+  const { level, progress } = xpStats(data.total);
+  return { ...data, level, progress };
 }
 
 const DAILY_GOALS = [
@@ -152,6 +168,7 @@ export async function updateDailyGoal(action) {
   }
   if (data.completed) {
     await AsyncStorage.setItem(DAILY_GOAL_KEY, JSON.stringify(data));
+    await updateXP(10);
   }
   return data;
 }
@@ -173,7 +190,7 @@ export async function markReflectionComplete() {
 
 export async function markInsightRead() {
   await updateRing('ring3');
-  await updateXP(5);
+  await updateXP(10);
   await updateDailyGoal('insight');
 }
 
@@ -182,8 +199,12 @@ async function updateRing(ring) {
     const raw = await AsyncStorage.getItem(STREAK_RINGS_KEY);
     const data = raw ? JSON.parse(raw) : {};
     const today = getDateKey();
-    if (!data[today]) data[today] = { ring1: false, ring2: false, ring3: false };
+    if (!data[today]) data[today] = { ring1: false, ring2: false, ring3: false, bonus: false };
     data[today][ring] = true;
+    if (!data[today].bonus && data[today].ring1 && data[today].ring2 && data[today].ring3) {
+      data[today].bonus = true;
+      await updateXP(20);
+    }
     await AsyncStorage.setItem(STREAK_RINGS_KEY, JSON.stringify(data));
     return data[today];
   } catch (err) {
@@ -271,11 +292,48 @@ function letterGrade(score) {
   return 'F';
 }
 
+export async function updateStreak() {
+  try {
+    const today = getDateKey();
+    const [lastRaw, currentRaw, longestRaw] = await Promise.all([
+      AsyncStorage.getItem(LAST_CHECKIN_KEY),
+      AsyncStorage.getItem(CURRENT_STREAK_KEY),
+      AsyncStorage.getItem(LONGEST_STREAK_KEY),
+    ]);
+    let current = currentRaw ? parseInt(currentRaw, 10) : 0;
+    let longest = longestRaw ? parseInt(longestRaw, 10) : 0;
+
+    if (lastRaw === today) {
+      return current;
+    }
+
+    if (lastRaw) {
+      const diff = Math.floor((new Date(today) - new Date(lastRaw)) / DAY_MS);
+      if (diff === 1) current += 1;
+      else current = 1;
+    } else {
+      current = 1;
+    }
+
+    if (current > longest) longest = current;
+
+    await AsyncStorage.multiSet([
+      [LAST_CHECKIN_KEY, today],
+      [CURRENT_STREAK_KEY, current.toString()],
+      [LONGEST_STREAK_KEY, longest.toString()],
+    ]);
+    return current;
+  } catch (err) {
+    console.error('updateStreak', err);
+    return 0;
+  }
+}
+
 /**
  * Helper to get current scores
  */
 export async function getCurrentScores() {
-  const [mindRaw, momentumRaw, streakRaw, traitRaw, gradeRaw, xpStatsRaw, goalRaw] = await Promise.all([
+  const [mindRaw, momentumRaw, streakRaw, traitRaw, gradeRaw, xpStatsRaw, goalRaw, streakValRaw, longestRaw] = await Promise.all([
     AsyncStorage.getItem(MIND_SCORE_KEY),
     AsyncStorage.getItem(MOMENTUM_KEY),
     AsyncStorage.getItem(STREAK_RINGS_KEY),
@@ -283,15 +341,21 @@ export async function getCurrentScores() {
     AsyncStorage.getItem(MIND_GRADE_KEY),
     AsyncStorage.getItem(XP_KEY),
     AsyncStorage.getItem(DAILY_GOAL_KEY),
+    AsyncStorage.getItem(CURRENT_STREAK_KEY),
+    AsyncStorage.getItem(LONGEST_STREAK_KEY),
   ]);
+  const xpData = xpStatsRaw ? JSON.parse(xpStatsRaw) : { xpToday: 0, total: 0 };
+  const { level, progress } = xpStats(xpData.total);
   return {
     mindScore: mindRaw ? JSON.parse(mindRaw).value : 75,
     momentum: momentumRaw ? JSON.parse(momentumRaw).value : 0,
     streakRings: streakRaw ? JSON.parse(streakRaw)[getDateKey()] || {} : {},
     traitXP: traitRaw ? JSON.parse(traitRaw) : {},
     mindGrade: gradeRaw ? JSON.parse(gradeRaw).grade : 'C',
-    xp: xpStatsRaw ? { ...JSON.parse(xpStatsRaw), level: levelFromXP(JSON.parse(xpStatsRaw).total) } : { xpToday: 0, total: 0, level: 1 },
+    xp: { ...xpData, level, progress },
     dailyGoal: goalRaw ? JSON.parse(goalRaw) : null,
+    streak: streakValRaw ? parseInt(streakValRaw, 10) : 0,
+    longestStreak: longestRaw ? parseInt(longestRaw, 10) : 0,
   };
 }
 
@@ -303,5 +367,8 @@ export async function processCheckIn(entry) {
   await updateMomentum();
   await markEnergyLogged();
   await updateTraitXP(entry.tags || []);
+  if (entry.tags && entry.tags.length >= 3) await updateXP(5);
+  if (entry.note && entry.note.length > 100) await updateXP(5);
   await updateMindGrade();
+  await updateStreak();
 }

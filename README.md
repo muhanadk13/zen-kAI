@@ -11,3 +11,7 @@ This repo contains the experimental ZenAI app with a gamified scoring system ins
 | Weekly Grade | ![Grade](assets/icons/trophy.svg) |
 
 The `utils/scoring.js` file implements the logic for updating the user's scores and progress. Screens use these icons to create a playful, video game feel without copying Duolingo's colors.
+
+## Testing
+
+Run `npm test` to verify the project setup. This placeholder script simply prints `No tests`.

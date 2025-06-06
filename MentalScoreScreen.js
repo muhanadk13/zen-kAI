@@ -213,11 +213,9 @@ export default function MentalScoreScreen() {
       markInsightRead().then(() => {
         getCurrentScores().then((data) => {
           setRings(data.streakRings);
-          if (data.xp) {
-            const progress = data.xp.total % 100;
-            setXp({ ...data.xp, progress });
-          }
+          if (data.xp) setXp(data.xp);
           if (data.dailyGoal) setDailyGoal(data.dailyGoal);
+          if (data.streak !== undefined) setStreak(data.streak);
         });
       });
     }
@@ -228,11 +226,9 @@ export default function MentalScoreScreen() {
       setMomentum(data.momentum);
       setMindGrade(data.mindGrade);
       setRings(data.streakRings);
-      if (data.xp) {
-        const progress = (data.xp.total % 100);
-        setXp({ ...data.xp, progress });
-      }
+      if (data.xp) setXp(data.xp);
       if (data.dailyGoal) setDailyGoal(data.dailyGoal);
+      if (data.streak !== undefined) setStreak(data.streak);
     });
   }, []);
 
@@ -411,11 +407,9 @@ export default function MentalScoreScreen() {
         setMomentum(data.momentum);
         setMindGrade(data.mindGrade);
         setRings(data.streakRings);
-        if (data.xp) {
-          const progress = data.xp.total % 100;
-          setXp({ ...data.xp, progress });
-        }
+        if (data.xp) setXp(data.xp);
         if (data.dailyGoal) setDailyGoal(data.dailyGoal);
+        if (data.streak !== undefined) setStreak(data.streak);
       });
     });
 
@@ -566,31 +560,11 @@ export default function MentalScoreScreen() {
 
   const calculateStreak = async () => {
     try {
-      const historyRaw = await AsyncStorage.getItem('checkInHistory');
-      const history = historyRaw ? JSON.parse(historyRaw) : [];
-      const today = new Date().toISOString().split('T')[0];
-
-      const sortedHistory = history.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-      const uniqueDates = [...new Set(sortedHistory.map(entry => entry.timestamp.split('T')[0]))];
-
-      let streakCount = 0;
-      let currentDate = new Date(today);
-
-      for (let i = uniqueDates.length - 1; i >= 0; i--) {
-        const checkInDate = new Date(uniqueDates[i]);
-        if (
-          checkInDate.toISOString().split('T')[0] === currentDate.toISOString().split('T')[0]
-        ) {
-          streakCount++;
-          currentDate.setDate(currentDate.getDate() - 1);
-        } else {
-          break;
-        }
-      }
-
-      setStreak(streakCount);
+      const raw = await AsyncStorage.getItem('currentStreak');
+      const count = raw ? parseInt(raw, 10) : 0;
+      setStreak(count);
       streakRef.current?.bounceIn();
-      if (streakCount > 0) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      if (count > 0) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     } catch (err) {
       console.error('❌ Error calculating streak:', err);
       setStreak(0);
