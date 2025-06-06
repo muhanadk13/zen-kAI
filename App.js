@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
-     import { NavigationContainer } from '@react-navigation/native';
-     import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { colors } from './utils/theme';
      import * as Notifications from 'expo-notifications';
      import * as Device from 'expo-device';
      import Constants from 'expo-constants';
@@ -13,7 +14,15 @@ import React, { useEffect, useRef } from 'react';
      import TestInsightScreen from './TestInsightScreen';
 
 import HistoryScreen from './HistoryScreen';
-     const Stack = createNativeStackNavigator();
+const Stack = createNativeStackNavigator();
+
+const navTheme = {
+  ...DefaultTheme,
+  colors: {
+    ...DefaultTheme.colors,
+    background: colors.backgroundLight,
+  },
+};
 
      function getNextOccurrence(hour, minute) {
        const now = new Date();
@@ -168,7 +177,7 @@ import HistoryScreen from './HistoryScreen';
        }, []);
 
        return (
-         <NavigationContainer ref={navigationRef}>
+        <NavigationContainer ref={navigationRef} theme={navTheme}>
            <Stack.Navigator initialRouteName="MentalScore">
              <Stack.Screen name="MentalScore" component={MentalScoreScreen} />
              <Stack.Screen name="CheckIn" component={CheckInScreen} />

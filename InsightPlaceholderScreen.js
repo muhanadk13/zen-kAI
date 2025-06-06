@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
+import { colors } from './utils/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function InsightPlaceholderScreen({ navigation }) {
@@ -102,7 +103,7 @@ export default function InsightPlaceholderScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F2F2F7', // Light background for a clean look
+    backgroundColor: colors.backgroundLight, // Light background for a clean look
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 20,
@@ -110,7 +111,7 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 24, // Balanced font size for readability
     fontWeight: '600', // Medium bold for elegance
-    color: '#1C1C1E', // Dark text for contrast
+    color: colors.textDark, // Dark text for contrast
     textAlign: 'center',
     fontFamily: 'System',
     letterSpacing: 0.5, // Subtle letter spacing for refinement

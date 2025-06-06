@@ -20,6 +20,7 @@ import {
   generateTodaysInsight,
   generateWeeklyMindMirror,
 } from './utils/generateTodaysInsight';
+import { colors } from './utils/theme';
 
 const AnimatedProgressBar = ({ progress, color }) => {
   const width = progress.interpolate({
@@ -617,13 +618,13 @@ const styles = StyleSheet.create({
   container: {
     marginTop: 30,
     paddingHorizontal: 24,
-    backgroundColor: '#F2F2F7',
+    backgroundColor: colors.backgroundLight,
     paddingBottom: 40,
   },
   headerButton: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#2563eb',
+    color: colors.primary,
   },
   gaugeContainer: {
     alignItems: 'center',
@@ -639,7 +640,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     fontSize: 45,
     fontWeight: '700',
-    color: '#000',
+    color: colors.textDark,
     marginBottom: 22,
   },
   mentalScoreLabel: {
@@ -647,7 +648,7 @@ const styles = StyleSheet.create({
     top: '60%',
     fontSize: 16,
     fontWeight: '500',
-    color: '#555',
+    color: colors.textMuted,
     textAlign: 'center',
   },
   streakContainer: {
@@ -659,12 +660,12 @@ const styles = StyleSheet.create({
   streakText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#FF4500',
+    color: colors.primary,
     marginTop: -10,
     
   },
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.cardBackground,
     padding: 18,
     borderRadius: 16,
     marginBottom: 20,
@@ -687,23 +688,23 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000',
+    color: colors.textDark,
   },
   cardText: {
     fontSize: 14,
     fontWeight: '400',
     lineHeight: 22,
-    color: '#333',
+    color: colors.textDark,
     marginTop: 2,
   },
   bold: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#000',
+    color: colors.textDark,
     marginVertical: 4,
   },
   metricsSection: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.cardBackground,
     borderRadius: 16,
     padding: 16,
     shadowColor: '#000',
@@ -728,12 +729,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     marginBottom: 8,
-    color: '#000',
+    color: colors.textDark,
   },
   barBackground: {
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#e0e0e0',
+    backgroundColor: colors.accent,
     overflow: 'hidden',
   },
   barFill: {
@@ -745,7 +746,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   resetButton: {
-    backgroundColor: '#ef4444',
+    backgroundColor: colors.primary,
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 10,
@@ -755,7 +756,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   resetButtonText: {
-    color: '#fff',
+    color: colors.white,
     fontWeight: '600',
     fontSize: 15,
   },

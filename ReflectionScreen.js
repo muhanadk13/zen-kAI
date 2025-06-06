@@ -18,6 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useColorScheme } from 'react-native';
+import { colors } from './utils/theme';
 import { useNavigation } from '@react-navigation/native';
 import * as Animatable from 'react-native-animatable';
 import ConfettiCannon from 'react-native-confetti-cannon';
@@ -243,7 +244,7 @@ export default function ReflectionScreen() {
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? '#1C1C1E' : '#F2F2F7' }]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? '#1C1C1E' : colors.backgroundLight }] }>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={{ flex: 1 }}
@@ -270,7 +271,11 @@ export default function ReflectionScreen() {
                 style={[
                   styles.chatBubble,
                   msg.fromUser ? styles.userBubble : styles.aiBubble,
-                  { backgroundColor: msg.fromUser ? (isDarkMode ? '#007AFF' : '#D0E8FF') : (isDarkMode ? '#2C2C2E' : '#EDEDED') },
+                  {
+                    backgroundColor: msg.fromUser
+                      ? (isDarkMode ? colors.primary : colors.secondary)
+                      : (isDarkMode ? '#2C2C2E' : colors.cardBackground),
+                  },
                 ]}
               >
                 <Text style={[styles.chatText, { color: isDarkMode ? '#FFFFFF' : '#1C1C1E' }]}>{msg.text}</Text>
@@ -283,7 +288,11 @@ export default function ReflectionScreen() {
               style={[
                 styles.input,
                 {
-                  backgroundColor: isAIResponding ? '#E0E0E0' : isDarkMode ? '#2C2C2E' : '#F1F1F3',
+                  backgroundColor: isAIResponding
+                    ? '#E0E0E0'
+                    : isDarkMode
+                    ? '#2C2C2E'
+                    : colors.cardBackground,
                   color: isAIResponding ? '#A9A9A9' : isDarkMode ? '#FFFFFF' : '#1C1C1E',
                 },
               ]}
@@ -304,7 +313,7 @@ export default function ReflectionScreen() {
                 <Ionicons
                   name="arrow-up-circle"
                   size={43}
-                  color={isAIResponding ? '#A9A9A9' : isDarkMode ? '#0A84FF' : '#007AFF'}
+                  color={isAIResponding ? '#A9A9A9' : colors.primary}
                 />
               </Animatable.View>
             </Pressable>

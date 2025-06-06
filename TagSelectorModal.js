@@ -9,6 +9,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { defaultTags, getUserTags, addUserTag } from './utils/tags';
+import { colors } from './utils/theme';
 
 export default function TagSelectorModal({
   visible,
@@ -89,45 +90,45 @@ export default function TagSelectorModal({
 }
 
 const styles = StyleSheet.create({
-  modal: { flex: 1, backgroundColor: '#fff', padding: 20 },
+  modal: { flex: 1, backgroundColor: colors.backgroundLight, padding: 20 },
   header: { fontSize: 20, fontWeight: '600', marginBottom: 8 },
   search: {
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#ccc',
+    borderColor: colors.accent,
     borderRadius: 8,
     padding: 8,
     marginBottom: 12,
-    color: '#111',
+    color: colors.textDark,
   },
   scroll: { paddingBottom: 40 },
   section: { fontSize: 16, fontWeight: '600', marginVertical: 8 },
   tagRow: { flexDirection: 'row', flexWrap: 'wrap' },
   tag: {
-    backgroundColor: '#E5E5EA',
+    backgroundColor: colors.accent,
     borderRadius: 14,
     paddingVertical: 6,
     paddingHorizontal: 12,
     margin: 4,
   },
-  tagSelected: { backgroundColor: '#3b82f6' },
-  tagText: { color: '#111' },
-  tagTextSelected: { color: '#fff' },
+  tagSelected: { backgroundColor: colors.primary },
+  tagText: { color: colors.textDark },
+  tagTextSelected: { color: colors.white },
   customRow: { flexDirection: 'row', alignItems: 'center', marginTop: 8 },
   input: {
     flex: 1,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#ccc',
+    borderColor: colors.accent,
     borderRadius: 8,
     padding: 8,
-    color: '#111',
+    color: colors.textDark,
   },
   addButton: {
     marginLeft: 8,
-    backgroundColor: '#3b82f6',
+    backgroundColor: colors.primary,
     padding: 8,
     borderRadius: 8,
   },
-  addButtonText: { color: '#fff', fontWeight: '600' },
+  addButtonText: { color: colors.white, fontWeight: '600' },
   done: { alignSelf: 'center', marginTop: 16 },
-  doneText: { fontSize: 16, color: '#3b82f6', fontWeight: '600' },
+  doneText: { fontSize: 16, color: colors.primary, fontWeight: '600' },
 });
