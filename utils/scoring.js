@@ -177,19 +177,17 @@ export async function updateDailyGoal(action) {
  */
 export async function markEnergyLogged() {
   await updateRing('ring1');
-  await updateXP(10);
   await updateDailyGoal('checkin');
 }
 
 export async function markReflectionComplete() {
   await updateRing('ring2');
-  await updateXP(10);
+  await updateXP(25);
   await updateDailyGoal('reflection');
 }
 
 export async function markInsightRead() {
   await updateRing('ring3');
-  await updateXP(10);
   await updateDailyGoal('insight');
 }
 
@@ -202,7 +200,7 @@ async function updateRing(ring) {
     data[today][ring] = true;
     if (!data[today].bonus && data[today].ring1 && data[today].ring2 && data[today].ring3) {
       data[today].bonus = true;
-      await updateXP(20);
+      await updateXP(10);
     }
     await AsyncStorage.setItem(STREAK_RINGS_KEY, JSON.stringify(data));
     return data[today];
@@ -304,8 +302,11 @@ export async function processCheckIn(entry) {
   await updateMindScore();
   await updateMomentum();
   await markEnergyLogged();
+  let xpAmount = 10;
+  if (entry.window === 'checkIn1') xpAmount = 10;
+  else if (entry.window === 'checkIn2') xpAmount = 10;
+  else if (entry.window === 'checkIn3') xpAmount = 15;
+  await updateXP(xpAmount);
   await updateTraitXP(entry.tags || []);
-  if (entry.tags && entry.tags.length >= 3) await updateXP(5);
-  if (entry.note && entry.note.length > 100) await updateXP(5);
   await updateStreak();
 }
