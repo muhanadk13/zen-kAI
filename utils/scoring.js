@@ -4,7 +4,6 @@ const MIND_SCORE_KEY = 'mindScore';
 const MOMENTUM_KEY = 'momentum';
 const STREAK_RINGS_KEY = 'streakRings';
 const TRAIT_XP_KEY = 'traitXP';
-const MIND_GRADE_KEY = 'weeklyMindGrade';
 const XP_KEY = 'xpData';
 const DAILY_GOAL_KEY = 'dailyGoal';
 const LAST_CHECKIN_KEY = 'lastCheckIn';
@@ -184,7 +183,7 @@ export async function markEnergyLogged() {
 
 export async function markReflectionComplete() {
   await updateRing('ring2');
-  await updateXP(15);
+  await updateXP(10);
   await updateDailyGoal('reflection');
 }
 
@@ -232,65 +231,6 @@ export async function updateTraitXP(tags) {
 /**
  * Calculate weekly mind grade once per week
  */
-export async function updateMindGrade() {
-  try {
-    const now = new Date();
-    const start = getStartOfWeek(now);
-    const raw = await AsyncStorage.getItem('checkInHistory');
-    const history = raw ? JSON.parse(raw) : [];
-    const weekEntries = history.filter(
-      (e) => new Date(e.timestamp) >= start && new Date(e.timestamp) <= now
-    );
-    const daysChecked = new Set(
-      weekEntries.map((e) => getDateKey(new Date(e.timestamp)))
-    ).size;
-    const avg = (key) =>
-      weekEntries.length
-        ? weekEntries.reduce((s, e) => s + (e[key] || 0), 0) / weekEntries.length
-        : 0;
-    const energy = avg('energy');
-    const clarity = avg('clarity');
-    const emotion = avg('emotion');
-    const focus = Math.round(0.6 * clarity + 0.4 * energy);
-    const score = (energy + clarity + emotion + focus) / 4;
-    const consistency = daysChecked / 7;
-    const composite = score * 0.7 + consistency * 100 * 0.3;
-    const grade = letterGrade(composite);
-    await AsyncStorage.setItem(MIND_GRADE_KEY, JSON.stringify({
-      week: getDateKey(start),
-      grade
-    }));
-    return grade;
-  } catch (err) {
-    console.error('updateMindGrade', err);
-    return 'C';
-  }
-}
-
-function getStartOfWeek(date) {
-  const d = new Date(date);
-  const day = d.getDay();
-  const diff = d.getDate() - day; // Sunday as first day
-  d.setDate(diff);
-  d.setHours(0, 0, 0, 0);
-  return d;
-}
-
-function letterGrade(score) {
-  if (score >= 97) return 'A+';
-  if (score >= 93) return 'A';
-  if (score >= 90) return 'A-';
-  if (score >= 87) return 'B+';
-  if (score >= 83) return 'B';
-  if (score >= 80) return 'B-';
-  if (score >= 77) return 'C+';
-  if (score >= 73) return 'C';
-  if (score >= 70) return 'C-';
-  if (score >= 67) return 'D+';
-  if (score >= 63) return 'D';
-  if (score >= 60) return 'D-';
-  return 'F';
-}
 
 export async function updateStreak() {
   try {
@@ -333,12 +273,11 @@ export async function updateStreak() {
  * Helper to get current scores
  */
 export async function getCurrentScores() {
-  const [mindRaw, momentumRaw, streakRaw, traitRaw, gradeRaw, xpStatsRaw, goalRaw, streakValRaw, longestRaw] = await Promise.all([
+  const [mindRaw, momentumRaw, streakRaw, traitRaw, xpStatsRaw, goalRaw, streakValRaw, longestRaw] = await Promise.all([
     AsyncStorage.getItem(MIND_SCORE_KEY),
     AsyncStorage.getItem(MOMENTUM_KEY),
     AsyncStorage.getItem(STREAK_RINGS_KEY),
     AsyncStorage.getItem(TRAIT_XP_KEY),
-    AsyncStorage.getItem(MIND_GRADE_KEY),
     AsyncStorage.getItem(XP_KEY),
     AsyncStorage.getItem(DAILY_GOAL_KEY),
     AsyncStorage.getItem(CURRENT_STREAK_KEY),
@@ -351,7 +290,6 @@ export async function getCurrentScores() {
     momentum: momentumRaw ? JSON.parse(momentumRaw).value : 0,
     streakRings: streakRaw ? JSON.parse(streakRaw)[getDateKey()] || {} : {},
     traitXP: traitRaw ? JSON.parse(traitRaw) : {},
-    mindGrade: gradeRaw ? JSON.parse(gradeRaw).grade : 'C',
     xp: { ...xpData, level, progress },
     dailyGoal: goalRaw ? JSON.parse(goalRaw) : null,
     streak: streakValRaw ? parseInt(streakValRaw, 10) : 0,
@@ -369,6 +307,5 @@ export async function processCheckIn(entry) {
   await updateTraitXP(entry.tags || []);
   if (entry.tags && entry.tags.length >= 3) await updateXP(5);
   if (entry.note && entry.note.length > 100) await updateXP(5);
-  await updateMindGrade();
   await updateStreak();
 }
