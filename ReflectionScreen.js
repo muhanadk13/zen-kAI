@@ -20,7 +20,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useColorScheme } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import * as Animatable from 'react-native-animatable';
-import ConfettiCannon from 'react-native-confetti-cannon';
 import { markReflectionComplete } from './utils/scoring';
 import { OPENAI_API_KEY } from './utils/apiKey';
 
@@ -38,7 +37,6 @@ export default function ReflectionScreen() {
   const [message, setMessage] = useState('');
   const [chatMessages, setChatMessages] = useState([]);
   const [isAIResponding, setIsAIResponding] = useState(false); // Track AI response state
-  const [showConfetti, setShowConfetti] = useState(false);
   const scrollViewRef = useRef();
   const sendButtonRef = useRef(null);
   const colorScheme = useColorScheme();
@@ -196,14 +194,14 @@ export default function ReflectionScreen() {
       newChatMessages[newChatMessages.length - 1].fromUser;
   
     if (hasRespondedToFinalQuestion) {
-      setShowConfetti(true);
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      await Haptics.notificationAsync(
+        Haptics.NotificationFeedbackType.Success
+      );
       await markReflectionComplete();
       setTimeout(() => {
         setChatMessages([]);
         navigation.navigate('MentalScore');
-        setShowConfetti(false);
-      }, 1500);
+      }, 500);
       return;
     }
   
@@ -311,13 +309,6 @@ export default function ReflectionScreen() {
             </Pressable>
           </View>
         </KeyboardAvoidingView>
-        {showConfetti && (
-          <ConfettiCannon
-            count={80}
-            origin={{ x: Dimensions.get('window').width / 2, y: 0 }}
-            fadeOut
-          />
-        )}
       </SafeAreaView>
     </TouchableWithoutFeedback>
   );

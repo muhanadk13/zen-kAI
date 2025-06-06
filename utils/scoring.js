@@ -108,11 +108,11 @@ export async function updateXP(amount = 10) {
 }
 
 export function levelFromXP(xp) {
-  return Math.floor(Math.sqrt(xp / 10));
+  return Math.floor(Math.sqrt(xp / 5)) + 1;
 }
 
 export function xpForLevel(level) {
-  return 10 * level * level;
+  return 5 * (level - 1) * (level - 1);
 }
 
 export function xpStats(total) {
@@ -125,7 +125,7 @@ export function xpStats(total) {
 
 export async function getXP() {
   const raw = await AsyncStorage.getItem(XP_KEY);
-  if (!raw) return { xpToday: 0, total: 0, level: 0, progress: 0 };
+  if (!raw) return { xpToday: 0, total: 0, level: 1, progress: 0 };
   const data = JSON.parse(raw);
   const { level, progress } = xpStats(data.total);
   return { ...data, level, progress };
