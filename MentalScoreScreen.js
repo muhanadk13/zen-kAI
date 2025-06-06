@@ -22,7 +22,6 @@ import {
 import { markInsightRead, getCurrentScores, xpForLevel } from './utils/scoring';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle } from 'react-native-svg';
-import ConfettiCannon from 'react-native-confetti-cannon';
 
 const AnimatedProgressBar = ({ progress, color }) => {
   const width = progress.interpolate({
@@ -129,7 +128,6 @@ export default function MentalScoreScreen() {
   const xpBarRef = useRef(null);
   const prevXp = useRef(0);
   const [xpDelta, setXpDelta] = useState(0);
-  const [showLevelConfetti, setShowLevelConfetti] = useState(false);
   const prevLevel = useRef(0);
 
   useEffect(() => {
@@ -168,11 +166,9 @@ export default function MentalScoreScreen() {
 
   useEffect(() => {
     if (xp.level > prevLevel.current) {
-      setShowLevelConfetti(true);
       Haptics.notificationAsync(
         Haptics.NotificationFeedbackType.Success
       );
-      setTimeout(() => setShowLevelConfetti(false), 1600);
     }
     prevLevel.current = xp.level;
   }, [xp.level]);
@@ -226,7 +222,7 @@ export default function MentalScoreScreen() {
   useEffect(() => {
     Animated.timing(energyAnim, {
       toValue: energy,
-      duration: 1500,
+      duration: 800,
       useNativeDriver: false,
     }).start();
   }, [energy]);
@@ -241,7 +237,7 @@ export default function MentalScoreScreen() {
   useEffect(() => {
     Animated.timing(clarityAnim, {
       toValue: clarity,
-      duration: 1500,
+      duration: 800,
       useNativeDriver: false,
     }).start();
   }, [clarity]);
@@ -256,7 +252,7 @@ export default function MentalScoreScreen() {
   useEffect(() => {
     Animated.timing(emotionAnim, {
       toValue: emotion,
-      duration: 1500,
+      duration: 800,
       useNativeDriver: false,
     }).start();
   }, [emotion]);
@@ -271,7 +267,7 @@ export default function MentalScoreScreen() {
   useEffect(() => {
     Animated.timing(focusAnim, {
       toValue: focus,
-      duration: 1500,
+      duration: 800,
       useNativeDriver: false,
     }).start();
   }, [focus]);
@@ -289,7 +285,7 @@ export default function MentalScoreScreen() {
     prevScore.current = score;
     Animated.timing(scoreAnim, {
       toValue: score,
-      duration: 1500,
+      duration: 800,
       useNativeDriver: false,
     }).start();
   }, [score]);
@@ -337,6 +333,11 @@ export default function MentalScoreScreen() {
       await fetchCheckInData();
       await triggerMindMirror();
       await calculateStreak();
+      const data = await getCurrentScores();
+      if (data.xp) setXp(data.xp);
+      if (data.dailyGoal) setDailyGoal(data.dailyGoal);
+      if (data.streak !== undefined) setStreak(data.streak);
+      if (data.longestStreak !== undefined) setLongestStreak(data.longestStreak);
     };
     fetchData();
 
@@ -572,6 +573,7 @@ export default function MentalScoreScreen() {
       setFocus(BASELINE);
       setMicroInsight('Loading insight...');
       setWeeklyMindMirror('No MindMirror yet.');
+      setXp({ xpToday: 0, total: 0, level: 1, progress: 0 });
     } catch (err) {
       console.error('❌ Error clearing data:', err);
       Alert.alert('Error', 'Failed to clear data');
@@ -631,13 +633,6 @@ export default function MentalScoreScreen() {
         <Animatable.Text ref={xpGainRef} style={styles.xpGainText}>
           +{xpDelta}
         </Animatable.Text>
-        {showLevelConfetti && (
-          <ConfettiCannon
-            count={60}
-            origin={{ x: 160, y: 0 }}
-            fadeOut
-          />
-        )}
       </Animatable.View>
 
 
