@@ -11,7 +11,6 @@ import {
   Alert,
   Animated,
 } from 'react-native';
-import Svg, { Circle } from 'react-native-svg';
 import { useNavigation } from '@react-navigation/native';
 import * as Animatable from 'react-native-animatable';
 import * as Haptics from 'expo-haptics';
@@ -20,7 +19,7 @@ import {
   generateTodaysInsight,
   generateWeeklyMindMirror,
 } from './utils/generateTodaysInsight';
-import { markInsightRead, getCurrentScores } from './utils/scoring';
+import { markInsightRead, getCurrentScores, xpForLevel } from './utils/scoring';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Easing } from 'react-native';
 
@@ -118,34 +117,6 @@ const StreakRings = ({ rings }) => {
   );
 };
 
-const AnimatedLevelBar = ({ xp }) => {
-  const widthAnim = useRef(new Animated.Value(0)).current;
-  useEffect(() => {
-    Animated.timing(widthAnim, {
-      toValue: xp.progress,
-      duration: 600,
-      useNativeDriver: false,
-    }).start();
-  }, [xp.progress]);
-
-  const width = widthAnim.interpolate({
-    inputRange: [0, 100],
-    outputRange: ['0%', '100%'],
-  });
-
-  return (
-    <View style={styles.barBackground}>
-      <Animated.View style={{ width, height: '100%' }}>
-        <LinearGradient
-          colors={['#8be9fd', '#50fa7b']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.barFill}
-        />
-      </Animated.View>
-    </View>
-  );
-};
 
 export const getScoreColor = (score) => {
     if (score <= 20) return '#FF3B30';      // Bright Red
@@ -157,39 +128,6 @@ export const getScoreColor = (score) => {
   };
   
 
-const ScoreCircle = ({ score, size = 200, strokeWidth = 18 }) => {
-  const radius = (size - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const progress = (score / 100) * circumference;
-  const cx = size / 2;
-  const cy = size / 2;
-
-  return (
-    <Svg width={size} height={size} style={styles.gaugeSvg}>
-      <Circle
-        cx={cx}
-        cy={cy}
-        r={radius}
-        stroke="#e6e6e6"
-        strokeWidth={strokeWidth}
-        fill="none"
-      />
-      <Circle
-        cx={cx}
-        cy={cy}
-        r={radius}
-        stroke={getScoreColor(score)}
-        strokeWidth={strokeWidth}
-        strokeDasharray={`${progress} ${circumference - progress}`}
-        strokeLinecap="round"
-        rotation="-90"
-        originX={cx}
-        originY={cy}
-        fill="none"
-      />
-    </Svg>
-  );
-};
 
 export default function MentalScoreScreen() {
   const navigation = useNavigation();
@@ -202,11 +140,12 @@ export default function MentalScoreScreen() {
   const [microInsight, setMicroInsight] = useState('Loading insight...');
   const [weeklyMindMirror, setWeeklyMindMirror] = useState('No MindMirror yet.');
   const [streak, setStreak] = useState(0);
-  const [momentum, setMomentum] = useState(0);
-  const [mindGrade, setMindGrade] = useState('C');
   const [rings, setRings] = useState({ ring1: false, ring2: false, ring3: false });
   const [xp, setXp] = useState({ xpToday: 0, total: 0, level: 1, progress: 0 });
   const [dailyGoal, setDailyGoal] = useState(null);
+  const xpGainRef = useRef(null);
+  const prevXp = useRef(0);
+  const [xpDelta, setXpDelta] = useState(0);
 
   useEffect(() => {
     if (microInsight && microInsight !== 'Loading insight...') {
@@ -223,8 +162,6 @@ export default function MentalScoreScreen() {
 
   useEffect(() => {
     getCurrentScores().then((data) => {
-      setMomentum(data.momentum);
-      setMindGrade(data.mindGrade);
       setRings(data.streakRings);
       if (data.xp) setXp(data.xp);
       if (data.dailyGoal) setDailyGoal(data.dailyGoal);
@@ -233,8 +170,15 @@ export default function MentalScoreScreen() {
   }, []);
 
   useEffect(() => {
-    gradeRef.current?.pulse(700);
-  }, [mindGrade]);
+    if (xp.xpToday > prevXp.current) {
+      const delta = xp.xpToday - prevXp.current;
+      setXpDelta(delta);
+      prevXp.current = xp.xpToday;
+      xpGainRef.current?.fadeInDown(200).then(() => xpGainRef.current?.fadeOutUp(600));
+    } else {
+      prevXp.current = xp.xpToday;
+    }
+  }, [xp.xpToday]);
 
   const energyAnim = useRef(new Animated.Value(BASELINE)).current;
   const clarityAnim = useRef(new Animated.Value(BASELINE)).current;
@@ -266,7 +210,6 @@ export default function MentalScoreScreen() {
   const [displayFocus, setDisplayFocus] = useState(-1);
   const [displayScore, setDisplayScore] = useState(-1);
   const checkInButtonRef = useRef(null);
-  const gradeRef = useRef(null);
   const streakRef = useRef(null);
 
   useEffect(() => {
@@ -404,8 +347,6 @@ export default function MentalScoreScreen() {
       fetchCheckInData();
       calculateStreak();
       getCurrentScores().then((data) => {
-        setMomentum(data.momentum);
-        setMindGrade(data.mindGrade);
         setRings(data.streakRings);
         if (data.xp) setXp(data.xp);
         if (data.dailyGoal) setDailyGoal(data.dailyGoal);
@@ -674,20 +615,21 @@ export default function MentalScoreScreen() {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Animatable.View animation="fadeInDown" duration={800} style={styles.gaugeContainer}>
-        <ScoreCircle score={displayScore} size={170} />
         <Text style={styles.mentalScore}>{displayScore}</Text>
         <Text style={styles.mentalScoreLabel}>MentalScore</Text>
       </Animatable.View>
 
       <View style={styles.momentumContainer}>
-        <Text style={styles.momentumLabel}>Momentum</Text>
-        <AnimatedMomentumBar value={momentum} />
+        <Text style={styles.momentumLabel}>
+          Level {xp.level} - {xpForLevel(xp.level + 1) - xp.total} XP to go
+        </Text>
+        <AnimatedMomentumBar value={xp.progress} />
+        <Animatable.Text ref={xpGainRef} style={styles.xpGainText}>
+          +{xpDelta}
+        </Animatable.Text>
       </View>
 
-      <View style={styles.xpContainer}>
-        <Text style={styles.xpLabel}>Level {xp.level} - {xp.xpToday} XP today</Text>
-        <AnimatedLevelBar xp={{ progress: xp.progress }} />
-      </View>
+
 
       <View style={styles.streakContainer}>
         <Animatable.Text ref={streakRef} style={styles.streakText}>
@@ -695,17 +637,7 @@ export default function MentalScoreScreen() {
         </Animatable.Text>
       </View>
       <StreakRings rings={rings} />
-      <View style={styles.gradeContainer}>
-        <Animatable.Text
-          ref={gradeRef}
-          animation="pulse"
-          duration={700}
-          iterationCount={1}
-          style={styles.gradeText}
-        >
-          Weekly Grade: {mindGrade}
-        </Animatable.Text>
-      </View>
+      {/* XP gain animation will show here */}
 
       {dailyGoal && (
         <View style={styles.gradeContainer}>
@@ -920,15 +852,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginBottom: 4,
   },
-  xpContainer: {
-    marginBottom: 16,
-    alignItems: 'center',
-  },
-  xpLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
   resetContainer: {
     alignItems: 'center',
     marginTop: 10,
@@ -956,6 +879,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#4c1d95',
+  },
+  xpGainText: {
+    position: 'absolute',
+    right: 0,
+    top: -18,
+    color: '#7c3aed',
+    fontWeight: '700',
   },
   ringsWrapper: {
     alignItems: 'center',
