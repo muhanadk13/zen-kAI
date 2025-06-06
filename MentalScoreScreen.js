@@ -639,19 +639,15 @@ export default function MentalScoreScreen() {
 
       <View style={styles.streakContainer}>
         <Animatable.Text ref={streakRef} style={styles.streakText}>
-          🔥 {streak} Day Streak — Longest: {longestStreak} { [3,7,14,30,50].includes(streak) ? '🏅' : '' }
+          <Image
+            source={require('./assets/GIF/fire.gif')}
+            style={styles.streakIcon}
+          /> {streak} Day Streak{ [3,7,14,30,50].includes(streak) ? '🏅' : '' }
         </Animatable.Text>
       </View>
       {/* XP gain animation will show here */}
 
-      {dailyGoal && (
-        <View style={styles.gradeContainer}>
-          <Text style={styles.gradeText}>
-            Daily Goal: {dailyGoal.goal.text}
-            {dailyGoal.completed ? ' ✅' : ''}
-          </Text>
-        </View>
-      )}
+      
 
       <Animatable.View animation="fadeInUp" duration={600} style={styles.card}>
         <View style={styles.cardHeader}>
@@ -752,9 +748,9 @@ const styles = StyleSheet.create({
   mentalScore: {
     position: 'absolute',
     fontSize: 45,
-    fontWeight: '700',
+    fontWeight: '600',
     color: '#000',
-    marginBottom: 22,
+    marginBottom: 0,
   },
   streakContainer: {
     flexDirection: 'row',
@@ -767,6 +763,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#FF4500',
     marginTop: -10,
+  
     
   },
   card: {
@@ -847,7 +844,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   momentumContainer: {
-    marginBottom: 16,
+    marginBottom: 30,
   },
   levelGlow: {
     shadowColor: '#7c3aed',
@@ -893,5 +890,11 @@ const styles = StyleSheet.create({
     top: -18,
     color: '#7c3aed',
     fontWeight: '700',
+  },
+  streakIcon: {
+    width: 20,
+    height: 20,
+    marginRight: 4,
+
   },
 });
