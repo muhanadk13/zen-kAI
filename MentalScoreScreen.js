@@ -22,6 +22,7 @@ import {
 } from './utils/generateTodaysInsight';
 import { markInsightRead, getCurrentScores } from './utils/scoring';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Easing } from 'react-native';
 
 const AnimatedProgressBar = ({ progress, color }) => {
   const width = progress.interpolate({
@@ -61,6 +62,58 @@ const AnimatedMomentumBar = ({ value }) => {
           style={styles.barFill}
         />
       </Animated.View>
+    </View>
+  );
+};
+
+const StreakRings = ({ rings }) => {
+  const ring1 = useRef(new Animated.Value(rings.ring1 ? 1 : 0)).current;
+  const ring2 = useRef(new Animated.Value(rings.ring2 ? 1 : 0)).current;
+  const ring3 = useRef(new Animated.Value(rings.ring3 ? 1 : 0)).current;
+
+  useEffect(() => {
+    Animated.timing(ring1, {
+      toValue: rings.ring1 ? 1 : 0,
+      duration: 500,
+      easing: Easing.out(Easing.ease),
+      useNativeDriver: false,
+    }).start();
+  }, [rings.ring1]);
+
+  useEffect(() => {
+    Animated.timing(ring2, {
+      toValue: rings.ring2 ? 1 : 0,
+      duration: 500,
+      easing: Easing.out(Easing.ease),
+      useNativeDriver: false,
+    }).start();
+  }, [rings.ring2]);
+
+  useEffect(() => {
+    Animated.timing(ring3, {
+      toValue: rings.ring3 ? 1 : 0,
+      duration: 500,
+      easing: Easing.out(Easing.ease),
+      useNativeDriver: false,
+    }).start();
+  }, [rings.ring3]);
+
+  const ringStyle = (size, color, anim) => ({
+    position: 'absolute',
+    width: size,
+    height: size,
+    borderRadius: size / 2,
+    borderWidth: 6,
+    borderColor: color,
+    opacity: anim,
+    transform: [{ scale: anim }],
+  });
+
+  return (
+    <View style={styles.ringsWrapper}>
+      <Animated.View style={ringStyle(120, '#c084fc', ring1)} />
+      <Animated.View style={ringStyle(90, '#7c3aed', ring2)} />
+      <Animated.View style={ringStyle(60, '#4c1d95', ring3)} />
     </View>
   );
 };
@@ -122,10 +175,13 @@ export default function MentalScoreScreen() {
   const [streak, setStreak] = useState(0);
   const [momentum, setMomentum] = useState(0);
   const [mindGrade, setMindGrade] = useState('C');
+  const [rings, setRings] = useState({ ring1: false, ring2: false, ring3: false });
 
   useEffect(() => {
     if (microInsight && microInsight !== 'Loading insight...') {
-      markInsightRead();
+      markInsightRead().then(() => {
+        getCurrentScores().then((data) => setRings(data.streakRings));
+      });
     }
   }, [microInsight]);
 
@@ -133,6 +189,7 @@ export default function MentalScoreScreen() {
     getCurrentScores().then((data) => {
       setMomentum(data.momentum);
       setMindGrade(data.mindGrade);
+      setRings(data.streakRings);
     });
   }, []);
 
@@ -309,6 +366,7 @@ export default function MentalScoreScreen() {
       getCurrentScores().then((data) => {
         setMomentum(data.momentum);
         setMindGrade(data.mindGrade);
+        setRings(data.streakRings);
       });
     });
 
@@ -604,6 +662,7 @@ export default function MentalScoreScreen() {
       <View style={styles.streakContainer}>
         <Text style={styles.streakText}>🔥 {streak} Day Streak</Text>
       </View>
+      <StreakRings rings={rings} />
       <View style={styles.gradeContainer}>
         <Animatable.Text
           ref={gradeRef}
@@ -847,5 +906,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#4c1d95',
+  },
+  ringsWrapper: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
   },
 });
