@@ -21,7 +21,7 @@ import {
   generateWeeklyMindMirror,
 } from './utils/generateTodaysInsight';
 import { markInsightRead, getCurrentScores } from './utils/scoring';
-import LinearGradient from 'react-native-linear-gradient';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const AnimatedProgressBar = ({ progress, color }) => {
   const width = progress.interpolate({
