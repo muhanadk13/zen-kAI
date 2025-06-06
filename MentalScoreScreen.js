@@ -11,7 +11,6 @@ import {
   Alert,
   Animated,
 } from 'react-native';
-import Svg, { Circle } from 'react-native-svg';
 import { useNavigation } from '@react-navigation/native';
 import * as Animatable from 'react-native-animatable';
 import * as Haptics from 'expo-haptics';
@@ -20,6 +19,10 @@ import {
   generateTodaysInsight,
   generateWeeklyMindMirror,
 } from './utils/generateTodaysInsight';
+import { markInsightRead, getCurrentScores, xpForLevel } from './utils/scoring';
+import { LinearGradient } from 'expo-linear-gradient';
+import Svg, { Circle } from 'react-native-svg';
+import ConfettiCannon from 'react-native-confetti-cannon';
 
 const AnimatedProgressBar = ({ progress, color }) => {
   const width = progress.interpolate({
@@ -33,17 +36,37 @@ const AnimatedProgressBar = ({ progress, color }) => {
   );
 };
 
-export const getScoreColor = (score) => {
-    if (score <= 20) return '#FF3B30';      // Bright Red
-    if (score <= 40) return '#FF9500';      // Orange
-    if (score <= 55) return '#FFCC00';      // Yellow
-    if (score <= 70) return '#AEF359';      // Lime Green
-    if (score <= 85) return '#4CD964';      // Soft Green
-    return '#2ECC71';                       // Darker Green
-  };
-  
+const AnimatedMomentumBar = ({ value }) => {
+  const anim = useRef(new Animated.Value(0)).current;
 
-const ScoreCircle = ({ score, size = 200, strokeWidth = 18 }) => {
+  useEffect(() => {
+    Animated.timing(anim, {
+      toValue: value,
+      duration: 600,
+      useNativeDriver: false,
+    }).start();
+  }, [value]);
+
+  const width = anim.interpolate({
+    inputRange: [0, 100],
+    outputRange: ['0%', '100%'],
+  });
+
+  return (
+    <View style={styles.barBackground}>
+      <Animated.View style={{ width, height: '100%' }}>
+        <LinearGradient
+          colors={['#c084fc', '#7c3aed']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.barFill}
+        />
+      </Animated.View>
+    </View>
+  );
+};
+
+const ScoreCircle = ({ score, size = 170, strokeWidth = 18 }) => {
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const progress = (score / 100) * circumference;
@@ -77,6 +100,17 @@ const ScoreCircle = ({ score, size = 200, strokeWidth = 18 }) => {
   );
 };
 
+const getScoreColor = (score) => {
+  if (score <= 20) return '#FF3B30';
+  if (score <= 40) return '#FF9500';
+  if (score <= 55) return '#FFCC00';
+  if (score <= 70) return '#AEF359';
+  if (score <= 85) return '#4CD964';
+  return '#2ECC71';
+};
+  
+
+
 export default function MentalScoreScreen() {
   const navigation = useNavigation();
   const BASELINE = 75;
@@ -88,6 +122,61 @@ export default function MentalScoreScreen() {
   const [microInsight, setMicroInsight] = useState('Loading insight...');
   const [weeklyMindMirror, setWeeklyMindMirror] = useState('No MindMirror yet.');
   const [streak, setStreak] = useState(0);
+  const [longestStreak, setLongestStreak] = useState(0);
+  const [xp, setXp] = useState({ xpToday: 0, total: 0, level: 1, progress: 0 });
+  const [dailyGoal, setDailyGoal] = useState(null);
+  const [shootConfetti, setShootConfetti] = useState(false);
+  const xpGainRef = useRef(null);
+  const xpBarRef = useRef(null);
+  const prevXp = useRef(0);
+  const [xpDelta, setXpDelta] = useState(0);
+  const prevLevel = useRef(0);
+  const confettiRef = useRef();
+
+  useEffect(() => {
+    if (microInsight && microInsight !== 'Loading insight...') {
+      markInsightRead().then(() => {
+        getCurrentScores().then((data) => {
+          if (data.xp) setXp(data.xp);
+          if (data.dailyGoal) setDailyGoal(data.dailyGoal);
+          if (data.streak !== undefined) setStreak(data.streak);
+          if (data.longestStreak !== undefined) setLongestStreak(data.longestStreak);
+        });
+      });
+    }
+  }, [microInsight]);
+
+  useEffect(() => {
+    getCurrentScores().then((data) => {
+      if (data.xp) setXp(data.xp);
+      if (data.dailyGoal) setDailyGoal(data.dailyGoal);
+      if (data.streak !== undefined) setStreak(data.streak);
+      if (data.longestStreak !== undefined) setLongestStreak(data.longestStreak);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (xp.xpToday > prevXp.current) {
+      const delta = xp.xpToday - prevXp.current;
+      setXpDelta(delta);
+      prevXp.current = xp.xpToday;
+      xpGainRef.current?.fadeInDown(200).then(() => xpGainRef.current?.fadeOutUp(600));
+      xpBarRef.current?.pulse(800);
+    } else {
+      prevXp.current = xp.xpToday;
+    }
+  }, [xp.xpToday]);
+
+  useEffect(() => {
+    if (xp.level > prevLevel.current) {
+      Haptics.notificationAsync(
+        Haptics.NotificationFeedbackType.Success
+      );
+      setShootConfetti(true);
+      setTimeout(() => setShootConfetti(false), 3000);
+    }
+    prevLevel.current = xp.level;
+  }, [xp.level]);
 
   const energyAnim = useRef(new Animated.Value(BASELINE)).current;
   const clarityAnim = useRef(new Animated.Value(BASELINE)).current;
@@ -119,6 +208,7 @@ export default function MentalScoreScreen() {
   const [displayFocus, setDisplayFocus] = useState(-1);
   const [displayScore, setDisplayScore] = useState(-1);
   const checkInButtonRef = useRef(null);
+  const streakRef = useRef(null);
 
   useEffect(() => {
     const id = scoreAnim.addListener(({ value }) =>
@@ -137,7 +227,7 @@ export default function MentalScoreScreen() {
   useEffect(() => {
     Animated.timing(energyAnim, {
       toValue: energy,
-      duration: 1500,
+      duration: 800,
       useNativeDriver: false,
     }).start();
   }, [energy]);
@@ -152,7 +242,7 @@ export default function MentalScoreScreen() {
   useEffect(() => {
     Animated.timing(clarityAnim, {
       toValue: clarity,
-      duration: 1500,
+      duration: 800,
       useNativeDriver: false,
     }).start();
   }, [clarity]);
@@ -167,7 +257,7 @@ export default function MentalScoreScreen() {
   useEffect(() => {
     Animated.timing(emotionAnim, {
       toValue: emotion,
-      duration: 1500,
+      duration: 800,
       useNativeDriver: false,
     }).start();
   }, [emotion]);
@@ -182,7 +272,7 @@ export default function MentalScoreScreen() {
   useEffect(() => {
     Animated.timing(focusAnim, {
       toValue: focus,
-      duration: 1500,
+      duration: 800,
       useNativeDriver: false,
     }).start();
   }, [focus]);
@@ -200,7 +290,7 @@ export default function MentalScoreScreen() {
     prevScore.current = score;
     Animated.timing(scoreAnim, {
       toValue: score,
-      duration: 1500,
+      duration: 800,
       useNativeDriver: false,
     }).start();
   }, [score]);
@@ -248,12 +338,23 @@ export default function MentalScoreScreen() {
       await fetchCheckInData();
       await triggerMindMirror();
       await calculateStreak();
+      const data = await getCurrentScores();
+      if (data.xp) setXp(data.xp);
+      if (data.dailyGoal) setDailyGoal(data.dailyGoal);
+      if (data.streak !== undefined) setStreak(data.streak);
+      if (data.longestStreak !== undefined) setLongestStreak(data.longestStreak);
     };
     fetchData();
 
     const unsubscribe = navigation.addListener('focus', () => {
       fetchCheckInData();
       calculateStreak();
+      getCurrentScores().then((data) => {
+        if (data.xp) setXp(data.xp);
+        if (data.dailyGoal) setDailyGoal(data.dailyGoal);
+        if (data.streak !== undefined) setStreak(data.streak);
+        if (data.longestStreak !== undefined) setLongestStreak(data.longestStreak);
+      });
     });
 
     return unsubscribe;
@@ -403,29 +504,16 @@ export default function MentalScoreScreen() {
 
   const calculateStreak = async () => {
     try {
-      const historyRaw = await AsyncStorage.getItem('checkInHistory');
-      const history = historyRaw ? JSON.parse(historyRaw) : [];
-      const today = new Date().toISOString().split('T')[0];
-
-      const sortedHistory = history.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-      const uniqueDates = [...new Set(sortedHistory.map(entry => entry.timestamp.split('T')[0]))];
-
-      let streakCount = 0;
-      let currentDate = new Date(today);
-
-      for (let i = uniqueDates.length - 1; i >= 0; i--) {
-        const checkInDate = new Date(uniqueDates[i]);
-        if (
-          checkInDate.toISOString().split('T')[0] === currentDate.toISOString().split('T')[0]
-        ) {
-          streakCount++;
-          currentDate.setDate(currentDate.getDate() - 1);
-        } else {
-          break;
-        }
-      }
-
-      setStreak(streakCount);
+      const [curRaw, longRaw] = await Promise.all([
+        AsyncStorage.getItem('currentStreak'),
+        AsyncStorage.getItem('longestStreak'),
+      ]);
+      const count = curRaw ? parseInt(curRaw, 10) : 0;
+      const longest = longRaw ? parseInt(longRaw, 10) : 0;
+      setStreak(count);
+      setLongestStreak(longest);
+      streakRef.current?.bounceIn();
+      if (count > 0) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     } catch (err) {
       console.error('❌ Error calculating streak:', err);
       setStreak(0);
@@ -490,6 +578,7 @@ export default function MentalScoreScreen() {
       setFocus(BASELINE);
       setMicroInsight('Loading insight...');
       setWeeklyMindMirror('No MindMirror yet.');
+      setXp({ xpToday: 0, total: 0, level: 1, progress: 0 });
     } catch (err) {
       console.error('❌ Error clearing data:', err);
       Alert.alert('Error', 'Failed to clear data');
@@ -534,15 +623,48 @@ export default function MentalScoreScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Animatable.View animation="fadeInDown" duration={800} style={styles.gaugeContainer}>
-        <ScoreCircle score={displayScore} size={170} />
-        <Text style={styles.mentalScore}>{displayScore}</Text>
-        <Text style={styles.mentalScoreLabel}>MentalScore</Text>
+      {shootConfetti && (
+        <ConfettiCannon
+          count={80}
+          origin={{ x: -10, y: 0 }}
+          fadeOut
+          ref={confettiRef}
+        />
+      )}
+      <Animatable.View animation="bounceIn" duration={800} style={styles.gaugeContainer}>
+        <ScoreCircle score={displayScore} />
+        <Animatable.Text animation="pulse" iterationCount="infinite" iterationDelay={4000} style={styles.mentalScore}>
+          {displayScore}
+        </Animatable.Text>
       </Animatable.View>
 
+      <Animatable.View ref={xpBarRef} style={[styles.momentumContainer, xp.progress > 90 && styles.levelGlow]}>
+        <Text style={styles.momentumLabel}>
+          Level {xp.level} — {xp.total} / {xpForLevel(xp.level + 1)} XP
+        </Text>
+        <AnimatedMomentumBar value={xp.progress} />
+        <Animatable.Text ref={xpGainRef} style={styles.xpGainText}>
+          +{xpDelta}
+        </Animatable.Text>
+      </Animatable.View>
+
+
+
       <View style={styles.streakContainer}>
-        <Text style={styles.streakText}>🔥 {streak} Day Streak</Text>
+        <Animatable.Text ref={streakRef} style={styles.streakText}>
+          🔥 {streak} Day Streak — Longest: {longestStreak} { [3,7,14,30,50].includes(streak) ? '🏅' : '' }
+        </Animatable.Text>
       </View>
+      {/* XP gain animation will show here */}
+
+      {dailyGoal && (
+        <View style={styles.gradeContainer}>
+          <Text style={styles.gradeText}>
+            Daily Goal: {dailyGoal.goal.text}
+            {dailyGoal.completed ? ' ✅' : ''}
+          </Text>
+        </View>
+      )}
 
       <Animatable.View animation="fadeInUp" duration={600} style={styles.card}>
         <View style={styles.cardHeader}>
@@ -574,7 +696,7 @@ export default function MentalScoreScreen() {
         <View style={styles.row}>
           <View style={[styles.metricBox, styles.metricBoxLeft]}>
             <Text style={styles.metricLabel}>💚 Emotion {displayEmotion}%</Text>
-            <AnimatedProgressBar progress={emotionProgress} color="#7fe87a" />
+            <AnimatedProgressBar progress={emotionProgress} color="#34d1bf" />
           </View>
           <View style={styles.metricBox}>
             <Text style={styles.metricLabel}>🎯 Focus {displayFocus}%</Text>
@@ -634,6 +756,11 @@ const styles = StyleSheet.create({
     width: 170,
     height: 170,
   },
+  gaugeSvg: {
+    width: 170,
+    height: 170,
+    alignSelf: 'center',
+  },
 
   mentalScore: {
     position: 'absolute',
@@ -641,14 +768,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#000',
     marginBottom: 22,
-  },
-  mentalScoreLabel: {
-    position: 'absolute',
-    top: '60%',
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#555',
-    textAlign: 'center',
   },
   streakContainer: {
     flexDirection: 'row',
@@ -740,6 +859,19 @@ const styles = StyleSheet.create({
     height: '100%',
     borderRadius: 5,
   },
+  momentumContainer: {
+    marginBottom: 16,
+  },
+  levelGlow: {
+    shadowColor: '#7c3aed',
+    shadowRadius: 6,
+    shadowOpacity: 0.6,
+  },
+  momentumLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
   resetContainer: {
     alignItems: 'center',
     marginTop: 10,
@@ -758,5 +890,21 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '600',
     fontSize: 15,
+  },
+  gradeContainer: {
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  gradeText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#4c1d95',
+  },
+  xpGainText: {
+    position: 'absolute',
+    right: 0,
+    top: -18,
+    color: '#7c3aed',
+    fontWeight: '700',
   },
 });
