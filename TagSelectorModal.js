@@ -15,6 +15,7 @@ import {
 import * as Haptics from 'expo-haptics';
 import * as Animatable from 'react-native-animatable';
 import { defaultTags, getUserTags, addUserTag, removeUserTag } from './utils/tags';
+import { updateDailyGoal } from './utils/scoring';
 
 export default function TagSelectorModal({ visible, onClose, selectedTags, toggleTag }) {
   const [userTags, setUserTags] = useState([]);
@@ -32,6 +33,7 @@ export default function TagSelectorModal({ visible, onClose, selectedTags, toggl
     const updated = await addUserTag(trimmed);
     setUserTags(updated);
     toggleTag(trimmed);
+    updateDailyGoal('addTag');
     setCustom('');
   };
 
@@ -42,6 +44,7 @@ export default function TagSelectorModal({ visible, onClose, selectedTags, toggl
     const handlePress = () => {
       toggleTag(tag);
       Haptics.selectionAsync();
+      updateDailyGoal('addTag');
     };
 
     const handleLongPress = async () => {

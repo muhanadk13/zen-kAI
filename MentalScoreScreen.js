@@ -118,6 +118,35 @@ const StreakRings = ({ rings }) => {
   );
 };
 
+const AnimatedLevelBar = ({ xp }) => {
+  const widthAnim = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.timing(widthAnim, {
+      toValue: xp.progress,
+      duration: 600,
+      useNativeDriver: false,
+    }).start();
+  }, [xp.progress]);
+
+  const width = widthAnim.interpolate({
+    inputRange: [0, 100],
+    outputRange: ['0%', '100%'],
+  });
+
+  return (
+    <View style={styles.barBackground}>
+      <Animated.View style={{ width, height: '100%' }}>
+        <LinearGradient
+          colors={['#8be9fd', '#50fa7b']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.barFill}
+        />
+      </Animated.View>
+    </View>
+  );
+};
+
 export const getScoreColor = (score) => {
     if (score <= 20) return '#FF3B30';      // Bright Red
     if (score <= 40) return '#FF9500';      // Orange
@@ -176,11 +205,20 @@ export default function MentalScoreScreen() {
   const [momentum, setMomentum] = useState(0);
   const [mindGrade, setMindGrade] = useState('C');
   const [rings, setRings] = useState({ ring1: false, ring2: false, ring3: false });
+  const [xp, setXp] = useState({ xpToday: 0, total: 0, level: 1, progress: 0 });
+  const [dailyGoal, setDailyGoal] = useState(null);
 
   useEffect(() => {
     if (microInsight && microInsight !== 'Loading insight...') {
       markInsightRead().then(() => {
-        getCurrentScores().then((data) => setRings(data.streakRings));
+        getCurrentScores().then((data) => {
+          setRings(data.streakRings);
+          if (data.xp) {
+            const progress = data.xp.total % 100;
+            setXp({ ...data.xp, progress });
+          }
+          if (data.dailyGoal) setDailyGoal(data.dailyGoal);
+        });
       });
     }
   }, [microInsight]);
@@ -190,6 +228,11 @@ export default function MentalScoreScreen() {
       setMomentum(data.momentum);
       setMindGrade(data.mindGrade);
       setRings(data.streakRings);
+      if (data.xp) {
+        const progress = (data.xp.total % 100);
+        setXp({ ...data.xp, progress });
+      }
+      if (data.dailyGoal) setDailyGoal(data.dailyGoal);
     });
   }, []);
 
@@ -228,6 +271,7 @@ export default function MentalScoreScreen() {
   const [displayScore, setDisplayScore] = useState(-1);
   const checkInButtonRef = useRef(null);
   const gradeRef = useRef(null);
+  const streakRef = useRef(null);
 
   useEffect(() => {
     const id = scoreAnim.addListener(({ value }) =>
@@ -367,6 +411,11 @@ export default function MentalScoreScreen() {
         setMomentum(data.momentum);
         setMindGrade(data.mindGrade);
         setRings(data.streakRings);
+        if (data.xp) {
+          const progress = data.xp.total % 100;
+          setXp({ ...data.xp, progress });
+        }
+        if (data.dailyGoal) setDailyGoal(data.dailyGoal);
       });
     });
 
@@ -540,6 +589,8 @@ export default function MentalScoreScreen() {
       }
 
       setStreak(streakCount);
+      streakRef.current?.bounceIn();
+      if (streakCount > 0) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     } catch (err) {
       console.error('❌ Error calculating streak:', err);
       setStreak(0);
@@ -659,8 +710,15 @@ export default function MentalScoreScreen() {
         <AnimatedMomentumBar value={momentum} />
       </View>
 
+      <View style={styles.xpContainer}>
+        <Text style={styles.xpLabel}>Level {xp.level} - {xp.xpToday} XP today</Text>
+        <AnimatedLevelBar xp={{ progress: xp.progress }} />
+      </View>
+
       <View style={styles.streakContainer}>
-        <Text style={styles.streakText}>🔥 {streak} Day Streak</Text>
+        <Animatable.Text ref={streakRef} style={styles.streakText}>
+          🔥 {streak} Day Streak
+        </Animatable.Text>
       </View>
       <StreakRings rings={rings} />
       <View style={styles.gradeContainer}>
@@ -674,6 +732,15 @@ export default function MentalScoreScreen() {
           Weekly Grade: {mindGrade}
         </Animatable.Text>
       </View>
+
+      {dailyGoal && (
+        <View style={styles.gradeContainer}>
+          <Text style={styles.gradeText}>
+            Daily Goal: {dailyGoal.goal.text}
+            {dailyGoal.completed ? ' ✅' : ''}
+          </Text>
+        </View>
+      )}
 
       <Animatable.View animation="fadeInUp" duration={600} style={styles.card}>
         <View style={styles.cardHeader}>
@@ -875,6 +942,15 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   momentumLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  xpContainer: {
+    marginBottom: 16,
+    alignItems: 'center',
+  },
+  xpLabel: {
     fontSize: 14,
     fontWeight: '600',
     marginBottom: 4,

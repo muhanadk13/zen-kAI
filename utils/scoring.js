@@ -5,6 +5,8 @@ const MOMENTUM_KEY = 'momentum';
 const STREAK_RINGS_KEY = 'streakRings';
 const TRAIT_XP_KEY = 'traitXP';
 const MIND_GRADE_KEY = 'weeklyMindGrade';
+const XP_KEY = 'xpData';
+const DAILY_GOAL_KEY = 'dailyGoal';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -80,18 +82,99 @@ export async function updateMomentum() {
 }
 
 /**
+ * XP handling
+ */
+export async function updateXP(amount = 10) {
+  try {
+    const raw = await AsyncStorage.getItem(XP_KEY);
+    const data = raw
+      ? JSON.parse(raw)
+      : { date: getDateKey(), xpToday: 0, total: 0 };
+    const today = getDateKey();
+    if (data.date !== today) {
+      data.date = today;
+      data.xpToday = 0;
+    }
+    data.xpToday += amount;
+    data.total += amount;
+    await AsyncStorage.setItem(XP_KEY, JSON.stringify(data));
+    return data;
+  } catch (err) {
+    console.error('updateXP', err);
+    return { xpToday: 0, total: 0 };
+  }
+}
+
+export function levelFromXP(xp) {
+  return Math.floor(xp / 100) + 1;
+}
+
+export async function getXP() {
+  const raw = await AsyncStorage.getItem(XP_KEY);
+  if (!raw) return { xpToday: 0, total: 0, level: 1 };
+  const data = JSON.parse(raw);
+  return { ...data, level: levelFromXP(data.total) };
+}
+
+const DAILY_GOALS = [
+  { id: 'three-checkins', text: 'Log all 3 check-ins' },
+  { id: 'add-tag', text: 'Add a tag to your note' },
+  { id: 'reflect-5', text: 'Reflect for 5 minutes' },
+];
+
+export async function getDailyGoal() {
+  const today = getDateKey();
+  const raw = await AsyncStorage.getItem(DAILY_GOAL_KEY);
+  let data = raw ? JSON.parse(raw) : {};
+  if (data.date !== today) {
+    const goal = DAILY_GOALS[Math.floor(Math.random() * DAILY_GOALS.length)];
+    data = { date: today, goal, completed: false };
+    await AsyncStorage.setItem(DAILY_GOAL_KEY, JSON.stringify(data));
+  }
+  return data;
+}
+
+export async function updateDailyGoal(action) {
+  const data = await getDailyGoal();
+  if (data.completed) return data;
+  if (data.goal.id === 'three-checkins' && action === 'checkin') {
+    const raw = await AsyncStorage.getItem('checkInHistory');
+    const history = raw ? JSON.parse(raw) : [];
+    const today = getDateKey();
+    const count = history.filter((e) => e.timestamp.startsWith(today)).length;
+    if (count >= 3) data.completed = true;
+  }
+  if (data.goal.id === 'add-tag' && action === 'addTag') {
+    data.completed = true;
+  }
+  if (data.goal.id === 'reflect-5' && action === 'reflection') {
+    data.completed = true;
+  }
+  if (data.completed) {
+    await AsyncStorage.setItem(DAILY_GOAL_KEY, JSON.stringify(data));
+  }
+  return data;
+}
+
+/**
  * Mark streak ring progress
  */
 export async function markEnergyLogged() {
   await updateRing('ring1');
+  await updateXP(10);
+  await updateDailyGoal('checkin');
 }
 
 export async function markReflectionComplete() {
   await updateRing('ring2');
+  await updateXP(15);
+  await updateDailyGoal('reflection');
 }
 
 export async function markInsightRead() {
   await updateRing('ring3');
+  await updateXP(5);
+  await updateDailyGoal('insight');
 }
 
 async function updateRing(ring) {
@@ -192,19 +275,23 @@ function letterGrade(score) {
  * Helper to get current scores
  */
 export async function getCurrentScores() {
-  const [mindRaw, momentumRaw, streakRaw, xpRaw, gradeRaw] = await Promise.all([
+  const [mindRaw, momentumRaw, streakRaw, traitRaw, gradeRaw, xpStatsRaw, goalRaw] = await Promise.all([
     AsyncStorage.getItem(MIND_SCORE_KEY),
     AsyncStorage.getItem(MOMENTUM_KEY),
     AsyncStorage.getItem(STREAK_RINGS_KEY),
     AsyncStorage.getItem(TRAIT_XP_KEY),
     AsyncStorage.getItem(MIND_GRADE_KEY),
+    AsyncStorage.getItem(XP_KEY),
+    AsyncStorage.getItem(DAILY_GOAL_KEY),
   ]);
   return {
     mindScore: mindRaw ? JSON.parse(mindRaw).value : 75,
     momentum: momentumRaw ? JSON.parse(momentumRaw).value : 0,
     streakRings: streakRaw ? JSON.parse(streakRaw)[getDateKey()] || {} : {},
-    traitXP: xpRaw ? JSON.parse(xpRaw) : {},
+    traitXP: traitRaw ? JSON.parse(traitRaw) : {},
     mindGrade: gradeRaw ? JSON.parse(gradeRaw).grade : 'C',
+    xp: xpStatsRaw ? { ...JSON.parse(xpStatsRaw), level: levelFromXP(JSON.parse(xpStatsRaw).total) } : { xpToday: 0, total: 0, level: 1 },
+    dailyGoal: goalRaw ? JSON.parse(goalRaw) : null,
   };
 }
 
