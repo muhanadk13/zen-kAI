@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView } from 'react-native';
+import { colors } from './utils/theme';
 import { generateMicroInsight } from './utils/generateTodaysInsight';
 
 export default function TestInsightScreen() {
@@ -33,7 +34,7 @@ export default function TestInsightScreen() {
 const styles = StyleSheet.create({
   container: {
     padding: 24,
-    backgroundColor: '#F2F2F7',
+    backgroundColor: colors.background,
     flexGrow: 1,
   },
   header: {
@@ -41,16 +42,17 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     marginBottom: 20,
     textAlign: 'center',
+    color: colors.text,
   },
   button: {
-    backgroundColor: '#3b82f6',
+    backgroundColor: colors.accent2,
     padding: 16,
     borderRadius: 12,
     alignItems: 'center',
     marginBottom: 20,
   },
   buttonText: {
-    color: '#fff',
+    color: colors.text,
     fontSize: 16,
     fontWeight: '600',
   },
@@ -58,10 +60,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 8,
+    color: colors.text,
   },
   resultText: {
     fontSize: 15,
-    color: '#111827',
+    color: colors.text,
     lineHeight: 22,
   },
 });

@@ -22,6 +22,7 @@ import { useNavigation } from '@react-navigation/native';
 import * as Animatable from 'react-native-animatable';
 import { markReflectionComplete } from './utils/scoring';
 import { OPENAI_API_KEY } from './utils/apiKey';
+import { colors } from './utils/theme';
 
 // System prompt to keep replies short and inquisitive
 const BASE_SYSTEM_MESSAGE = {
@@ -242,15 +243,15 @@ export default function ReflectionScreen() {
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? '#1C1C1E' : '#F2F2F7' }]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={{ flex: 1 }}
           keyboardVerticalOffset={10}
         >
           <View style={styles.header}>
-            <Text style={[styles.title, { color: isDarkMode ? '#FFFFFF' : '#1C1C1E' }]}>Reflection</Text>
-            <Text style={[styles.subtitle, { color: isDarkMode ? '#A9A9A9' : '#8E8E93' }]}>
+            <Text style={[styles.title, { color: colors.text }]}>Reflection</Text>
+            <Text style={[styles.subtitle, { color: colors.text }]}>
               Your personal AI assistant
             </Text>
           </View>
@@ -269,10 +270,10 @@ export default function ReflectionScreen() {
                 style={[
                   styles.chatBubble,
                   msg.fromUser ? styles.userBubble : styles.aiBubble,
-                  { backgroundColor: msg.fromUser ? (isDarkMode ? '#007AFF' : '#D0E8FF') : (isDarkMode ? '#2C2C2E' : '#EDEDED') },
+                  { backgroundColor: msg.fromUser ? colors.accent2 : colors.card },
                 ]}
               >
-                <Text style={[styles.chatText, { color: isDarkMode ? '#FFFFFF' : '#1C1C1E' }]}>{msg.text}</Text>
+                <Text style={[styles.chatText, { color: colors.text }]}>{msg.text}</Text>
               </Animatable.View>
             ))}
           </ScrollView>
@@ -282,8 +283,8 @@ export default function ReflectionScreen() {
               style={[
                 styles.input,
                 {
-                  backgroundColor: isAIResponding ? '#E0E0E0' : isDarkMode ? '#2C2C2E' : '#F1F1F3',
-                  color: isAIResponding ? '#A9A9A9' : isDarkMode ? '#FFFFFF' : '#1C1C1E',
+                  backgroundColor: colors.card,
+                  color: colors.text,
                 },
               ]}
               placeholder={isAIResponding ? 'AI is responding...' : 'Type your response...'}
@@ -320,6 +321,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 40,
     justifyContent: 'space-between',
+    backgroundColor: colors.background,
   },
   header: {
     alignItems: 'center',
@@ -358,6 +360,7 @@ const styles = StyleSheet.create({
   chatText: {
     fontSize: 16,
     fontFamily: 'System',
+    color: colors.text,
   },
   inputContainer: {
     flexDirection: 'row',
@@ -371,6 +374,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     flex: 1,
     fontFamily: 'System',
+    backgroundColor: colors.card,
+    color: colors.text,
   },
   sendButton: {
     marginLeft: 10,
@@ -379,5 +384,6 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
+    backgroundColor: colors.accent2,
   },
 });

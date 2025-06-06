@@ -22,6 +22,7 @@ import * as Animatable from 'react-native-animatable';
      import AsyncStorage from '@react-native-async-storage/async-storage';
 import TagSelectorModal from './TagSelectorModal';
 import { processCheckIn } from './utils/scoring';
+import { colors } from './utils/theme';
 
      export default function CheckInScreen() {
        const navigation = useNavigation();
@@ -315,28 +316,28 @@ const handleSave = async () => {
      const styles = StyleSheet.create({
       safe: {
         flex: 1,
-        backgroundColor: '#F2F2F7',
+        backgroundColor: colors.background,
       },
       container: {
         padding: 24,
         paddingBottom: 120,
-        backgroundColor: '#F2F2F7',
+        backgroundColor: colors.background,
       },
        title: {
          fontSize: 28,
          fontWeight: '700',
-         color: '#111827',
+         color: colors.text,
          marginBottom: 4,
        },
        subtitle: {
          fontSize: 15,
-         color: '#6b7280',
+         color: '#a5b4fc',
          marginBottom: 24,
        },
        label: {
          fontSize: 17,
          fontWeight: '600',
-         color: '#111827',
+         color: colors.text,
          marginBottom: 6,
        },
        slider: {
@@ -351,19 +352,19 @@ const handleSave = async () => {
        },
        rangeText: {
          fontSize: 13,
-         color: '#6b7280',
+         color: '#a1a1aa',
        },
       input: {
-        backgroundColor: '#f3f4f6',
+        backgroundColor: '#2b2d42',
         borderRadius: 12,
         padding: 14,
         fontSize: 15,
-        color: '#111827',
+        color: colors.text,
         marginBottom: 24,
         minHeight: 80,
       },
       tagButton: {
-        backgroundColor: '#e5e7eb',
+        backgroundColor: '#3f3f55',
         paddingVertical: 8,
         paddingHorizontal: 12,
         borderRadius: 12,
@@ -371,7 +372,7 @@ const handleSave = async () => {
         marginBottom: 12,
       },
       tagButtonText: {
-        color: '#111827',
+        color: colors.text,
         fontWeight: '600',
       },
       tagList: {
@@ -382,24 +383,24 @@ const handleSave = async () => {
       tagChip: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#e5e5ea',
+        backgroundColor: '#3f3f55',
         borderRadius: 16,
         paddingHorizontal: 10,
         paddingVertical: 4,
         margin: 4,
       },
       tagChipText: {
-        color: '#111827',
+        color: colors.text,
         marginRight: 4,
       },
       removeTag: {
-        color: '#6b7280',
+        color: '#a1a1aa',
         fontSize: 16,
         paddingLeft: 4,
         paddingRight: 2,
       },
       button: {
-        backgroundColor: '#3b82f6',
+        backgroundColor: colors.accent2,
         paddingVertical: 16,
         borderRadius: 12,
         alignItems: 'center',
@@ -409,7 +410,7 @@ const handleSave = async () => {
          shadowRadius: 10,
        },
        buttonText: {
-         color: '#fff',
+         color: colors.text,
          fontSize: 16,
          fontWeight: '600',
        },

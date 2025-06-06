@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { colors } from './utils/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 function formatTime(iso) {
@@ -140,7 +141,7 @@ export default function HistoryScreen() {
 const styles = StyleSheet.create({
   container: {
     padding: 20,
-    backgroundColor: '#F2F2F7',
+    backgroundColor: colors.background,
   },
   dayBox: {
     marginBottom: 16,
@@ -152,26 +153,29 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 4,
+    color: colors.text,
   },
   entry: {
     marginBottom: 6,
   },
   entryText: {
     fontSize: 14,
+    color: colors.text,
   },
   note: {
     fontSize: 13,
-    color: '#555',
+    color: '#a1a1aa',
   },
   tags: {
     fontSize: 13,
-    color: '#777',
+    color: '#a1a1aa',
   },
   noData: {
     fontSize: 14,
-    color: '#999',
+    color: '#777',
   },
   avgText: {
     fontSize: 14,
+    color: colors.text,
   },
 });

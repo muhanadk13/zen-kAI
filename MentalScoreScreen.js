@@ -21,6 +21,7 @@ import {
 } from './utils/generateTodaysInsight';
 import { markInsightRead, getCurrentScores, xpForLevel } from './utils/scoring';
 import { LinearGradient } from 'expo-linear-gradient';
+import { colors } from './utils/theme';
 import Svg, { Circle } from 'react-native-svg';
 import ConfettiCannon from 'react-native-confetti-cannon';
 
@@ -512,7 +513,7 @@ export default function MentalScoreScreen() {
       const longest = longRaw ? parseInt(longRaw, 10) : 0;
       setStreak(count);
       setLongestStreak(longest);
-      streakRef.current?.bounceIn();
+      streakRef.current?.rubberBand();
       if (count > 0) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     } catch (err) {
       console.error('❌ Error calculating streak:', err);
@@ -651,8 +652,15 @@ export default function MentalScoreScreen() {
 
 
       <View style={styles.streakContainer}>
-        <Animatable.Text ref={streakRef} style={styles.streakText}>
-          🔥 {streak} Day Streak — Longest: {longestStreak} { [3,7,14,30,50].includes(streak) ? '🏅' : '' }
+        <Animatable.Text
+          ref={streakRef}
+          style={styles.streakText}
+          animation="pulse"
+          iterationCount="infinite"
+          iterationDelay={3000}
+        >
+          🔥 {streak} Day Streak — Longest: {longestStreak}{' '}
+          {[3, 7, 14, 30, 50].includes(streak) ? '🏅' : ''}
         </Animatable.Text>
       </View>
       {/* XP gain animation will show here */}
@@ -739,7 +747,7 @@ const styles = StyleSheet.create({
   container: {
     marginTop: 30,
     paddingHorizontal: 24,
-    backgroundColor: '#F2F2F7',
+    backgroundColor: colors.background,
     paddingBottom: 40,
   },
   headerButton: {
@@ -766,7 +774,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     fontSize: 45,
     fontWeight: '700',
-    color: '#000',
+    color: colors.text,
     marginBottom: 22,
   },
   streakContainer: {
@@ -778,12 +786,12 @@ const styles = StyleSheet.create({
   streakText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#FF4500',
+    color: colors.gold,
     marginTop: -10,
-    
+
   },
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.card,
     padding: 18,
     borderRadius: 16,
     marginBottom: 20,
@@ -806,23 +814,23 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000',
+    color: colors.text,
   },
   cardText: {
     fontSize: 14,
     fontWeight: '400',
     lineHeight: 22,
-    color: '#333',
+    color: colors.text,
     marginTop: 2,
   },
   bold: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#000',
+    color: colors.text,
     marginVertical: 4,
   },
   metricsSection: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.card,
     borderRadius: 16,
     padding: 16,
     shadowColor: '#000',
@@ -847,12 +855,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     marginBottom: 8,
-    color: '#000',
+    color: colors.text,
   },
   barBackground: {
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#e0e0e0',
+    backgroundColor: '#3b3b4f',
     overflow: 'hidden',
   },
   barFill: {
@@ -871,6 +879,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     marginBottom: 4,
+    color: colors.text,
   },
   resetContainer: {
     alignItems: 'center',
@@ -898,13 +907,13 @@ const styles = StyleSheet.create({
   gradeText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#4c1d95',
+    color: colors.accent2,
   },
   xpGainText: {
     position: 'absolute',
     right: 0,
     top: -18,
-    color: '#7c3aed',
+    color: colors.accent2,
     fontWeight: '700',
   },
 });

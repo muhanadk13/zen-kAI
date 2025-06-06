@@ -4,7 +4,9 @@ import React, { useEffect, useRef } from 'react';
      import * as Notifications from 'expo-notifications';
      import * as Device from 'expo-device';
      import Constants from 'expo-constants';
-     import { Alert, Platform } from 'react-native';
+import { Alert, Platform } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { colors } from './utils/theme';
      import AsyncStorage from '@react-native-async-storage/async-storage';
 
      import MentalScoreScreen from './MentalScoreScreen';
@@ -168,14 +170,16 @@ import HistoryScreen from './HistoryScreen';
        }, []);
 
        return (
-         <NavigationContainer ref={navigationRef}>
-           <Stack.Navigator initialRouteName="MentalScore">
-             <Stack.Screen name="MentalScore" component={MentalScoreScreen} />
-             <Stack.Screen name="CheckIn" component={CheckInScreen} />
-             <Stack.Screen name="Reflection" component={ReflectionScreen} options={{ headerShown: false }} />
-             <Stack.Screen name="TestInsight" component={TestInsightScreen} />
-             <Stack.Screen name="History" component={HistoryScreen} />
-           </Stack.Navigator>
-         </NavigationContainer>
+         <LinearGradient colors={[colors.background, '#0f172a']} style={{ flex: 1 }}>
+           <NavigationContainer ref={navigationRef}>
+             <Stack.Navigator initialRouteName="MentalScore">
+               <Stack.Screen name="MentalScore" component={MentalScoreScreen} />
+               <Stack.Screen name="CheckIn" component={CheckInScreen} />
+               <Stack.Screen name="Reflection" component={ReflectionScreen} options={{ headerShown: false }} />
+               <Stack.Screen name="TestInsight" component={TestInsightScreen} />
+               <Stack.Screen name="History" component={HistoryScreen} />
+             </Stack.Navigator>
+           </NavigationContainer>
+         </LinearGradient>
        );
      }
