@@ -37,11 +37,11 @@ import HistoryScreen from './HistoryScreen';
        await Notifications.cancelAllScheduledNotificationsAsync();
        console.log('🧹 Cleared all scheduled notifications.');
 
-       const triggers = [
-         { hour: 9, minute: 0, title: '🧘 Morning Check-In', body: 'Start your day with a check-in.', window: 'checkIn1' },
-         { hour: 16, minute: 0, title: '🌞 Afternoon Check-In', body: 'Complete your second check-in.', window: 'checkIn2' },
-         { hour: 20, minute: 0, title: '🌙 Evening Reflection', body: 'Finish with your final check-in.', window: 'checkIn3' },
-       ];
+      const triggers = [
+        { hour: 10, minute: 0, title: '🧘 Morning Check-In', body: 'Start your day with a check-in.', window: 'checkIn1' },
+        { hour: 16, minute: 0, title: '🌞 Afternoon Check-In', body: 'Complete your second check-in.', window: 'checkIn2' },
+        { hour: 21, minute: 0, title: '🌙 Evening Reflection', body: 'Finish with your final check-in.', window: 'checkIn3' },
+      ];
 
        const idRecord = {};
        for (const { hour, minute, title, body, window } of triggers) {
@@ -144,10 +144,10 @@ import HistoryScreen from './HistoryScreen';
              const { screen, window } = response.notification.request.content.data;
              if (screen === 'CheckIn' && window) {
                navigationRef.current?.navigate(screen, { window });
-               if (window === 'checkIn1') rescheduleNotification('checkIn1', 9, 0);
+               if (window === 'checkIn1') rescheduleNotification('checkIn1', 10, 0);
                if (window === 'checkIn2') rescheduleNotification('checkIn2', 16, 0);
-               if (window === 'checkIn3') rescheduleNotification('checkIn3', 23, 18);
-             }
+               if (window === 'checkIn3') rescheduleNotification('checkIn3', 21, 0);
+            }
            });
 
            Notifications.setNotificationHandler({
