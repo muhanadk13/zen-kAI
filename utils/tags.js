@@ -1,8 +1,23 @@
 export const defaultTags = {
-  emotions: ['stressed', 'grateful', 'anxious', 'excited', 'burned out'],
-  activities: ['worked out', 'studied', 'socialized', 'skipped gym'],
-  themes: ['productivity', 'routine', 'relationships', 'body image'],
+  emotions: [
+    'Stressed', 'Grateful', 'Anxious', 'Excited', 'Burned Out',
+    'Lonely', 'Overwhelmed', 'Motivated',
+    'Peaceful', 'Focused','Confident'
+  ],
+  activities: [
+    'Worked Out', 'Studied', 'Socialized', 'Skipped Gym',
+    'Ate Clean', 'Went On A Walk', 'Read A Book',
+    'Mindlessly Scrolled', 'Meditated',
+    'Worked', 'Napped', 'Stayed Up Late'
+  ],
+  themes: [
+    'Productivity', 'Routine', 'Relationships', 
+    'Discipline', 'Self-Worth', 'Health',
+     'Purpose', 'Growth', 'Confidence',
+    'Mental Clarity', 'Social Pressure'
+  ],
 };
+
 
 const USER_TAGS_KEY = 'userTags';
 
