@@ -21,6 +21,7 @@ import { useColorScheme } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import * as Animatable from 'react-native-animatable';
 import ConfettiCannon from 'react-native-confetti-cannon';
+import { COLORS } from './theme';
 
 const OPENAI_API_KEY = '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';
 
@@ -243,15 +244,15 @@ export default function ReflectionScreen() {
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? '#1C1C1E' : '#F2F2F7' }]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? COLORS.textPrimary : COLORS.paleGray }]}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={{ flex: 1 }}
           keyboardVerticalOffset={10}
         >
           <View style={styles.header}>
-            <Text style={[styles.title, { color: isDarkMode ? '#FFFFFF' : '#1C1C1E' }]}>Reflection</Text>
-            <Text style={[styles.subtitle, { color: isDarkMode ? '#A9A9A9' : '#8E8E93' }]}>
+            <Text style={[styles.title, { color: isDarkMode ? COLORS.icyWhite : COLORS.textPrimary }]}>Reflection</Text>
+            <Text style={[styles.subtitle, { color: isDarkMode ? COLORS.placeholder : COLORS.textSecondary }]}>
               Your personal AI assistant
             </Text>
           </View>
@@ -270,10 +271,18 @@ export default function ReflectionScreen() {
                 style={[
                   styles.chatBubble,
                   msg.fromUser ? styles.userBubble : styles.aiBubble,
-                  { backgroundColor: msg.fromUser ? (isDarkMode ? '#007AFF' : '#D0E8FF') : (isDarkMode ? '#2C2C2E' : '#EDEDED') },
+                  {
+                    backgroundColor: msg.fromUser
+                      ? isDarkMode
+                        ? COLORS.accent
+                        : COLORS.softLavender
+                      : isDarkMode
+                        ? '#2C2C2E'
+                        : COLORS.icyWhite,
+                  },
                 ]}
               >
-                <Text style={[styles.chatText, { color: isDarkMode ? '#FFFFFF' : '#1C1C1E' }]}>{msg.text}</Text>
+                <Text style={[styles.chatText, { color: isDarkMode ? COLORS.icyWhite : COLORS.textPrimary }]}>{msg.text}</Text>
               </Animatable.View>
             ))}
           </ScrollView>
@@ -283,12 +292,20 @@ export default function ReflectionScreen() {
               style={[
                 styles.input,
                 {
-                  backgroundColor: isAIResponding ? '#E0E0E0' : isDarkMode ? '#2C2C2E' : '#F1F1F3',
-                  color: isAIResponding ? '#A9A9A9' : isDarkMode ? '#FFFFFF' : '#1C1C1E',
+                  backgroundColor: isAIResponding
+                    ? COLORS.border
+                    : isDarkMode
+                    ? '#2C2C2E'
+                    : COLORS.icyWhite,
+                  color: isAIResponding
+                    ? COLORS.placeholder
+                    : isDarkMode
+                    ? COLORS.icyWhite
+                    : COLORS.textPrimary,
                 },
               ]}
               placeholder={isAIResponding ? 'AI is responding...' : 'Type your response...'}
-              placeholderTextColor={isAIResponding ? '#A9A9A9' : isDarkMode ? '#666666' : '#A9A9A9'}
+              placeholderTextColor={isAIResponding ? COLORS.placeholder : isDarkMode ? '#666666' : COLORS.placeholder}
               value={message}
               onChangeText={setMessage}
               returnKeyType="send"
@@ -304,7 +321,7 @@ export default function ReflectionScreen() {
                 <Ionicons
                   name="arrow-up-circle"
                   size={43}
-                  color={isAIResponding ? '#A9A9A9' : isDarkMode ? '#0A84FF' : '#007AFF'}
+                  color={isAIResponding ? COLORS.placeholder : COLORS.accent}
                 />
               </Animatable.View>
             </Pressable>

@@ -16,6 +16,7 @@ import { useNavigation } from '@react-navigation/native';
 import * as Animatable from 'react-native-animatable';
 import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { COLORS } from './theme';
 import {
   generateTodaysInsight,
   generateWeeklyMindMirror,
@@ -56,7 +57,7 @@ const ScoreCircle = ({ score, size = 200, strokeWidth = 18 }) => {
         cx={cx}
         cy={cy}
         r={radius}
-        stroke="#e6e6e6"
+        stroke={COLORS.border}
         strokeWidth={strokeWidth}
         fill="none"
       />
@@ -587,13 +588,13 @@ export default function MentalScoreScreen() {
         <TouchableOpacity onPress={resetCheckIn3} style={styles.resetButton}>
           <Text style={styles.resetButtonText}>Reset Check-In 3 (Dev)</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={devLaunchCheckIn3} style={[styles.resetButton, { marginTop: 12, backgroundColor: '#3b82f6' }]}>
+        <TouchableOpacity onPress={devLaunchCheckIn3} style={[styles.resetButton, { marginTop: 12, backgroundColor: COLORS.accent }]}>
           <Text style={styles.resetButtonText}>Open Check-In 3 (Dev)</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={resetCheckIn1} style={[styles.resetButton, { marginTop: 12, backgroundColor: '#ef4444' }]}>
           <Text style={styles.resetButtonText}>Reset Check-In 1 (Dev)</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={devLaunchCheckIn1} style={[styles.resetButton, { marginTop: 12, backgroundColor: '#3b82f6' }]}>
+        <TouchableOpacity onPress={devLaunchCheckIn1} style={[styles.resetButton, { marginTop: 12, backgroundColor: COLORS.accent }]}>
           <Text style={styles.resetButtonText}>Open Check-In 1 (Dev)</Text>
         </TouchableOpacity>
         <TouchableOpacity 
@@ -617,13 +618,13 @@ const styles = StyleSheet.create({
   container: {
     marginTop: 30,
     paddingHorizontal: 24,
-    backgroundColor: '#F2F2F7',
+    backgroundColor: COLORS.paleGray,
     paddingBottom: 40,
   },
   headerButton: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#2563eb',
+    color: COLORS.accent,
   },
   gaugeContainer: {
     alignItems: 'center',
@@ -639,7 +640,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     fontSize: 45,
     fontWeight: '700',
-    color: '#000',
+    color: COLORS.textPrimary,
     marginBottom: 22,
   },
   mentalScoreLabel: {
@@ -647,7 +648,7 @@ const styles = StyleSheet.create({
     top: '60%',
     fontSize: 16,
     fontWeight: '500',
-    color: '#555',
+    color: COLORS.textSecondary,
     textAlign: 'center',
   },
   streakContainer: {
@@ -659,12 +660,12 @@ const styles = StyleSheet.create({
   streakText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#FF4500',
+    color: COLORS.accent,
     marginTop: -10,
     
   },
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.icyWhite,
     padding: 18,
     borderRadius: 16,
     marginBottom: 20,
@@ -687,23 +688,23 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000',
+    color: COLORS.textPrimary,
   },
   cardText: {
     fontSize: 14,
     fontWeight: '400',
     lineHeight: 22,
-    color: '#333',
+    color: COLORS.textSecondary,
     marginTop: 2,
   },
   bold: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#000',
+    color: COLORS.textPrimary,
     marginVertical: 4,
   },
   metricsSection: {
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.icyWhite,
     borderRadius: 16,
     padding: 16,
     shadowColor: '#000',
@@ -733,7 +734,7 @@ const styles = StyleSheet.create({
   barBackground: {
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#e0e0e0',
+    backgroundColor: COLORS.border,
     overflow: 'hidden',
   },
   barFill: {
@@ -745,7 +746,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   resetButton: {
-    backgroundColor: '#ef4444',
+    backgroundColor: COLORS.accent,
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 10,
@@ -755,7 +756,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   resetButtonText: {
-    color: '#fff',
+    color: COLORS.icyWhite,
     fontWeight: '600',
     fontSize: 15,
   },

@@ -9,6 +9,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { defaultTags, getUserTags, addUserTag } from './utils/tags';
+import { COLORS } from './theme';
 
 export default function TagSelectorModal({
   visible,
@@ -54,7 +55,7 @@ export default function TagSelectorModal({
         <TextInput
           style={styles.search}
           placeholder="Search tags"
-          placeholderTextColor="#999"
+          placeholderTextColor={COLORS.placeholder}
           value={search}
           onChangeText={setSearch}
         />
@@ -71,7 +72,7 @@ export default function TagSelectorModal({
             <TextInput
               style={styles.input}
               placeholder="Create custom tag"
-              placeholderTextColor="#999"
+              placeholderTextColor={COLORS.placeholder}
               value={custom}
               onChangeText={setCustom}
             />
@@ -89,45 +90,45 @@ export default function TagSelectorModal({
 }
 
 const styles = StyleSheet.create({
-  modal: { flex: 1, backgroundColor: '#fff', padding: 20 },
+  modal: { flex: 1, backgroundColor: COLORS.icyWhite, padding: 20 },
   header: { fontSize: 20, fontWeight: '600', marginBottom: 8 },
   search: {
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#ccc',
+    borderColor: COLORS.border,
     borderRadius: 8,
     padding: 8,
     marginBottom: 12,
-    color: '#111',
+    color: COLORS.textPrimary,
   },
   scroll: { paddingBottom: 40 },
   section: { fontSize: 16, fontWeight: '600', marginVertical: 8 },
   tagRow: { flexDirection: 'row', flexWrap: 'wrap' },
   tag: {
-    backgroundColor: '#E5E5EA',
+    backgroundColor: COLORS.paleGray,
     borderRadius: 14,
     paddingVertical: 6,
     paddingHorizontal: 12,
     margin: 4,
   },
-  tagSelected: { backgroundColor: '#3b82f6' },
-  tagText: { color: '#111' },
-  tagTextSelected: { color: '#fff' },
+  tagSelected: { backgroundColor: COLORS.accent },
+  tagText: { color: COLORS.textPrimary },
+  tagTextSelected: { color: COLORS.icyWhite },
   customRow: { flexDirection: 'row', alignItems: 'center', marginTop: 8 },
   input: {
     flex: 1,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#ccc',
+    borderColor: COLORS.border,
     borderRadius: 8,
     padding: 8,
-    color: '#111',
+    color: COLORS.textPrimary,
   },
   addButton: {
     marginLeft: 8,
-    backgroundColor: '#3b82f6',
+    backgroundColor: COLORS.accent,
     padding: 8,
     borderRadius: 8,
   },
-  addButtonText: { color: '#fff', fontWeight: '600' },
+  addButtonText: { color: COLORS.icyWhite, fontWeight: '600' },
   done: { alignSelf: 'center', marginTop: 16 },
-  doneText: { fontSize: 16, color: '#3b82f6', fontWeight: '600' },
+  doneText: { fontSize: 16, color: COLORS.accent, fontWeight: '600' },
 });
