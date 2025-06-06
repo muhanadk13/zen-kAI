@@ -21,7 +21,7 @@ import {
 } from './utils/generateTodaysInsight';
 import { markInsightRead, getCurrentScores, xpForLevel } from './utils/scoring';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Easing } from 'react-native';
+import Svg, { Circle } from 'react-native-svg';
 
 const AnimatedProgressBar = ({ progress, color }) => {
   const width = progress.interpolate({
@@ -65,67 +65,48 @@ const AnimatedMomentumBar = ({ value }) => {
   );
 };
 
-const StreakRings = ({ rings }) => {
-  const ring1 = useRef(new Animated.Value(rings.ring1 ? 1 : 0)).current;
-  const ring2 = useRef(new Animated.Value(rings.ring2 ? 1 : 0)).current;
-  const ring3 = useRef(new Animated.Value(rings.ring3 ? 1 : 0)).current;
-
-  useEffect(() => {
-    Animated.timing(ring1, {
-      toValue: rings.ring1 ? 1 : 0,
-      duration: 500,
-      easing: Easing.out(Easing.ease),
-      useNativeDriver: false,
-    }).start();
-  }, [rings.ring1]);
-
-  useEffect(() => {
-    Animated.timing(ring2, {
-      toValue: rings.ring2 ? 1 : 0,
-      duration: 500,
-      easing: Easing.out(Easing.ease),
-      useNativeDriver: false,
-    }).start();
-  }, [rings.ring2]);
-
-  useEffect(() => {
-    Animated.timing(ring3, {
-      toValue: rings.ring3 ? 1 : 0,
-      duration: 500,
-      easing: Easing.out(Easing.ease),
-      useNativeDriver: false,
-    }).start();
-  }, [rings.ring3]);
-
-  const ringStyle = (size, color, anim) => ({
-    position: 'absolute',
-    width: size,
-    height: size,
-    borderRadius: size / 2,
-    borderWidth: 6,
-    borderColor: color,
-    opacity: anim,
-    transform: [{ scale: anim }],
-  });
+const ScoreCircle = ({ score, size = 170, strokeWidth = 18 }) => {
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const progress = (score / 100) * circumference;
+  const cx = size / 2;
+  const cy = size / 2;
 
   return (
-    <View style={styles.ringsWrapper}>
-      <Animated.View style={ringStyle(120, '#c084fc', ring1)} />
-      <Animated.View style={ringStyle(90, '#7c3aed', ring2)} />
-      <Animated.View style={ringStyle(60, '#4c1d95', ring3)} />
-    </View>
+    <Svg width={size} height={size} style={styles.gaugeSvg}>
+      <Circle
+        cx={cx}
+        cy={cy}
+        r={radius}
+        stroke="#e6e6e6"
+        strokeWidth={strokeWidth}
+        fill="none"
+      />
+      <Circle
+        cx={cx}
+        cy={cy}
+        r={radius}
+        stroke={getScoreColor(score)}
+        strokeWidth={strokeWidth}
+        strokeDasharray={`${progress} ${circumference - progress}`}
+        strokeLinecap="round"
+        rotation="-90"
+        originX={cx}
+        originY={cy}
+        fill="none"
+      />
+    </Svg>
   );
 };
 
-
-export const getScoreColor = (score) => {
-    if (score <= 20) return '#FF3B30';      // Bright Red
-    if (score <= 40) return '#FF9500';      // Orange
-    if (score <= 55) return '#FFCC00';      // Yellow
-    if (score <= 70) return '#AEF359';      // Lime Green
-    if (score <= 85) return '#4CD964';      // Soft Green
-    return '#2ECC71';                       // Darker Green
-  };
+const getScoreColor = (score) => {
+  if (score <= 20) return '#FF3B30';
+  if (score <= 40) return '#FF9500';
+  if (score <= 55) return '#FFCC00';
+  if (score <= 70) return '#AEF359';
+  if (score <= 85) return '#4CD964';
+  return '#2ECC71';
+};
   
 
 
@@ -140,7 +121,7 @@ export default function MentalScoreScreen() {
   const [microInsight, setMicroInsight] = useState('Loading insight...');
   const [weeklyMindMirror, setWeeklyMindMirror] = useState('No MindMirror yet.');
   const [streak, setStreak] = useState(0);
-  const [rings, setRings] = useState({ ring1: false, ring2: false, ring3: false });
+  const [longestStreak, setLongestStreak] = useState(0);
   const [xp, setXp] = useState({ xpToday: 0, total: 0, level: 1, progress: 0 });
   const [dailyGoal, setDailyGoal] = useState(null);
   const xpGainRef = useRef(null);
@@ -151,10 +132,10 @@ export default function MentalScoreScreen() {
     if (microInsight && microInsight !== 'Loading insight...') {
       markInsightRead().then(() => {
         getCurrentScores().then((data) => {
-          setRings(data.streakRings);
           if (data.xp) setXp(data.xp);
           if (data.dailyGoal) setDailyGoal(data.dailyGoal);
           if (data.streak !== undefined) setStreak(data.streak);
+          if (data.longestStreak !== undefined) setLongestStreak(data.longestStreak);
         });
       });
     }
@@ -162,10 +143,10 @@ export default function MentalScoreScreen() {
 
   useEffect(() => {
     getCurrentScores().then((data) => {
-      setRings(data.streakRings);
       if (data.xp) setXp(data.xp);
       if (data.dailyGoal) setDailyGoal(data.dailyGoal);
       if (data.streak !== undefined) setStreak(data.streak);
+      if (data.longestStreak !== undefined) setLongestStreak(data.longestStreak);
     });
   }, []);
 
@@ -347,10 +328,10 @@ export default function MentalScoreScreen() {
       fetchCheckInData();
       calculateStreak();
       getCurrentScores().then((data) => {
-        setRings(data.streakRings);
         if (data.xp) setXp(data.xp);
         if (data.dailyGoal) setDailyGoal(data.dailyGoal);
         if (data.streak !== undefined) setStreak(data.streak);
+        if (data.longestStreak !== undefined) setLongestStreak(data.longestStreak);
       });
     });
 
@@ -501,9 +482,14 @@ export default function MentalScoreScreen() {
 
   const calculateStreak = async () => {
     try {
-      const raw = await AsyncStorage.getItem('currentStreak');
-      const count = raw ? parseInt(raw, 10) : 0;
+      const [curRaw, longRaw] = await Promise.all([
+        AsyncStorage.getItem('currentStreak'),
+        AsyncStorage.getItem('longestStreak'),
+      ]);
+      const count = curRaw ? parseInt(curRaw, 10) : 0;
+      const longest = longRaw ? parseInt(longRaw, 10) : 0;
       setStreak(count);
+      setLongestStreak(longest);
       streakRef.current?.bounceIn();
       if (count > 0) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     } catch (err) {
@@ -615,13 +601,17 @@ export default function MentalScoreScreen() {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Animatable.View animation="fadeInDown" duration={800} style={styles.gaugeContainer}>
+        <ScoreCircle score={displayScore} />
         <Text style={styles.mentalScore}>{displayScore}</Text>
-        <Text style={styles.mentalScoreLabel}>MentalScore</Text>
+        <Text style={styles.mentalScoreLabel}>Today’s Mental Readiness</Text>
+        <Text style={styles.subScores}>
+          Clarity: {displayClarity} / Energy: {displayEnergy} / Emotion: {displayEmotion}
+        </Text>
       </Animatable.View>
 
-      <View style={styles.momentumContainer}>
+      <View style={[styles.momentumContainer, xp.progress > 90 && styles.levelGlow]}>
         <Text style={styles.momentumLabel}>
-          Level {xp.level} - {xpForLevel(xp.level + 1) - xp.total} XP to go
+          Level {xp.level} — {xp.total} / {xpForLevel(xp.level + 1)} XP
         </Text>
         <AnimatedMomentumBar value={xp.progress} />
         <Animatable.Text ref={xpGainRef} style={styles.xpGainText}>
@@ -633,10 +623,9 @@ export default function MentalScoreScreen() {
 
       <View style={styles.streakContainer}>
         <Animatable.Text ref={streakRef} style={styles.streakText}>
-          🔥 {streak} Day Streak
+          🔥 {streak} Day Streak — Longest: {longestStreak} { [3,7,14,30,50].includes(streak) ? '🏅' : '' }
         </Animatable.Text>
       </View>
-      <StreakRings rings={rings} />
       {/* XP gain animation will show here */}
 
       {dailyGoal && (
@@ -737,6 +726,11 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     width: 170,
     height: 170,
+  },
+  gaugeSvg: {
+    width: 170,
+    height: 170,
+    alignSelf: 'center',
   },
 
   mentalScore: {
@@ -847,6 +841,11 @@ const styles = StyleSheet.create({
   momentumContainer: {
     marginBottom: 16,
   },
+  levelGlow: {
+    shadowColor: '#7c3aed',
+    shadowRadius: 6,
+    shadowOpacity: 0.6,
+  },
   momentumLabel: {
     fontSize: 14,
     fontWeight: '600',
@@ -880,16 +879,16 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#4c1d95',
   },
+  subScores: {
+    fontSize: 14,
+    color: '#555',
+    marginTop: 4,
+  },
   xpGainText: {
     position: 'absolute',
     right: 0,
     top: -18,
     color: '#7c3aed',
     fontWeight: '700',
-  },
-  ringsWrapper: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 20,
   },
 });
