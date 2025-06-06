@@ -125,6 +125,7 @@ export default function MentalScoreScreen() {
   const [xp, setXp] = useState({ xpToday: 0, total: 0, level: 1, progress: 0 });
   const [dailyGoal, setDailyGoal] = useState(null);
   const xpGainRef = useRef(null);
+  const xpBarRef = useRef(null);
   const prevXp = useRef(0);
   const [xpDelta, setXpDelta] = useState(0);
 
@@ -156,6 +157,7 @@ export default function MentalScoreScreen() {
       setXpDelta(delta);
       prevXp.current = xp.xpToday;
       xpGainRef.current?.fadeInDown(200).then(() => xpGainRef.current?.fadeOutUp(600));
+      xpBarRef.current?.pulse(800);
     } else {
       prevXp.current = xp.xpToday;
     }
@@ -600,16 +602,14 @@ export default function MentalScoreScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Animatable.View animation="fadeInDown" duration={800} style={styles.gaugeContainer}>
+      <Animatable.View animation="bounceIn" duration={800} style={styles.gaugeContainer}>
         <ScoreCircle score={displayScore} />
-        <Text style={styles.mentalScore}>{displayScore}</Text>
-        <Text style={styles.mentalScoreLabel}>Today’s Mental Readiness</Text>
-        <Text style={styles.subScores}>
-          Clarity: {displayClarity} / Energy: {displayEnergy} / Emotion: {displayEmotion}
-        </Text>
+        <Animatable.Text animation="pulse" iterationCount="infinite" iterationDelay={4000} style={styles.mentalScore}>
+          {displayScore}
+        </Animatable.Text>
       </Animatable.View>
 
-      <View style={[styles.momentumContainer, xp.progress > 90 && styles.levelGlow]}>
+      <Animatable.View ref={xpBarRef} style={[styles.momentumContainer, xp.progress > 90 && styles.levelGlow]}>
         <Text style={styles.momentumLabel}>
           Level {xp.level} — {xp.total} / {xpForLevel(xp.level + 1)} XP
         </Text>
@@ -617,7 +617,7 @@ export default function MentalScoreScreen() {
         <Animatable.Text ref={xpGainRef} style={styles.xpGainText}>
           +{xpDelta}
         </Animatable.Text>
-      </View>
+      </Animatable.View>
 
 
 
@@ -739,14 +739,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#000',
     marginBottom: 22,
-  },
-  mentalScoreLabel: {
-    position: 'absolute',
-    top: '60%',
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#555',
-    textAlign: 'center',
   },
   streakContainer: {
     flexDirection: 'row',
@@ -878,11 +870,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#4c1d95',
-  },
-  subScores: {
-    fontSize: 14,
-    color: '#555',
-    marginTop: 4,
   },
   xpGainText: {
     position: 'absolute',
