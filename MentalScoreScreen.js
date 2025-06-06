@@ -20,6 +20,8 @@ import {
   generateTodaysInsight,
   generateWeeklyMindMirror,
 } from './utils/generateTodaysInsight';
+import { markInsightRead, getCurrentScores } from './utils/scoring';
+import LinearGradient from 'react-native-linear-gradient';
 
 const AnimatedProgressBar = ({ progress, color }) => {
   const width = progress.interpolate({
@@ -29,6 +31,36 @@ const AnimatedProgressBar = ({ progress, color }) => {
   return (
     <View style={styles.barBackground}>
       <Animated.View style={[styles.barFill, { backgroundColor: color, width }]} />
+    </View>
+  );
+};
+
+const AnimatedMomentumBar = ({ value }) => {
+  const anim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(anim, {
+      toValue: value,
+      duration: 600,
+      useNativeDriver: false,
+    }).start();
+  }, [value]);
+
+  const width = anim.interpolate({
+    inputRange: [0, 100],
+    outputRange: ['0%', '100%'],
+  });
+
+  return (
+    <View style={styles.barBackground}>
+      <Animated.View style={{ width, height: '100%' }}>
+        <LinearGradient
+          colors={['#c084fc', '#7c3aed']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.barFill}
+        />
+      </Animated.View>
     </View>
   );
 };
@@ -88,6 +120,25 @@ export default function MentalScoreScreen() {
   const [microInsight, setMicroInsight] = useState('Loading insight...');
   const [weeklyMindMirror, setWeeklyMindMirror] = useState('No MindMirror yet.');
   const [streak, setStreak] = useState(0);
+  const [momentum, setMomentum] = useState(0);
+  const [mindGrade, setMindGrade] = useState('C');
+
+  useEffect(() => {
+    if (microInsight && microInsight !== 'Loading insight...') {
+      markInsightRead();
+    }
+  }, [microInsight]);
+
+  useEffect(() => {
+    getCurrentScores().then((data) => {
+      setMomentum(data.momentum);
+      setMindGrade(data.mindGrade);
+    });
+  }, []);
+
+  useEffect(() => {
+    gradeRef.current?.pulse(700);
+  }, [mindGrade]);
 
   const energyAnim = useRef(new Animated.Value(BASELINE)).current;
   const clarityAnim = useRef(new Animated.Value(BASELINE)).current;
@@ -119,6 +170,7 @@ export default function MentalScoreScreen() {
   const [displayFocus, setDisplayFocus] = useState(-1);
   const [displayScore, setDisplayScore] = useState(-1);
   const checkInButtonRef = useRef(null);
+  const gradeRef = useRef(null);
 
   useEffect(() => {
     const id = scoreAnim.addListener(({ value }) =>
@@ -254,6 +306,10 @@ export default function MentalScoreScreen() {
     const unsubscribe = navigation.addListener('focus', () => {
       fetchCheckInData();
       calculateStreak();
+      getCurrentScores().then((data) => {
+        setMomentum(data.momentum);
+        setMindGrade(data.mindGrade);
+      });
     });
 
     return unsubscribe;
@@ -540,8 +596,24 @@ export default function MentalScoreScreen() {
         <Text style={styles.mentalScoreLabel}>MentalScore</Text>
       </Animatable.View>
 
+      <View style={styles.momentumContainer}>
+        <Text style={styles.momentumLabel}>Momentum</Text>
+        <AnimatedMomentumBar value={momentum} />
+      </View>
+
       <View style={styles.streakContainer}>
         <Text style={styles.streakText}>🔥 {streak} Day Streak</Text>
+      </View>
+      <View style={styles.gradeContainer}>
+        <Animatable.Text
+          ref={gradeRef}
+          animation="pulse"
+          duration={700}
+          iterationCount={1}
+          style={styles.gradeText}
+        >
+          Weekly Grade: {mindGrade}
+        </Animatable.Text>
       </View>
 
       <Animatable.View animation="fadeInUp" duration={600} style={styles.card}>
@@ -574,7 +646,7 @@ export default function MentalScoreScreen() {
         <View style={styles.row}>
           <View style={[styles.metricBox, styles.metricBoxLeft]}>
             <Text style={styles.metricLabel}>💚 Emotion {displayEmotion}%</Text>
-            <AnimatedProgressBar progress={emotionProgress} color="#7fe87a" />
+            <AnimatedProgressBar progress={emotionProgress} color="#34d1bf" />
           </View>
           <View style={styles.metricBox}>
             <Text style={styles.metricLabel}>🎯 Focus {displayFocus}%</Text>
@@ -740,6 +812,14 @@ const styles = StyleSheet.create({
     height: '100%',
     borderRadius: 5,
   },
+  momentumContainer: {
+    marginBottom: 16,
+  },
+  momentumLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
   resetContainer: {
     alignItems: 'center',
     marginTop: 10,
@@ -758,5 +838,14 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '600',
     fontSize: 15,
+  },
+  gradeContainer: {
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  gradeText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#4c1d95',
   },
 });

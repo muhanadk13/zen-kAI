@@ -21,6 +21,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import * as Animatable from 'react-native-animatable';
      import AsyncStorage from '@react-native-async-storage/async-storage';
 import TagSelectorModal from './TagSelectorModal';
+import { processCheckIn } from './utils/scoring';
 
      export default function CheckInScreen() {
        const navigation = useNavigation();
@@ -125,11 +126,13 @@ const handleSave = async () => {
              return;
            }
 
-           await AsyncStorage.setItem(key, JSON.stringify(entry));
-           const historyRaw = await AsyncStorage.getItem('checkInHistory');
-           const history = historyRaw ? JSON.parse(historyRaw) : [];
-           history.push(entry);
-          await AsyncStorage.setItem('checkInHistory', JSON.stringify(history));
+          await AsyncStorage.setItem(key, JSON.stringify(entry));
+          const historyRaw = await AsyncStorage.getItem('checkInHistory');
+          const history = historyRaw ? JSON.parse(historyRaw) : [];
+          history.push(entry);
+         await AsyncStorage.setItem('checkInHistory', JSON.stringify(history));
+
+          await processCheckIn(entry);
 
           await Haptics.notificationAsync(
             Haptics.NotificationFeedbackType.Success

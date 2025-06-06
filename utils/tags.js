@@ -43,3 +43,14 @@ export async function addUserTag(tag) {
   }
   return tags;
 }
+
+export async function removeUserTag(tag) {
+  try {
+    const tags = await getUserTags();
+    const updated = tags.filter((t) => t !== tag);
+    await AsyncStorage.setItem(USER_TAGS_KEY, JSON.stringify(updated));
+    return updated;
+  } catch {
+    return [];
+  }
+}
