@@ -2,6 +2,8 @@ import React, { useEffect, useState, useRef } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { OPENAI_API_KEY } from './utils/apiKey';
+import { LinearGradient } from 'expo-linear-gradient';
+import { colors } from './utils/theme';
 
 export default function InsightPlaceholderScreen({ navigation }) {
   const fadeAnim = useRef(new Animated.Value(0)).current; // Use useRef for Animated.Value
@@ -92,31 +94,30 @@ export default function InsightPlaceholderScreen({ navigation }) {
   }, [fadeAnim, navigation]);
 
   return (
-    <View style={styles.container}>
-      <Animated.Text style={[styles.text, { opacity: fadeAnim }]}>
+    <LinearGradient colors={colors.primaryGradient} style={styles.container}>
+      <Animated.Text style={[styles.text, { opacity: fadeAnim }]}>\
         {insight}
       </Animated.Text>
-    </View>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F2F2F7', // Light background for a clean look
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 20,
   },
   text: {
-    fontSize: 24, // Balanced font size for readability
-    fontWeight: '600', // Medium bold for elegance
-    color: '#1C1C1E', // Dark text for contrast
+    fontSize: 24,
+    fontWeight: '600',
+    color: colors.white,
     textAlign: 'center',
     fontFamily: 'System',
-    letterSpacing: 0.5, // Subtle letter spacing for refinement
-    lineHeight: 32, // Comfortable line height for readability
-    shadowColor: 'rgba(0, 0, 0, 0.1)', // Subtle shadow for depth
+    letterSpacing: 0.5,
+    lineHeight: 32,
+    shadowColor: 'rgba(0,0,0,0.2)',
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 4,
   },

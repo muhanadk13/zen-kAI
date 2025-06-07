@@ -18,3 +18,5 @@ Run `npm test` to verify the project setup. This placeholder script simply print
 ## Style Guide
 
 A detailed [Style Guide](docs/STYLE_GUIDE.md) outlines the visual system for the app, including colors, typography and component styling.
+
+The latest version introduces a bottom tab navigation and an AI Insight screen that appears after your final check-in, giving the app a Duolingo-style flow.

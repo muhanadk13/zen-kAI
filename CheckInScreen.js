@@ -138,8 +138,8 @@ const handleSave = async () => {
             Haptics.NotificationFeedbackType.Success
           );
 
-           // Navigate directly to MentalScoreScreen or ReflectionScreen
-           navigation.navigate(window === 'checkIn3' ? 'Reflection' : 'MentalScore');
+          // Navigate directly to MentalScoreScreen or Insight for final check-in
+          navigation.navigate(window === 'checkIn3' ? 'Insight' : 'MentalScore');
         } catch (err) {
           console.error('❌ Error saving check-in:', err);
           await Haptics.notificationAsync(
