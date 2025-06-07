@@ -20,6 +20,7 @@ import {
   generateWeeklyMindMirror,
 } from './utils/generateTodaysInsight';
 import { markInsightRead, getCurrentScores, xpForLevel } from './utils/scoring';
+import { colors } from './theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle } from 'react-native-svg';
 
@@ -722,13 +723,13 @@ const styles = StyleSheet.create({
   container: {
     marginTop: 30,
     paddingHorizontal: 24,
-    backgroundColor: '#F2F2F7',
+    backgroundColor: colors.background,
     paddingBottom: 40,
   },
   headerButton: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#2563eb',
+    color: colors.primary,
   },
   gaugeContainer: {
     alignItems: 'center',
@@ -831,7 +832,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     marginBottom: 8,
-    color: '#000',
+    color: colors.textDark,
   },
   barBackground: {
     height: 10,
@@ -888,7 +889,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 0,
     top: -18,
-    color: '#7c3aed',
+    color: colors.primary,
     fontWeight: '700',
   },
   streakIcon: {

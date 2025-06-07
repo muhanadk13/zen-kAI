@@ -22,6 +22,7 @@ import { useNavigation } from '@react-navigation/native';
 import * as Animatable from 'react-native-animatable';
 import { markReflectionComplete } from './utils/scoring';
 import { OPENAI_API_KEY } from './utils/apiKey';
+import { colors } from './theme';
 
 // System prompt to keep replies short and inquisitive
 const BASE_SYSTEM_MESSAGE = {
@@ -242,7 +243,7 @@ export default function ReflectionScreen() {
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? '#1C1C1E' : '#F2F2F7' }]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? '#1C1C1E' : colors.background }]}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={{ flex: 1 }}
@@ -269,7 +270,7 @@ export default function ReflectionScreen() {
                 style={[
                   styles.chatBubble,
                   msg.fromUser ? styles.userBubble : styles.aiBubble,
-                  { backgroundColor: msg.fromUser ? (isDarkMode ? '#007AFF' : '#D0E8FF') : (isDarkMode ? '#2C2C2E' : '#EDEDED') },
+                  { backgroundColor: msg.fromUser ? (isDarkMode ? colors.primary : '#d7f2da') : (isDarkMode ? '#2C2C2E' : '#EDEDED') },
                 ]}
               >
                 <Text style={[styles.chatText, { color: isDarkMode ? '#FFFFFF' : '#1C1C1E' }]}>{msg.text}</Text>
@@ -303,7 +304,7 @@ export default function ReflectionScreen() {
                 <Ionicons
                   name="arrow-up-circle"
                   size={43}
-                  color={isAIResponding ? '#A9A9A9' : isDarkMode ? '#0A84FF' : '#007AFF'}
+                  color={isAIResponding ? '#A9A9A9' : isDarkMode ? colors.primary : colors.primary}
                 />
               </Animatable.View>
             </Pressable>

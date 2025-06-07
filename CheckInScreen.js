@@ -22,6 +22,7 @@ import * as Animatable from 'react-native-animatable';
      import AsyncStorage from '@react-native-async-storage/async-storage';
 import TagSelectorModal from './TagSelectorModal';
 import { processCheckIn } from './utils/scoring';
+import { colors } from './theme';
 
      export default function CheckInScreen() {
        const navigation = useNavigation();
@@ -180,9 +181,9 @@ const handleSave = async () => {
               maximumValue={100}
               value={energy}
               onValueChange={(val) => handleSliderChange(val, setEnergy, lastEnergy)}
-              minimumTrackTintColor="#34d399"
+              minimumTrackTintColor={colors.primary}
               maximumTrackTintColor="#e5e7eb"
-              thumbTintColor="#10b981"
+              thumbTintColor={colors.primary}
             />
             <View style={styles.range}>
               <Text style={styles.rangeText}>Depleted</Text>
@@ -197,9 +198,9 @@ const handleSave = async () => {
               maximumValue={100}
               value={clarity}
               onValueChange={(val) => handleSliderChange(val, setClarity, lastClarity)}
-              minimumTrackTintColor="#60a5fa"
+              minimumTrackTintColor={colors.primary}
               maximumTrackTintColor="#e5e7eb"
-              thumbTintColor="#3b82f6"
+              thumbTintColor={colors.primary}
             />
             <View style={styles.range}>
               <Text style={styles.rangeText}>Foggy</Text>
@@ -213,9 +214,9 @@ const handleSave = async () => {
               maximumValue={100}
               value={emotion}
               onValueChange={(val) => handleSliderChange(val, setEmotion, lastEmotion)}
-              minimumTrackTintColor="#fcd34d"
+              minimumTrackTintColor={colors.accent}
               maximumTrackTintColor="#e5e7eb"
-              thumbTintColor="#fbbf24"
+              thumbTintColor={colors.accent}
             />
             <View style={styles.range}>
               <Text style={styles.rangeText}>Down</Text>
@@ -315,28 +316,28 @@ const handleSave = async () => {
      const styles = StyleSheet.create({
       safe: {
         flex: 1,
-        backgroundColor: '#F2F2F7',
+        backgroundColor: colors.background,
       },
       container: {
         padding: 24,
         paddingBottom: 120,
-        backgroundColor: '#F2F2F7',
+        backgroundColor: colors.background,
       },
        title: {
          fontSize: 28,
          fontWeight: '700',
-         color: '#111827',
+         color: colors.textDark,
          marginBottom: 4,
        },
        subtitle: {
          fontSize: 15,
-         color: '#6b7280',
+         color: colors.primary,
          marginBottom: 24,
        },
        label: {
          fontSize: 17,
          fontWeight: '600',
-         color: '#111827',
+         color: colors.textDark,
          marginBottom: 6,
        },
        slider: {
@@ -351,19 +352,19 @@ const handleSave = async () => {
        },
        rangeText: {
          fontSize: 13,
-         color: '#6b7280',
+         color: colors.primary,
        },
       input: {
-        backgroundColor: '#f3f4f6',
+        backgroundColor: '#eef7ed',
         borderRadius: 12,
         padding: 14,
         fontSize: 15,
-        color: '#111827',
+        color: colors.textDark,
         marginBottom: 24,
         minHeight: 80,
       },
       tagButton: {
-        backgroundColor: '#e5e7eb',
+        backgroundColor: colors.accent,
         paddingVertical: 8,
         paddingHorizontal: 12,
         borderRadius: 12,
@@ -371,7 +372,7 @@ const handleSave = async () => {
         marginBottom: 12,
       },
       tagButtonText: {
-        color: '#111827',
+        color: colors.textDark,
         fontWeight: '600',
       },
       tagList: {
@@ -382,24 +383,24 @@ const handleSave = async () => {
       tagChip: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#e5e5ea',
+        backgroundColor: '#e0f7e0',
         borderRadius: 16,
         paddingHorizontal: 10,
         paddingVertical: 4,
         margin: 4,
       },
       tagChipText: {
-        color: '#111827',
+        color: colors.textDark,
         marginRight: 4,
       },
       removeTag: {
-        color: '#6b7280',
+        color: '#5f5f5f',
         fontSize: 16,
         paddingLeft: 4,
         paddingRight: 2,
       },
       button: {
-        backgroundColor: '#3b82f6',
+        backgroundColor: colors.primary,
         paddingVertical: 16,
         borderRadius: 12,
         alignItems: 'center',
@@ -409,7 +410,7 @@ const handleSave = async () => {
          shadowRadius: 10,
        },
        buttonText: {
-         color: '#fff',
+         color: colors.textLight,
          fontSize: 16,
          fontWeight: '600',
        },
@@ -421,12 +422,12 @@ const handleSave = async () => {
        },
        footerText: {
          fontSize: 12,
-         color: '#9ca3af',
+         color: '#6c6c6c',
          marginLeft: 6,
        },
        lockIcon: {
          width: 14,
          height: 14,
-         tintColor: '#9ca3af',
+         tintColor: '#6c6c6c',
        },
      });

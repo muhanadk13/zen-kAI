@@ -16,6 +16,7 @@ import * as Haptics from 'expo-haptics';
 import * as Animatable from 'react-native-animatable';
 import { defaultTags, getUserTags, addUserTag, removeUserTag } from './utils/tags';
 import { updateDailyGoal } from './utils/scoring';
+import { colors } from './theme';
 
 export default function TagSelectorModal({ visible, onClose, selectedTags, toggleTag }) {
   const [userTags, setUserTags] = useState([]);
@@ -136,7 +137,7 @@ export default function TagSelectorModal({ visible, onClose, selectedTags, toggl
 const styles = StyleSheet.create({
   modal: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: colors.background,
     paddingHorizontal: 20,
     paddingTop: 12,
   },
@@ -146,7 +147,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: 12,
     fontSize: 16,
-    color: '#111',
+    color: colors.textDark,
     backgroundColor: '#FFFFFF',
     marginBottom: 8,
     marginTop: 70,
@@ -158,7 +159,7 @@ const styles = StyleSheet.create({
   section: {
     fontSize: 15,
     fontWeight: '500',
-    color: '#333',
+    color: colors.textDark,
     marginTop: 18,
     marginBottom: 6,
   },
@@ -171,17 +172,17 @@ const styles = StyleSheet.create({
     margin: 4,
   },
   tag: {
-    backgroundColor: '#E5E7EB',
+    backgroundColor: '#e0f7e0',
     borderRadius: 18,
     paddingVertical: 6,
     paddingHorizontal: 14,
   },
   tagSelected: {
-    backgroundColor: '#007AFF',
+    backgroundColor: colors.primary,
   },
   tagText: {
     fontSize: 14,
-    color: '#111',
+    color: colors.textDark,
   },
   tagTextSelected: {
     color: '#fff',
@@ -205,7 +206,7 @@ const styles = StyleSheet.create({
   },
   addButton: {
     marginLeft: 10,
-    backgroundColor: '#007AFF',
+    backgroundColor: colors.primary,
     paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: 12,
@@ -224,7 +225,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   done: {
-    backgroundColor: '#007AFF',
+    backgroundColor: colors.primary,
     paddingVertical: 12,
     paddingHorizontal: 28,
     borderRadius: 16,
@@ -233,6 +234,6 @@ const styles = StyleSheet.create({
   doneText: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#fff',
+    color: colors.textLight,
   },
 });
