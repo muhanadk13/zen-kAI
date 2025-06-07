@@ -14,3 +14,7 @@ The `utils/scoring.js` file implements the logic for updating the user's scores 
 ## Testing
 
 Run `npm test` to verify the project setup. This placeholder script simply prints `No tests`.
+
+## Style Guide
+
+A detailed [Style Guide](docs/STYLE_GUIDE.md) outlines the visual system for the app, including colors, typography and component styling.
