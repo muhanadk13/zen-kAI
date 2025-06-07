@@ -22,6 +22,7 @@ import {
 import { markInsightRead, getCurrentScores, xpForLevel } from './utils/scoring';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle } from 'react-native-svg';
+import { getHearts, restoreHearts } from './utils/hearts';
 
 const AnimatedProgressBar = ({ progress, color }) => {
   const width = progress.interpolate({
@@ -124,6 +125,7 @@ export default function MentalScoreScreen() {
   const [longestStreak, setLongestStreak] = useState(0);
   const [xp, setXp] = useState({ xpToday: 0, total: 0, level: 1, progress: 0 });
   const [dailyGoal, setDailyGoal] = useState(null);
+  const [hearts, setHearts] = useState(5);
   const xpGainRef = useRef(null);
   const xpBarRef = useRef(null);
   const prevXp = useRef(0);
@@ -142,6 +144,10 @@ export default function MentalScoreScreen() {
       });
     }
   }, [microInsight]);
+
+  useEffect(() => {
+    getHearts().then(setHearts);
+  }, []);
 
   useEffect(() => {
     getCurrentScores().then((data) => {
@@ -574,10 +580,17 @@ export default function MentalScoreScreen() {
       setMicroInsight('Loading insight...');
       setWeeklyMindMirror('No MindMirror yet.');
       setXp({ xpToday: 0, total: 0, level: 1, progress: 0 });
+      setHearts(5);
     } catch (err) {
       console.error('❌ Error clearing data:', err);
       Alert.alert('Error', 'Failed to clear data');
     }
+  };
+
+  const handleRestoreHearts = async () => {
+    const count = await restoreHearts();
+    setHearts(count);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   };
 
   const renderMarkdown = (text) => {
@@ -618,6 +631,14 @@ export default function MentalScoreScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+      <View style={styles.heartsRow}>
+        {[...Array(5)].map((_, i) => (
+          <Text key={i} style={[styles.heartIcon, { opacity: hearts > i ? 1 : 0.3 }]}>❤️</Text>
+        ))}
+        <TouchableOpacity onPress={handleRestoreHearts} style={styles.restoreButton}>
+          <Text style={styles.restoreText}>+</Text>
+        </TouchableOpacity>
+      </View>
       <Animatable.View animation="bounceIn" duration={800} style={styles.gaugeContainer}>
         <ScoreCircle score={displayScore} />
         <Animatable.Text animation="pulse" iterationCount="infinite" iterationDelay={4000} style={styles.mentalScore}>
@@ -722,13 +743,13 @@ const styles = StyleSheet.create({
   container: {
     marginTop: 30,
     paddingHorizontal: 24,
-    backgroundColor: '#F2F2F7',
+    backgroundColor: '#0F172A',
     paddingBottom: 40,
   },
   headerButton: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#2563eb',
+    color: '#FF61F6',
   },
   gaugeContainer: {
     alignItems: 'center',
@@ -749,7 +770,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     fontSize: 45,
     fontWeight: '600',
-    color: '#000',
+    color: '#F8FAFC',
     marginBottom: 0,
   },
   streakContainer: {
@@ -761,13 +782,13 @@ const styles = StyleSheet.create({
   streakText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#FF4500',
+    color: '#FF6D00',
     marginTop: -10,
   
     
   },
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: '#1E293B',
     padding: 18,
     borderRadius: 16,
     marginBottom: 20,
@@ -790,23 +811,23 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000',
+    color: '#F8FAFC',
   },
   cardText: {
     fontSize: 14,
     fontWeight: '400',
     lineHeight: 22,
-    color: '#333',
+    color: '#F8FAFC',
     marginTop: 2,
   },
   bold: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#000',
+    color: '#F8FAFC',
     marginVertical: 4,
   },
   metricsSection: {
-    backgroundColor: '#fff',
+    backgroundColor: '#1E293B',
     borderRadius: 16,
     padding: 16,
     shadowColor: '#000',
@@ -831,12 +852,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     marginBottom: 8,
-    color: '#000',
+    color: '#F8FAFC',
   },
   barBackground: {
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#e0e0e0',
+    backgroundColor: '#202B43',
     overflow: 'hidden',
   },
   barFill: {
@@ -896,5 +917,27 @@ const styles = StyleSheet.create({
     height: 20,
     marginRight: 4,
 
+  },
+  heartsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  heartIcon: {
+    fontSize: 20,
+    marginHorizontal: 2,
+  },
+  restoreButton: {
+    marginLeft: 8,
+    backgroundColor: '#2F80ED',
+    borderRadius: 12,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  restoreText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 16,
   },
 });
