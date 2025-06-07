@@ -627,7 +627,7 @@ export default function MentalScoreScreen() {
 
       <Animatable.View ref={xpBarRef} style={[styles.momentumContainer, xp.progress > 90 && styles.levelGlow]}>
         <Text style={styles.momentumLabel}>
-          Level {xp.level} — {xp.total} / {xpForLevel(xp.level + 1)} XP
+          Level {xp.level} — {xp.total - xpForLevel(xp.level)} / {xpForLevel(xp.level + 1) - xpForLevel(xp.level)} XP
         </Text>
         <AnimatedMomentumBar value={xp.progress} />
         <Animatable.Text ref={xpGainRef} style={styles.xpGainText}>
