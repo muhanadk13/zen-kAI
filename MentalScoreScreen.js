@@ -146,6 +146,13 @@ export default function MentalScoreScreen() {
   const [score, setScore] = useState(BASELINE); // Define score state
   const [microInsight, setMicroInsight] = useState('Loading insight...');
   const [weeklyMindMirror, setWeeklyMindMirror] = useState('No MindMirror yet.');
+  const insightPlaceholder =
+    microInsight === 'Loading insight...' ||
+    microInsight === 'No insight yet.' ||
+    microInsight.includes('Keep checking in');
+  const mindMirrorPlaceholder =
+    weeklyMindMirror === 'No MindMirror yet.' ||
+    weeklyMindMirror.startsWith('Not enough check-ins');
   const [streak, setStreak] = useState(0);
   const [longestStreak, setLongestStreak] = useState(0);
   const [xp, setXp] = useState({ xpToday: 0, total: 0, level: 1, progress: 0 });
@@ -745,6 +752,9 @@ start={{ x: 0, y: 0 }}
       <Text style={styles.cardTitle}>Weekly MindMirror</Text>
     </View>
     {renderMarkdown(weeklyMindMirror)}
+    {mindMirrorPlaceholder && (
+      <BlurView tint="dark" intensity={50} style={styles.blurOverlay} />
+    )}
   </Animatable.View>
 </LinearGradient>
 
@@ -761,6 +771,9 @@ start={{ x: 0, y: 0 }}
       <Text style={styles.cardTitle}>Today’s Insight</Text>
     </View>
     <Text style={styles.cardText}>{microInsight}</Text>
+    {insightPlaceholder && (
+      <BlurView tint="dark" intensity={50} style={styles.blurOverlay} />
+    )}
   </Animatable.View>
 </LinearGradient>
 
@@ -1053,6 +1066,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#1C1E29',
     borderRadius: 20,
     padding: 18,
+  },
+  blurOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 20,
   },
   metricsGradient: {
     borderRadius: 22,
