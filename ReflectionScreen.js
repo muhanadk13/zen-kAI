@@ -20,6 +20,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useColorScheme } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import * as Animatable from 'react-native-animatable';
+import { LinearGradient } from 'expo-linear-gradient';
 import { markReflectionComplete } from './utils/scoring';
 import { OPENAI_API_KEY } from './utils/apiKey';
 
@@ -241,13 +242,14 @@ export default function ReflectionScreen() {
   };
 
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? '#1C1C1E' : '#F2F2F7' }]}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={{ flex: 1 }}
-          keyboardVerticalOffset={10}
-        >
+    <LinearGradient colors={['#1C1F2E', '#12131C']} style={{ flex: 1 }}>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <SafeAreaView style={styles.container}>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={{ flex: 1 }}
+            keyboardVerticalOffset={10}
+          >
           <View style={styles.header}>
             <Text style={[styles.title, { color: isDarkMode ? '#FFFFFF' : '#1C1C1E' }]}>Reflection</Text>
             <Text style={[styles.subtitle, { color: isDarkMode ? '#A9A9A9' : '#8E8E93' }]}>
@@ -311,6 +313,7 @@ export default function ReflectionScreen() {
         </KeyboardAvoidingView>
       </SafeAreaView>
     </TouchableWithoutFeedback>
+    </LinearGradient>
   );
 }
 
