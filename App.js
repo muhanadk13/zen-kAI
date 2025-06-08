@@ -9,6 +9,9 @@ import React, { useEffect, useRef } from 'react';
      import CheckInScreen from './CheckInScreen';
      import ReflectionScreen from './ReflectionScreen';
      import TestInsightScreen from './TestInsightScreen';
+     import { BlurView } from 'expo-blur';
+     import { Image, TouchableOpacity } from 'react-native';
+
 
 import HistoryScreen from './HistoryScreen';
      const Stack = createNativeStackNavigator();
@@ -169,7 +172,42 @@ import HistoryScreen from './HistoryScreen';
          <NavigationContainer ref={navigationRef}>
            <Stack.Navigator initialRouteName="MentalScore">
              <Stack.Screen name="MentalScore" component={MentalScoreScreen} />
-             <Stack.Screen name="CheckIn" component={CheckInScreen} />
+             <Stack.Screen
+  name="CheckIn"
+  component={CheckInScreen}
+  options={{
+    headerTransparent: true,
+    headerBackground: () => (
+      <BlurView
+        intensity={99}
+        tint="dark"
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(18,19,28,0.7)', // fallback for Android
+        }}
+      />
+    ),
+    
+    headerTitle: () => (
+      <Image
+        source={require('./assets/logo-text-only.png')}
+        style={{ width: 130, height: 120, marginBottom: 8, }}
+      />
+    ),
+    headerLeft: () => (
+      <TouchableOpacity onPress={() => navigationRef.current?.navigate('MentalScore')} style={{ marginLeft: 16 }}>
+        <Image
+          source={require('./assets/logo-japan.png')}
+          style={{ width: 50, height: 50, marginLeft: 8, marginBottom: 8}}
+        />
+      </TouchableOpacity>
+    ),
+  }}
+/>
              <Stack.Screen name="Reflection" component={ReflectionScreen} options={{ headerShown: false }} />
              <Stack.Screen name="TestInsight" component={TestInsightScreen} />
              <Stack.Screen name="History" component={HistoryScreen} />
