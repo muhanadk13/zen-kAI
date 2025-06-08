@@ -14,6 +14,7 @@ import React, { useEffect, useRef } from 'react';
 
 
 import HistoryScreen from './HistoryScreen';
+import LoadScreen from "./LoadScreen";
      const Stack = createNativeStackNavigator();
 
      function getNextOccurrence(hour, minute) {
@@ -219,6 +220,7 @@ import HistoryScreen from './HistoryScreen';
              <Stack.Screen name="Reflection" component={ReflectionScreen} options={{ headerShown: false }} />
              <Stack.Screen name="TestInsight" component={TestInsightScreen} />
              <Stack.Screen name="History" component={HistoryScreen} />
+             <Stack.Screen name="Load" component={LoadScreen} options={{ headerShown: false }} />
            </Stack.Navigator>
          </NavigationContainer>
        );
