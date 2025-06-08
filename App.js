@@ -199,7 +199,15 @@ import HistoryScreen from './HistoryScreen';
       />
     ),
     headerLeft: () => (
-      <TouchableOpacity onPress={() => navigationRef.current?.navigate('MentalScore')} style={{ marginLeft: 16 }}>
+      <TouchableOpacity
+        onPress={() => {
+          if (navigationRef.current?.canGoBack()) {
+            navigationRef.current.goBack();
+          } else {
+            navigationRef.current?.navigate('MentalScore');
+          }
+        }}
+        style={{ marginLeft: 16 }}>
         <Image
           source={require('./assets/logo-japan.png')}
           style={{ width: 50, height: 50, marginLeft: 8, marginBottom: 8}}

@@ -113,7 +113,11 @@ export default function CheckInScreen() {
       await AsyncStorage.setItem('checkInHistory', JSON.stringify(history));
       await processCheckIn(entry);
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      navigation.navigate(window === 'checkIn3' ? 'Reflection' : 'MentalScore');
+      if (window === 'checkIn3') {
+        navigation.navigate('Reflection');
+      } else {
+        navigation.goBack();
+      }
     } catch (err) {
       console.error('❌ Error saving check-in:', err);
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
