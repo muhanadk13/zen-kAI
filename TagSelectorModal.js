@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import * as Animatable from 'react-native-animatable';
+import { LinearGradient } from 'expo-linear-gradient';
 import { defaultTags, getUserTags, addUserTag, removeUserTag } from './utils/tags';
 import { updateDailyGoal } from './utils/scoring';
 
@@ -55,27 +56,39 @@ export default function TagSelectorModal({ visible, onClose, selectedTags, toggl
       if (selected) toggleTag(tag);
     };
 
+    const TagContent = (
+      <TouchableOpacity
+        onPress={handlePress}
+        onLongPress={handleLongPress}
+        style={[styles.tagInner, selected && styles.tagSelectedInner]}
+      >
+        <Text style={[styles.tagText, selected && styles.tagTextSelected]}>{tag}</Text>
+      </TouchableOpacity>
+    );
+
     return (
       <Animatable.View key={tag} animation="fadeIn" duration={200} style={styles.tagWrapper}>
-        <TouchableOpacity
-          style={[styles.tag, selected && styles.tagSelected]}
-          onPress={handlePress}
-          onLongPress={handleLongPress}
-        >
-          <Text style={[styles.tagText, selected && styles.tagTextSelected]}>{tag}</Text>
-        </TouchableOpacity>
+        {selected ? (
+          <LinearGradient
+            colors={['#646DFF', '#D7A4FF']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.gradientBorder}
+          >
+            {TagContent}
+          </LinearGradient>
+        ) : (
+          TagContent
+        )}
       </Animatable.View>
     );
   };
 
   return (
     <Modal visible={visible} animationType="slide" transparent={false}>
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-          <View style={styles.modal}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <LinearGradient colors={["#0f0f11", "#1c1e29"]} style={styles.modal}>
             <TextInput
               style={styles.search}
               placeholder="Search or filter tags..."
@@ -86,11 +99,7 @@ export default function TagSelectorModal({ visible, onClose, selectedTags, toggl
               autoCorrect={false}
             />
 
-            <ScrollView
-              contentContainerStyle={styles.scroll}
-              keyboardShouldPersistTaps="handled"
-              showsVerticalScrollIndicator={false}
-            >
+            <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
               <Text style={styles.section}>Emotions</Text>
               <View style={styles.tagRow}>{defaultTags.emotions.map((t) => renderTag(t))}</View>
 
@@ -126,92 +135,104 @@ export default function TagSelectorModal({ visible, onClose, selectedTags, toggl
                 <Text style={styles.doneText}>Done</Text>
               </TouchableOpacity>
             </View>
-          </View>
+          </LinearGradient>
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
     </Modal>
   );
 }
-
 const styles = StyleSheet.create({
   modal: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
     paddingHorizontal: 20,
-    paddingTop: 12,
+    paddingTop: 56,
+    backgroundColor: 'transparent',
   },
   search: {
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    borderRadius: 14,
-    padding: 12,
+    borderRadius: 16,
+    padding: 14,
     fontSize: 16,
-    color: '#111',
-    backgroundColor: '#FFFFFF',
-    marginBottom: 8,
-    marginTop: 70,
-  
+    backgroundColor: '#262B3A',
+    color: '#FFFFFF',
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 6,
   },
   scroll: {
-    paddingBottom: 16,
+    paddingBottom: 80,
   },
   section: {
     fontSize: 15,
-    fontWeight: '500',
-    color: '#333',
-    marginTop: 18,
-    marginBottom: 6,
+    fontWeight: '600',
+    color: '#CBD5E1',
+    marginTop: 28,
+    marginBottom: 10,
   },
   tagRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    gap: 8,
     marginBottom: 8,
   },
   tagWrapper: {
-    margin: 4,
+    marginBottom: 8,
+    marginRight: 8,
   },
-  tag: {
-    backgroundColor: '#E5E7EB',
+  gradientBorder: {
+    borderRadius: 20,
+    padding: 2,
+    shadowColor: '#646DFF',
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  tagInner: {
+    backgroundColor: '#2E3340',
     borderRadius: 18,
     paddingVertical: 6,
-    paddingHorizontal: 14,
+    paddingHorizontal: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  tagSelected: {
-    backgroundColor: '#007AFF',
+  tagSelectedInner: {
+    backgroundColor: '#11131A',
   },
   tagText: {
     fontSize: 14,
-    color: '#111',
+    color: '#CBD5E1',
   },
   tagTextSelected: {
-    color: '#fff',
-    fontWeight: '600',
+    color: '#ffffff',
+    fontWeight: '700',
   },
   customRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 12,
-    marginBottom: 28,
+    marginTop: 16,
+    gap: 10,
   },
   input: {
     flex: 1,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    borderRadius: 12,
-    padding: 10,
+    borderRadius: 14,
+    padding: 14,
     fontSize: 15,
-    color: '#111',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#262B3A',
+    color: '#FFFFFF',
   },
   addButton: {
-    marginLeft: 10,
-    backgroundColor: '#007AFF',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 12,
+    backgroundColor: '#646DFF',
+    paddingVertical: 12,
+    paddingHorizontal: 18,
+    borderRadius: 14,
+    shadowColor: '#646DFF',
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
   },
   addButtonDisabled: {
-    backgroundColor: '#C7D2FE',
+    backgroundColor: '#475569',
   },
   addButtonText: {
     color: '#fff',
@@ -219,20 +240,28 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   footer: {
-    paddingVertical: 16,
+    position: 'absolute',
+    bottom: 20,
+    width: '100%',
+    paddingHorizontal: 20,
     alignItems: 'center',
-    justifyContent: 'center',
   },
   done: {
-    backgroundColor: '#007AFF',
-    paddingVertical: 12,
-    paddingHorizontal: 28,
-    borderRadius: 16,
-    marginBottom: 40,
+    backgroundColor: '#646DFF',
+    paddingVertical: 16,
+    paddingHorizontal: 36,
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 6,
   },
   doneText: {
     fontSize: 15,
-    fontWeight: '600',
-    color: '#fff',
+    fontWeight: '700',
+    color: '#ffffff',
+    letterSpacing: 0.5,
   },
 });
+
