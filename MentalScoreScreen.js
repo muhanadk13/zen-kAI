@@ -316,24 +316,6 @@ export default function MentalScoreScreen() {
     }).start();
   }, [score]);
 
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      headerLeft: () => (
-        <Image
-          style={{ width: 60, height: 60, marginLeft: 1, marginBottom: 8 }}
-          resizeMode="contain"
-        />
-      ),
-      headerTitle: () => (
-        <Image
-          source={require('./assets/logo-text.png')}
-          style={{ width: 120, height: 40 }}
-          resizeMode="contain"
-        />
-      ),
-      headerTitleAlign: 'center',
-    });
-  }, [navigation]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -603,6 +585,7 @@ export default function MentalScoreScreen() {
 
   useLayoutEffect(() => {
     navigation.setOptions({
+      headerShown: true,
       headerTransparent: true,
       headerBackground: () => (
         <BlurView

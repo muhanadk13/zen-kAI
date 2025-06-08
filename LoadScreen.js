@@ -12,7 +12,11 @@ export default function LoadScreen() {
       navigation.replace('MentalScore'); // Replace prevents "back" to Load
     }, 3000); // Adjust delay as needed (ms)
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      videoRef.current?.stopAsync();
+      videoRef.current?.unloadAsync();
+    };
   }, []);
 
   return (
