@@ -171,8 +171,8 @@ import LoadScreen from "./LoadScreen";
 
        return (
          <NavigationContainer ref={navigationRef}>
-           <Stack.Navigator initialRouteName="MentalScore">
-             <Stack.Screen name="MentalScore" component={MentalScoreScreen} />
+<Stack.Navigator initialRouteName="Load">
+<Stack.Screen name="MentalScore" component={MentalScoreScreen} />
              <Stack.Screen
   name="CheckIn"
   component={CheckInScreen}
