@@ -1,10 +1,8 @@
 import React, { useEffect, useRef } from 'react';
      import { NavigationContainer } from '@react-navigation/native';
      import { createNativeStackNavigator } from '@react-navigation/native-stack';
-     import * as Notifications from 'expo-notifications';
-     import * as Device from 'expo-device';
-     import Constants from 'expo-constants';
-     import { Alert, Platform } from 'react-native';
+     import { Platform } from 'react-native'; // Only if you use Platform elsewhere
+
      import AsyncStorage from '@react-native-async-storage/async-storage';
 
      import MentalScoreScreen from './MentalScoreScreen';

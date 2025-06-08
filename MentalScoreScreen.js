@@ -23,6 +23,8 @@ import { markInsightRead, getCurrentScores, xpForLevel } from './utils/scoring';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
 import LottieView from 'lottie-react-native'; // Import Lottie
+import { BlurView } from 'expo-blur'; // Add this import if not already at the top
+
 
 const AnimatedProgressBar = ({ progress, color }) => {
   const width = progress.interpolate({
@@ -56,7 +58,15 @@ const AnimatedMomentumBar = ({ value }) => {
     <View style={styles.barBackground}>
       <Animated.View style={{ width, height: '100%' }}>
         <LinearGradient
-          colors={['#c084fc', '#7c3aed']}
+colors={[
+  '#04ca76', // green
+  '#1cf1b7', // aqua
+  '#00a6cb', // cyan blue
+  '#1cadf1', // sky blue
+  '#6279f5', // indigo-blue bridge
+  '#9048f7', // purple
+  '#ae6ef7', // soft lavender end
+]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={styles.barFill}
@@ -77,10 +87,16 @@ const ScoreCircle = ({ score, size = 170, strokeWidth = 18 }) => {
     <View style={styles.gaugeGlow}>
       <Svg width={size} height={size} style={styles.gaugeSvg}>
         <Defs>
-          <SvgLinearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <Stop offset="0%" stopColor="#7C3AED" />
-            <Stop offset="100%" stopColor="#A78BFA" />
-          </SvgLinearGradient>
+        <SvgLinearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+  <Stop offset="0%" stopColor="#04ca76" />
+  <Stop offset="16.6%" stopColor="#1cf1b7" />
+  <Stop offset="33.3%" stopColor="#00a6cb" />
+  <Stop offset="50%" stopColor="#1cadf1" />
+  <Stop offset="66.6%" stopColor="#6279f5" />
+  <Stop offset="83.3%" stopColor="#9048f7" />
+  <Stop offset="100%" stopColor="#ae6ef7" />
+</SvgLinearGradient>
+
         </Defs>
         <Circle
           cx={cx}
@@ -607,26 +623,51 @@ export default function MentalScoreScreen() {
 
   useLayoutEffect(() => {
     navigation.setOptions({
+      headerTransparent: true,
+      headerBackground: () => (
+        <BlurView
+          tint="dark"  // or "light" or "default"
+          intensity={90}
+          style={{ flex: 1 }}
+        />
+      ),
+      headerTitle: () => (
+        <Image
+          source={require('./assets/logo-text-only.png')}
+          style={{ width: 360, height: 120, marginBottom: 8 }}
+          resizeMode="contain"
+        />
+      ),
       headerLeft: () => (
-        <Animatable.Text
+        <TouchableOpacity
           onPress={() => navigation.navigate('History')}
-          style={styles.headerButton}
+          style={{ paddingLeft: 16 }}
         >
-          History
-        </Animatable.Text>
+          <Image
+            source={require('./assets/logo-japan.png')}
+            style={{ width: 50, height: 50, marginLeft: 8, marginBottom: 8 }}
+            resizeMode="contain"
+          />
+        </TouchableOpacity>
       ),
       headerRight: () => (
         <Animatable.Text
           ref={checkInButtonRef}
           onPress={handleCheckInPress}
-          style={styles.headerButton}
+          style={{
+            fontSize: 16,
+            fontWeight: '700',
+            color: '#51C4FF',
+            paddingRight: 16,
+          }}
         >
           Check In
         </Animatable.Text>
       ),
+      headerTitleAlign: 'center',
     });
   }, [navigation]);
-
+  
   return (
 <LinearGradient
   colors={['#1C1F2E', '#12131C']}
@@ -781,8 +822,9 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     paddingHorizontal: 24,
-    paddingTop: 24,
+    paddingTop: 120,
     paddingBottom: 40,
+
   },
   
   headerButton: {
@@ -798,14 +840,7 @@ const styles = StyleSheet.create({
     width: 170,
     height: 170,
   },
-  gaugeGlow: {
-    shadowColor: '#A78BFA',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.9,
-    shadowRadius: 10,
-    borderRadius: 100,
-    alignSelf: 'center',
-  },
+
   gaugeSvg: {
     width: 170,
     height: 170,
@@ -826,7 +861,7 @@ const styles = StyleSheet.create({
   streakText: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#FF5858',
+    color: '#e8b923',
     marginTop: -10,
   },
   streakIcon: {
@@ -996,3 +1031,4 @@ const styles = StyleSheet.create({
   
   
 });
+ 
