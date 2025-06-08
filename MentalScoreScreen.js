@@ -15,10 +15,8 @@ import { useNavigation } from '@react-navigation/native';
 import * as Animatable from 'react-native-animatable';
 import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {
-  generateTodaysInsight,
-  generateWeeklyMindMirror,
-} from './utils/generateTodaysInsight';
+import { generateTodaysInsight } from './utils/generateTodaysInsight';
+import { getWeeklyMindMirror } from './utils/mindMirror';
 import { markInsightRead, getCurrentScores, xpForLevel } from './utils/scoring';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
@@ -359,7 +357,8 @@ export default function MentalScoreScreen() {
       }
 
       await fetchCheckInData();
-      await triggerMindMirror();
+      const mirror = await getWeeklyMindMirror();
+      setWeeklyMindMirror(mirror);
       await calculateStreak();
       const data = await getCurrentScores();
       if (data.xp) setXp(data.xp);
@@ -497,33 +496,6 @@ export default function MentalScoreScreen() {
     }
   };
 
-  const triggerMindMirror = async () => {
-    try {
-      const today = new Date();
-      const todayStr = today.toISOString().split('T')[0];
-      const isSunday = today.getDay() === 0;
-      const lastMindMirrorUpdate = await AsyncStorage.getItem('lastMindMirrorUpdate');
-      const alreadyUpdated = lastMindMirrorUpdate && new Date(lastMindMirrorUpdate).toDateString() === today.toDateString();
-  
-      const historyRaw = await AsyncStorage.getItem('checkInHistory');
-      const history = historyRaw ? JSON.parse(historyRaw) : [];
-      const weekAgo = new Date();
-      weekAgo.setDate(weekAgo.getDate() - 7);
-      const weeklyEntries = history.filter((entry) => new Date(entry.timestamp) >= weekAgo);
-  
-      // Ensure it's Sunday and there are at least 20 entries
-      if (isSunday && !alreadyUpdated && weeklyEntries.length >= 14) {
-        const mindMirror = await generateWeeklyMindMirror();
-        setWeeklyMindMirror(mindMirror);
-        await AsyncStorage.setItem('lastMindMirrorUpdate', today.toISOString());
-      } else {
-        setWeeklyMindMirror('No MindMirror yet.');
-      }
-    } catch (err) {
-      console.error('❌ Error triggering MindMirror:', err);
-      setWeeklyMindMirror('No MindMirror yet.');
-    }
-  };
 
   const calculateStreak = async () => {
     try {
@@ -846,8 +818,11 @@ start={{ x: 0, y: 0 }}
         >
           <Text style={styles.resetButtonText}>Reset All Data (Dev)</Text>
         </TouchableOpacity>
-        <TouchableOpacity 
-          onPress={() => triggerMindMirror()} 
+        <TouchableOpacity
+          onPress={async () => {
+            const mirror = await getWeeklyMindMirror();
+            setWeeklyMindMirror(mirror);
+          }}
           style={[styles.resetButton, { marginTop: 12, backgroundColor: '#10b981' }]}
         >
           <Text style={styles.resetButtonText}>Generate MindMirror (Dev)</Text>
