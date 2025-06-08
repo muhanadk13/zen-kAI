@@ -504,20 +504,20 @@ export default function MentalScoreScreen() {
       const isSunday = today.getDay() === 0;
       const lastMindMirrorUpdate = await AsyncStorage.getItem('lastMindMirrorUpdate');
       const alreadyUpdated = lastMindMirrorUpdate && new Date(lastMindMirrorUpdate).toDateString() === today.toDateString();
-
+  
       const historyRaw = await AsyncStorage.getItem('checkInHistory');
       const history = historyRaw ? JSON.parse(historyRaw) : [];
       const weekAgo = new Date();
       weekAgo.setDate(weekAgo.getDate() - 7);
       const weeklyEntries = history.filter((entry) => new Date(entry.timestamp) >= weekAgo);
-
-      if (isSunday && !alreadyUpdated && weeklyEntries.length >= 3) {
+  
+      // Ensure it's Sunday and there are at least 20 entries
+      if (isSunday && !alreadyUpdated && weeklyEntries.length >= 14) {
         const mindMirror = await generateWeeklyMindMirror();
         setWeeklyMindMirror(mindMirror);
         await AsyncStorage.setItem('lastMindMirrorUpdate', today.toISOString());
       } else {
-        const stored = await AsyncStorage.getItem(`mindMirror-${todayStr}`);
-        if (stored) setWeeklyMindMirror(stored);
+        setWeeklyMindMirror('No MindMirror yet.');
       }
     } catch (err) {
       console.error('❌ Error triggering MindMirror:', err);
