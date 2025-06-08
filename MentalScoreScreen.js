@@ -137,6 +137,7 @@ const getScoreColor = (score) => {
 
 export default function MentalScoreScreen() {
   const navigation = useNavigation();
+  const scrollViewRef = useRef(null); // Add a reference for the ScrollView
   const BASELINE = 75;
   const [energy, setEnergy] = useState(BASELINE);
   const [clarity, setClarity] = useState(BASELINE);
@@ -550,6 +551,13 @@ export default function MentalScoreScreen() {
   };
 
   const handleCheckInPress = async () => {
+    // Scroll to the top before triggering the animation
+    await new Promise((resolve) => {
+      scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+      setTimeout(resolve, 500); // Wait for the scroll animation to complete (adjust duration if needed)
+    });
+  
+    // Trigger the check-in animation and navigation
     checkInButtonRef.current?.rubberBand(600);
     await Haptics.selectionAsync();
     const today = new Date().toISOString().split('T')[0];
@@ -690,7 +698,10 @@ export default function MentalScoreScreen() {
       }}
     />
   )}
-  <ScrollView contentContainerStyle={styles.scrollContainer}>
+  <ScrollView 
+    ref={scrollViewRef} // Attach the reference to the ScrollView
+    contentContainerStyle={styles.scrollContainer}
+  >
       <Animatable.View animation="bounceIn" duration={800} style={styles.gaugeContainer}>
         <ScoreCircle score={displayScore} />
         <Animatable.Text animation="pulse" iterationCount="infinite" iterationDelay={4000} style={styles.mentalScore}>
@@ -754,35 +765,66 @@ start={{ x: 0, y: 0 }}
 </LinearGradient>
 
 
-<LinearGradient
-colors={['#7C3AED', '#A78BFA']}
-start={{ x: 0, y: 0 }}
-  end={{ x: 1, y: 1 }}
-  style={styles.metricsGradient}
->
-  <Animatable.View animation="fadeInUp" duration={600} delay={400} style={styles.metricsInner}>
-    <View style={styles.row}>
-      <View style={[styles.metricBox, styles.metricBoxLeft]}>
-        <Text style={styles.metricLabel}>⚡ Energy {displayEnergy}%</Text>
-        <AnimatedProgressBar progress={energyProgress} color="#C3B1E1" />
-      </View>
-      <View style={styles.metricBox}>
-        <Text style={styles.metricLabel}>💡 Clarity {displayClarity}%</Text>
-        <AnimatedProgressBar progress={clarityProgress} color="#f5c065" />
-      </View>
+<View style={styles.metricsGradient}>
+  <Animatable.View animation="fadeInUp" duration={600} delay={400} style={styles.metricsGrid}>
+    <View style={styles.metricsRow}>
+      <LinearGradient
+        colors={['#00e89f', '#04ca76']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.metricBorder}
+      >
+        <View style={styles.metricPill}>
+          <Text style={styles.metricIcon}>⚡</Text>
+          <Text style={styles.metricName}>Energy</Text>
+          <Text style={styles.metricValue}>{displayEnergy}%</Text>
+        </View>
+      </LinearGradient>
+
+      <LinearGradient
+        colors={['#facc15', '#f59e0b']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.metricBorder}
+      >
+        <View style={styles.metricPill}>
+          <Text style={styles.metricIcon}>💡</Text>
+          <Text style={styles.metricName}>Clarity</Text>
+          <Text style={styles.metricValue}>{displayClarity}%</Text>
+        </View>
+      </LinearGradient>
     </View>
-    <View style={styles.row}>
-      <View style={[styles.metricBox, styles.metricBoxLeft]}>
-        <Text style={styles.metricLabel}>💚 Emotion {displayEmotion}%</Text>
-        <AnimatedProgressBar progress={emotionProgress} color="#34d1bf" />
-      </View>
-      <View style={styles.metricBox}>
-        <Text style={styles.metricLabel}>🎯 Focus {displayFocus}%</Text>
-        <AnimatedProgressBar progress={focusProgress} color="#60a5fa" />
-      </View>
+
+    <View style={styles.metricsRow}>
+      <LinearGradient
+        colors={['#22d3ee', '#3b82f6']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.metricBorder}
+      >
+        <View style={styles.metricPill}>
+          <Text style={styles.metricIcon}>💚</Text>
+          <Text style={styles.metricName}>Emotion</Text>
+          <Text style={styles.metricValue}>{displayEmotion}%</Text>
+        </View>
+      </LinearGradient>
+
+      <LinearGradient
+        colors={['#a78bfa', '#8b5cf6']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.metricBorder}
+      >
+        <View style={styles.metricPill}>
+          <Text style={styles.metricIcon}>🎯</Text>
+          <Text style={styles.metricName}>Focus</Text>
+          <Text style={styles.metricValue}>{displayFocus}%</Text>
+        </View>
+      </LinearGradient>
     </View>
   </Animatable.View>
-</LinearGradient>
+</View>
+
 
 
       <View style={styles.resetContainer}>
@@ -1029,6 +1071,55 @@ const styles = StyleSheet.create({
     padding: 18,
   },
   
+ metricsGrid: {
+  paddingVertical: 12,
+  paddingHorizontal: 6,
+},
+
+metricsRow: {
+  flexDirection: 'row',
+  justifyContent: 'space-evenly',
+  marginBottom: 16,
+},
+
+metricBorder: {
+  flex: 1,
+  marginHorizontal: 6,
+  borderRadius: 22,
+  padding: 2, // border thickness
+},
+
+metricPill: {
+  backgroundColor: '#1F2233',
+  borderRadius: 20,
+  paddingVertical: 16,
+  paddingHorizontal: 10,
+  alignItems: 'center',
+  justifyContent: 'center',
+  shadowColor: '#000',
+  shadowOpacity: 0.1,
+  shadowOffset: { width: 0, height: 2 },
+  shadowRadius: 6,
+  elevation: 3,
+},
+
+metricIcon: {
+  fontSize: 24,
+  marginBottom: 4,
+},
+
+metricName: {
+  fontSize: 14,
+  fontWeight: '600',
+  color: '#A0A5B9',
+  marginBottom: 4,
+},
+
+metricValue: {
+  fontSize: 20,
+  fontWeight: '800',
+  color: '#FFFFFF',
+},
+
   
 });
- 
