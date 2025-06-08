@@ -5,10 +5,11 @@ import React, { useEffect, useRef } from 'react';
 
      import AsyncStorage from '@react-native-async-storage/async-storage';
 
-     import MentalScoreScreen from './MentalScoreScreen';
-     import CheckInScreen from './CheckInScreen';
-     import ReflectionScreen from './ReflectionScreen';
-     import TestInsightScreen from './TestInsightScreen';
+import MentalScoreScreen from './MentalScoreScreen';
+import CheckInScreen from './CheckInScreen';
+import ReflectionScreen from './ReflectionScreen';
+import TestInsightScreen from './TestInsightScreen';
+import LoadingScreen from './LoadingScreen';
      import { BlurView } from 'expo-blur';
      import { Image, TouchableOpacity } from 'react-native';
 
@@ -170,8 +171,9 @@ import HistoryScreen from './HistoryScreen';
 
        return (
          <NavigationContainer ref={navigationRef}>
-           <Stack.Navigator initialRouteName="MentalScore">
-             <Stack.Screen name="MentalScore" component={MentalScoreScreen} />
+          <Stack.Navigator initialRouteName="Loading">
+            <Stack.Screen name="Loading" component={LoadingScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="MentalScore" component={MentalScoreScreen} />
              <Stack.Screen
   name="CheckIn"
   component={CheckInScreen}
