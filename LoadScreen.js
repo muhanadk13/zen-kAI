@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Video } from 'expo-av';
 import { useNavigation } from '@react-navigation/native';
@@ -6,18 +6,16 @@ import { useNavigation } from '@react-navigation/native';
 export default function LoadScreen() {
   const navigation = useNavigation();
   const videoRef = useRef(null);
+  const [videoLoaded, setVideoLoaded] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      navigation.replace('MentalScore'); // Replace prevents "back" to Load
-    }, 3000); // Adjust delay as needed (ms)
-
-    return () => {
-      clearTimeout(timer);
-      videoRef.current?.stopAsync();
-      videoRef.current?.unloadAsync();
-    };
-  }, []);
+    if (videoLoaded) {
+      const timer = setTimeout(() => {
+        navigation.replace('MentalScore');
+      }, 3000); // wait 3s after load, then jump
+      return () => clearTimeout(timer);
+    }
+  }, [videoLoaded]);
 
   return (
     <View style={styles.container}>
@@ -25,9 +23,9 @@ export default function LoadScreen() {
         ref={videoRef}
         source={require('./assets/video/load.mp4')}
         shouldPlay
-        isLooping
         resizeMode="cover"
         isMuted
+        onLoad={() => setVideoLoaded(true)}
         style={StyleSheet.absoluteFill}
       />
     </View>
