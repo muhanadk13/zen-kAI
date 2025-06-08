@@ -21,7 +21,8 @@ import {
 } from './utils/generateTodaysInsight';
 import { markInsightRead, getCurrentScores, xpForLevel } from './utils/scoring';
 import { LinearGradient } from 'expo-linear-gradient';
-import Svg, { Circle } from 'react-native-svg';
+import Svg, { Circle, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
+import LottieView from 'lottie-react-native'; // Import Lottie
 
 const AnimatedProgressBar = ({ progress, color }) => {
   const width = progress.interpolate({
@@ -73,29 +74,37 @@ const ScoreCircle = ({ score, size = 170, strokeWidth = 18 }) => {
   const cy = size / 2;
 
   return (
-    <Svg width={size} height={size} style={styles.gaugeSvg}>
-      <Circle
-        cx={cx}
-        cy={cy}
-        r={radius}
-        stroke="#e6e6e6"
-        strokeWidth={strokeWidth}
-        fill="none"
-      />
-      <Circle
-        cx={cx}
-        cy={cy}
-        r={radius}
-        stroke={getScoreColor(score)}
-        strokeWidth={strokeWidth}
-        strokeDasharray={`${progress} ${circumference - progress}`}
-        strokeLinecap="round"
-        rotation="-90"
-        originX={cx}
-        originY={cy}
-        fill="none"
-      />
-    </Svg>
+    <View style={styles.gaugeGlow}>
+      <Svg width={size} height={size} style={styles.gaugeSvg}>
+        <Defs>
+          <SvgLinearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <Stop offset="0%" stopColor="#7C3AED" />
+            <Stop offset="100%" stopColor="#A78BFA" />
+          </SvgLinearGradient>
+        </Defs>
+        <Circle
+          cx={cx}
+          cy={cy}
+          r={radius}
+          stroke="#2E3340"
+          strokeWidth={strokeWidth}
+          fill="none"
+        />
+        <Circle
+          cx={cx}
+          cy={cy}
+          r={radius}
+          stroke="url(#scoreGradient)"
+          strokeWidth={strokeWidth}
+          strokeDasharray={`${progress} ${circumference - progress}`}
+          strokeLinecap="round"
+          rotation="-90"
+          originX={cx}
+          originY={cy}
+          fill="none"
+        />
+      </Svg>
+    </View>
   );
 };
 
@@ -129,6 +138,8 @@ export default function MentalScoreScreen() {
   const prevXp = useRef(0);
   const [xpDelta, setXpDelta] = useState(0);
   const prevLevel = useRef(0);
+  const [showConfetti, setShowConfetti] = useState(false); // Confetti state
+  const scoreAnim = useRef(new Animated.Value(BASELINE)).current;
 
   useEffect(() => {
     if (microInsight && microInsight !== 'Loading insight...') {
@@ -169,6 +180,7 @@ export default function MentalScoreScreen() {
       Haptics.notificationAsync(
         Haptics.NotificationFeedbackType.Success
       );
+      setShowConfetti(true); // 🎉 Show confetti
     }
     prevLevel.current = xp.level;
   }, [xp.level]);
@@ -177,7 +189,6 @@ export default function MentalScoreScreen() {
   const clarityAnim = useRef(new Animated.Value(BASELINE)).current;
   const emotionAnim = useRef(new Animated.Value(BASELINE)).current;
   const focusAnim = useRef(new Animated.Value(BASELINE)).current;
-  const scoreAnim = useRef(new Animated.Value(BASELINE)).current;
   const prevScore = useRef(-1); // Define prevScore ref
 
   const energyProgress = energyAnim.interpolate({
@@ -617,7 +628,28 @@ export default function MentalScoreScreen() {
   }, [navigation]);
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+<LinearGradient
+  colors={['#1C1F2E', '#12131C']}
+  start={{ x: 0, y: 0 }}
+  end={{ x: 0, y: 1 }}
+  style={styles.container}
+>
+  {showConfetti && (
+    <LottieView
+      source={require('./assets/animations/confetti.json')}
+      autoPlay
+      loop={false}
+      onAnimationFinish={() => setShowConfetti(false)}
+      style={{
+        position: 'absolute',
+        width: '100%',
+        height: '100%',
+        zIndex: 10,
+        pointerEvents: 'none',
+      }}
+    />
+  )}
+  <ScrollView contentContainerStyle={styles.scrollContainer}>
       <Animatable.View animation="bounceIn" duration={800} style={styles.gaugeContainer}>
         <ScoreCircle score={displayScore} />
         <Animatable.Text animation="pulse" iterationCount="infinite" iterationDelay={4000} style={styles.mentalScore}>
@@ -649,44 +681,68 @@ export default function MentalScoreScreen() {
 
       
 
-      <Animatable.View animation="fadeInUp" duration={600} style={styles.card}>
-        <View style={styles.cardHeader}>
-          <Image source={require('./assets/mirror.png')} style={styles.cardIcon} />
-          <Text style={styles.cardTitle}>Weekly MindMirror</Text>
-        </View>
-        {renderMarkdown(weeklyMindMirror)}
-      </Animatable.View>
+      <LinearGradient
+colors={['#646DFF', '#D7A4FF']} // Duolingo-style gradient
+start={{ x: 0, y: 0 }}
+  end={{ x: 1, y: 1 }}
+  style={styles.cardGradient}
+>
+  <Animatable.View animation="fadeInUp" duration={600} style={styles.cardInner}>
+    <View style={styles.cardHeader}>
+      <Image source={require('./assets/mirror.png')} style={styles.cardIcon} />
+      <Text style={styles.cardTitle}>Weekly MindMirror</Text>
+    </View>
+    {renderMarkdown(weeklyMindMirror)}
+  </Animatable.View>
+</LinearGradient>
 
-      <Animatable.View animation="fadeInUp" duration={600} delay={200} style={styles.card}>
-        <View style={styles.cardHeader}>
-          <Image source={require('./assets/advice.png')} style={styles.cardIcon} />
-          <Text style={styles.cardTitle}>Today’s Insight</Text>
-        </View>
-        <Text style={styles.cardText}>{microInsight}</Text>
-      </Animatable.View>
 
-      <Animatable.View animation="fadeInUp" duration={600} delay={400} style={styles.metricsSection}>
-        <View style={styles.row}>
-          <View style={[styles.metricBox, styles.metricBoxLeft]}>
-            <Text style={styles.metricLabel}>⚡ Energy {displayEnergy}%</Text>
-            <AnimatedProgressBar progress={energyProgress} color="#C3B1E1" />
-          </View>
-          <View style={styles.metricBox}>
-            <Text style={styles.metricLabel}>💡 Clarity {displayClarity}%</Text>
-            <AnimatedProgressBar progress={clarityProgress} color="#f5c065" />
-          </View>
-        </View>
-        <View style={styles.row}>
-          <View style={[styles.metricBox, styles.metricBoxLeft]}>
-            <Text style={styles.metricLabel}>💚 Emotion {displayEmotion}%</Text>
-            <AnimatedProgressBar progress={emotionProgress} color="#34d1bf" />
-          </View>
-          <View style={styles.metricBox}>
-            <Text style={styles.metricLabel}>🎯 Focus {displayFocus}%</Text>
-          <AnimatedProgressBar progress={focusProgress} color="#60a5fa" />
-          </View>
-        </View>
-      </Animatable.View>
+<LinearGradient
+colors={['#646DFF', '#D7A4FF']} // Duolingo-style gradient
+start={{ x: 0, y: 0 }}
+  end={{ x: 1, y: 1 }}
+  style={styles.cardGradient}
+>
+  <Animatable.View animation="fadeInUp" duration={600} delay={200} style={styles.cardInner}>
+    <View style={styles.cardHeader}>
+      <Image source={require('./assets/advice.png')} style={styles.cardIcon} />
+      <Text style={styles.cardTitle}>Today’s Insight</Text>
+    </View>
+    <Text style={styles.cardText}>{microInsight}</Text>
+  </Animatable.View>
+</LinearGradient>
+
+
+<LinearGradient
+colors={['#7C3AED', '#A78BFA']}
+start={{ x: 0, y: 0 }}
+  end={{ x: 1, y: 1 }}
+  style={styles.metricsGradient}
+>
+  <Animatable.View animation="fadeInUp" duration={600} delay={400} style={styles.metricsInner}>
+    <View style={styles.row}>
+      <View style={[styles.metricBox, styles.metricBoxLeft]}>
+        <Text style={styles.metricLabel}>⚡ Energy {displayEnergy}%</Text>
+        <AnimatedProgressBar progress={energyProgress} color="#C3B1E1" />
+      </View>
+      <View style={styles.metricBox}>
+        <Text style={styles.metricLabel}>💡 Clarity {displayClarity}%</Text>
+        <AnimatedProgressBar progress={clarityProgress} color="#f5c065" />
+      </View>
+    </View>
+    <View style={styles.row}>
+      <View style={[styles.metricBox, styles.metricBoxLeft]}>
+        <Text style={styles.metricLabel}>💚 Emotion {displayEmotion}%</Text>
+        <AnimatedProgressBar progress={emotionProgress} color="#34d1bf" />
+      </View>
+      <View style={styles.metricBox}>
+        <Text style={styles.metricLabel}>🎯 Focus {displayFocus}%</Text>
+        <AnimatedProgressBar progress={focusProgress} color="#60a5fa" />
+      </View>
+    </View>
+  </Animatable.View>
+</LinearGradient>
+
 
       <View style={styles.resetContainer}>
         <TouchableOpacity onPress={resetCheckIn3} style={styles.resetButton}>
@@ -714,43 +770,52 @@ export default function MentalScoreScreen() {
           <Text style={styles.resetButtonText}>Generate MindMirror (Dev)</Text>
         </TouchableOpacity>
       </View>
-    </ScrollView>
+      </ScrollView>
+</LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: 30,
+    flex: 1,
+  },
+  scrollContainer: {
     paddingHorizontal: 24,
-    backgroundColor: '#F2F2F7',
+    paddingTop: 24,
     paddingBottom: 40,
   },
+  
   headerButton: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#2563eb',
+    fontWeight: '700',
+    color: '#51C4FF', // Blue CTA
   },
   gaugeContainer: {
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 28,
-    position: 'relative',
     alignSelf: 'center',
     width: 170,
     height: 170,
+  },
+  gaugeGlow: {
+    shadowColor: '#A78BFA',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.9,
+    shadowRadius: 10,
+    borderRadius: 100,
+    alignSelf: 'center',
   },
   gaugeSvg: {
     width: 170,
     height: 170,
     alignSelf: 'center',
   },
-
   mentalScore: {
     position: 'absolute',
-    fontSize: 45,
-    fontWeight: '600',
-    color: '#000',
-    marginBottom: 0,
+    fontSize: 48,
+    fontWeight: '800',
+    color: '#FFFFFF',
   },
   streakContainer: {
     flexDirection: 'row',
@@ -759,59 +824,61 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   streakText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#FF4500',
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#FF5858',
     marginTop: -10,
-  
-    
+  },
+  streakIcon: {
+    width: 20,
+    height: 20,
+    marginRight: 4,
   },
   card: {
-    backgroundColor: '#fff',
-    padding: 18,
-    borderRadius: 16,
+    backgroundColor: '#1C1E29',
+    padding: 20,
+    borderRadius: 20,
     marginBottom: 20,
     shadowColor: '#000',
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 6,
-    elevation: 1,
+    shadowRadius: 8,
+    elevation: 2,
   },
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 12,
   },
   cardIcon: {
-    width: 22,
-    height: 22,
-    marginRight: 8,
+    width: 24,
+    height: 24,
+    marginRight: 10,
   },
   cardTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#000',
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
   cardText: {
-    fontSize: 14,
-    fontWeight: '400',
+    fontSize: 15,
+    fontWeight: '500',
     lineHeight: 22,
-    color: '#333',
-    marginTop: 2,
+    color: '#A9A9B3',
   },
   bold: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#000',
-    marginVertical: 4,
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginVertical: 6,
   },
   metricsSection: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 16,
+    backgroundColor: '#212532',
+    borderRadius: 20,
+    padding: 18,
     shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 1 },
     shadowRadius: 6,
     elevation: 1,
     marginBottom: 30,
@@ -831,40 +898,42 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     marginBottom: 8,
-    color: '#000',
+    color: '#FFFFFF',
   },
   barBackground: {
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#e0e0e0',
+    backgroundColor: '#2E3340',
     overflow: 'hidden',
   },
   barFill: {
     height: '100%',
     borderRadius: 5,
+    backgroundColor: '#51C4FF', // Active fill
   },
   momentumContainer: {
     marginBottom: 30,
-  },
-  levelGlow: {
-    shadowColor: '#7c3aed',
-    shadowRadius: 6,
-    shadowOpacity: 0.6,
   },
   momentumLabel: {
     fontSize: 14,
     fontWeight: '600',
     marginBottom: 4,
+    color: '#FFFFFF',
+  },
+  levelGlow: {
+    shadowColor: '#B48DFF',
+    shadowRadius: 10,
+    shadowOpacity: 0.7,
   },
   resetContainer: {
     alignItems: 'center',
     marginTop: 10,
   },
   resetButton: {
-    backgroundColor: '#ef4444',
+    backgroundColor: '#FF5858',
     paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 10,
+    paddingHorizontal: 26,
+    borderRadius: 14,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -872,29 +941,58 @@ const styles = StyleSheet.create({
   },
   resetButtonText: {
     color: '#fff',
-    fontWeight: '600',
-    fontSize: 15,
+    fontWeight: '700',
+    fontSize: 16,
   },
   gradeContainer: {
     alignItems: 'center',
     marginBottom: 8,
   },
   gradeText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#4c1d95',
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#B48DFF',
   },
   xpGainText: {
     position: 'absolute',
     right: 0,
     top: -18,
-    color: '#7c3aed',
-    fontWeight: '700',
+    color: '#7CF67C',
+    fontWeight: '800',
   },
-  streakIcon: {
-    width: 20,
-    height: 20,
-    marginRight: 4,
 
+  cardGradient: {
+    borderRadius: 22,
+    padding: 2,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 8,
+    elevation: 4,
   },
+  
+  cardInner: {
+    backgroundColor: '#1C1E29',
+    borderRadius: 20,
+    padding: 18,
+  },
+  metricsGradient: {
+    borderRadius: 22,
+    padding: 2,
+    marginBottom: 30,
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  
+  metricsInner: {
+    backgroundColor: '#212532',
+    borderRadius: 20,
+    padding: 18,
+  },
+  
+  
 });
