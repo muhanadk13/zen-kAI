@@ -24,7 +24,7 @@
     "expo-device": "~7.1.4",
     "expo-haptics": "~14.1.4",
     "expo-linear-gradient": "~14.1.5",
-    "expo-notifications": "~0.31.2",
+    "expo-notifications": "~0.31.3",
     "expo-status-bar": "~2.2.3",
     "lottie-react-native": "7.2.2",
     "react": "19.0.0",
@@ -40,7 +40,8 @@
     "react-native-shimmer-placeholder": "^2.0.9",
     "react-native-svg": "15.11.2",
     "react-native-touchable-scale": "^2.2.0",
-    "react-native-vector-icons": "^10.2.0"
+    "react-native-vector-icons": "^10.2.0",
+    "expo-constants": "~17.1.6"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0"
