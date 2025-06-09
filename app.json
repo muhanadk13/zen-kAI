@@ -4,45 +4,44 @@
     "slug": "zen-kai",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/logo-japan.png",
+    "icon": "./assets/icon-japan.png",
     "userInterfaceStyle": "dark",
-    "newArchEnabled": true,
+    "scheme": "zen-kai",
     "splash": {
       "image": "./assets/logo1.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    "assetBundlePatterns": ["**/*"],
     "ios": {
+      "bundleIdentifier": "com.muhanadk13.zen-kai",
       "supportsTablet": true,
-      "bundleIdentifier": "com.muhanadk13.zen-kai"
+      "icon": "./assets/icon-japan.png",
+      "infoPlist": {
+        "CFBundleIcons": {
+          "CFBundlePrimaryIcon": {
+            "CFBundleIconFiles": [
+              "icon-120.png"
+            ],
+            "UIPrerenderedIcon": true
+          }
+        }
+      }
     },
     "android": {
+      "package": "com.muhanadk13.zenkAI",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff",
-        "package": "com.yourname.zenai"
-      },
-      "edgeToEdgeEnabled": true,
-      "package": "com.muhanadk13.zenkAI"
+        "foregroundImage": "./assets/icon-japan.png",
+        "backgroundColor": "#ffffff"
+      }
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/icon-japan.png"
     },
     "extra": {
       "eas": {
         "projectId": "ed9f9ba9-1009-47ba-9f6c-32982d3efe45"
       }
-    },
-    "plugins": [
-      [
-        "expo-notifications",
-        {
-          "icon": "./assets/logo-japan.png",
-          "color": "#ffffff"
-        }
-      ]
-    ],
-    "scheme": "zen-kai"
-    
+    }
   }
 }
