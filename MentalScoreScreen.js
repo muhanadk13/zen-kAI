@@ -159,19 +159,19 @@ export default function MentalScoreScreen() {
   const insightIntervalRef = useRef(null);
   const [insightRevealed, setInsightRevealed] = useState(false); // Insight reveal state
   const [devMode, setDevMode] = useState(false);
-  const tapCount = useRef(0);
-  const lastTap = useRef(0);
+  const tapTracker = useRef({ count: 0, lastTap: 0 });
 
   const handleLogoPress = () => {
     const now = Date.now();
-    if (now - lastTap.current < 1000) {
-      tapCount.current += 1;
+    if (now - tapTracker.current.lastTap < 1000) {
+      tapTracker.current.count += 1;
     } else {
-      tapCount.current = 1;
+      tapTracker.current.count = 1;
     }
-    lastTap.current = now;
-    if (tapCount.current >= 5) {
-      setDevMode(true);
+    tapTracker.current.lastTap = now;
+    if (tapTracker.current.count >= 5) {
+      setDevMode((prev) => !prev);
+      tapTracker.current.count = 0;
     }
   };
 
