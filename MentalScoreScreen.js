@@ -659,36 +659,42 @@ export default function MentalScoreScreen() {
           </View>
   
           {/* Right - Check In */}
-          <View
-            style={{
-              position: 'absolute',
-              right: 0,
-              top: '60%',
-              transform: [{ translateY: -60 }],
-            }}
-          >
-            {devMode ? (
-              <Animatable.Text
-                ref={checkInButtonRef}
-                onPress={handleCheckInPress}
-                style={{
-                  fontSize: 16,
-                  fontWeight: '700',
-                  color: '#51C4FF',
-                }}
-              >
-                Check In
-              </Animatable.Text>
-            ) : (
-              <TouchableOpacity onPress={handleCheckInPress}>
-                <Image
-                  source={require('./assets/check.png')}
-                  style={{ width: 100, height: 100 }}
-                  resizeMode="contain"
-                />
-              </TouchableOpacity>
-            )}
-          </View>
+         {/* Right - Check In */}
+<View
+  style={{
+    position: 'absolute',
+    right: 0,
+    top: '60%',
+    transform: [{ translateY: -60 }],
+    width: 100,
+    height: 100,
+    justifyContent: 'center',
+    alignItems: 'center',
+  }}
+>
+  {devMode ? (
+    <TouchableOpacity onPress={handleCheckInPress}>
+      <Text
+        style={{
+          fontSize: 16,
+          fontWeight: '700',
+          color: '#51C4FF',
+        }}
+      >
+        Check In
+      </Text>
+    </TouchableOpacity>
+  ) : (
+    <TouchableOpacity onPress={handleCheckInPress}>
+      <Image
+        source={require('./assets/check.png')}
+        style={{ width: 100, height: 100 }}
+        resizeMode="contain"
+      />
+    </TouchableOpacity>
+  )}
+</View>
+
         </View>
       ),
       headerTitleAlign: 'center',
