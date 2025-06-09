@@ -622,34 +622,48 @@ export default function MentalScoreScreen() {
           />
         </TouchableOpacity>
       ),
-      headerLeft: devMode
-        ? () => (
-            <TouchableOpacity
-              onPress={() => navigation.navigate('History')}
-              style={{ paddingLeft: 16 }}
-            >
-              <Image
-                source={require('./assets/logo-japan.png')}
-                style={{ width: 50, height: 50, marginLeft: 8, marginBottom: 8 }}
-                resizeMode="contain"
-              />
-            </TouchableOpacity>
-          )
-        : undefined,
-      headerRight: () => (
-        <Animatable.Text
-          ref={checkInButtonRef}
-          onPress={handleCheckInPress}
-          style={{
-            fontSize: 16,
-            fontWeight: '700',
-            color: '#51C4FF',
-            paddingRight: 16,
-          }}
-        >
-          Check In
-        </Animatable.Text>
-      ),
+      headerLeft: () =>
+        devMode ? (
+          <TouchableOpacity
+            onPress={() => navigation.navigate('History')}
+            style={{ paddingLeft: 16 }}
+          >
+            <Image
+              source={require('./assets/logo-japan.png')}
+              style={{ width: 50, height: 50, marginLeft: 8, marginBottom: 8 }}
+              resizeMode="contain"
+            />
+          </TouchableOpacity>
+        ) : (
+          <Image
+            source={require('./assets/logo-japan.png')}
+            style={{ width: 50, height: 50, marginLeft: 16, marginBottom: 8 }}
+            resizeMode="contain"
+          />
+        ),
+      headerRight: () =>
+        devMode ? (
+          <Animatable.Text
+            ref={checkInButtonRef}
+            onPress={handleCheckInPress}
+            style={{
+              fontSize: 16,
+              fontWeight: '700',
+              color: '#51C4FF',
+              paddingRight: 16,
+            }}
+          >
+            Check In
+          </Animatable.Text>
+        ) : (
+          <TouchableOpacity onPress={handleCheckInPress} style={{ paddingRight: 16 }}>
+            <Image
+              source={require('./assets/check.png')}
+              style={{ width: 40, height: 40 }}
+              resizeMode="contain"
+            />
+          </TouchableOpacity>
+        ),
       headerTitleAlign: 'center',
     });
   }, [navigation, devMode]);
