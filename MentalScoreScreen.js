@@ -158,6 +158,22 @@ export default function MentalScoreScreen() {
   const [displayedInsight, setDisplayedInsight] = useState('');
   const insightIntervalRef = useRef(null);
   const [insightRevealed, setInsightRevealed] = useState(false); // Insight reveal state
+  const [devMode, setDevMode] = useState(false);
+  const tapCount = useRef(0);
+  const lastTap = useRef(0);
+
+  const handleLogoPress = () => {
+    const now = Date.now();
+    if (now - lastTap.current < 1000) {
+      tapCount.current += 1;
+    } else {
+      tapCount.current = 1;
+    }
+    lastTap.current = now;
+    if (tapCount.current >= 5) {
+      setDevMode(true);
+    }
+  };
 
   useEffect(() => {
     if (microInsight && microInsight !== 'Loading insight...') {
@@ -592,30 +608,34 @@ export default function MentalScoreScreen() {
       headerTransparent: true,
       headerBackground: () => (
         <BlurView
-          tint="dark"  // or "light" or "default"
+          tint="dark"
           intensity={90}
           style={{ flex: 1 }}
         />
       ),
       headerTitle: () => (
-        <Image
-          source={require('./assets/logo-text-only.png')}
-          style={{ width: 360, height: 120, marginBottom: 8 }}
-          resizeMode="contain"
-        />
-      ),
-      headerLeft: () => (
-        <TouchableOpacity
-          onPress={() => navigation.navigate('History')}
-          style={{ paddingLeft: 16 }}
-        >
+        <TouchableOpacity activeOpacity={0.8} onPress={handleLogoPress}>
           <Image
-            source={require('./assets/logo-japan.png')}
-            style={{ width: 50, height: 50, marginLeft: 8, marginBottom: 8 }}
+            source={require('./assets/logo-text-only.png')}
+            style={{ width: 360, height: 120, marginBottom: 8 }}
             resizeMode="contain"
           />
         </TouchableOpacity>
       ),
+      headerLeft: devMode
+        ? () => (
+            <TouchableOpacity
+              onPress={() => navigation.navigate('History')}
+              style={{ paddingLeft: 16 }}
+            >
+              <Image
+                source={require('./assets/logo-japan.png')}
+                style={{ width: 50, height: 50, marginLeft: 8, marginBottom: 8 }}
+                resizeMode="contain"
+              />
+            </TouchableOpacity>
+          )
+        : undefined,
       headerRight: () => (
         <Animatable.Text
           ref={checkInButtonRef}
@@ -632,7 +652,7 @@ export default function MentalScoreScreen() {
       ),
       headerTitleAlign: 'center',
     });
-  }, [navigation]);
+  }, [navigation, devMode]);
 
   useEffect(() => {
     if (!insightRevealed) return;
@@ -847,6 +867,7 @@ start={{ x: 0, y: 0 }}
 
 
 
+      {devMode && (
       <View style={styles.resetContainer}>
         <TouchableOpacity onPress={resetCheckIn3} style={styles.resetButton}>
           <Text style={styles.resetButtonText}>Reset Check-In 3 (Dev)</Text>
@@ -876,6 +897,7 @@ start={{ x: 0, y: 0 }}
           <Text style={styles.resetButtonText}>Generate MindMirror (Dev)</Text>
         </TouchableOpacity>
       </View>
+      )}
       </ScrollView>
 </LinearGradient>
   );
