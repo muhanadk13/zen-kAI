@@ -24,6 +24,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import TagSelectorModal from './TagSelectorModal';
 import { processCheckIn } from './utils/scoring';
+import { compileHistory } from './utils/history';
 
 export default function CheckInScreen() {
   const navigation = useNavigation();
@@ -111,6 +112,7 @@ export default function CheckInScreen() {
       const history = historyRaw ? JSON.parse(historyRaw) : [];
       history.push(entry);
       await AsyncStorage.setItem('checkInHistory', JSON.stringify(history));
+      await compileHistory();
       await processCheckIn(entry);
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       if (window === 'checkIn3') {
