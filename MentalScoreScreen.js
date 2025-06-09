@@ -169,7 +169,7 @@ export default function MentalScoreScreen() {
       tapTracker.current.count = 1;
     }
     tapTracker.current.lastTap = now;
-    if (tapTracker.current.count >= 5) {
+    if (tapTracker.current.count >= 7) {
       setDevMode((prev) => !prev);
       tapTracker.current.count = 0;
     }
@@ -617,7 +617,7 @@ export default function MentalScoreScreen() {
         <TouchableOpacity activeOpacity={0.8} onPress={handleLogoPress}>
           <Image
             source={require('./assets/logo-text-only.png')}
-            style={{ width: 360, height: 120, marginBottom: 8 }}
+            style={{ width: 360, height: 120, marginBottom: 8, marginLeft: 75, }}
             resizeMode="contain"
           />
         </TouchableOpacity>
@@ -656,10 +656,10 @@ export default function MentalScoreScreen() {
             Check In
           </Animatable.Text>
         ) : (
-          <TouchableOpacity onPress={handleCheckInPress} style={{ paddingRight: 16 }}>
+          <TouchableOpacity onPress={handleCheckInPress} style={{ paddingRight: 0 }}>
             <Image
               source={require('./assets/check.png')}
-              style={{ width: 40, height: 40 }}
+              style={{ width: 120, height: 120, marginLeft: 48, marginBottom: 8 }}
               resizeMode="contain"
             />
           </TouchableOpacity>
