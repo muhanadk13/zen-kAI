@@ -1,12 +1,11 @@
 import React, { useEffect, useRef } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Platform, Image, TouchableOpacity, Alert } from 'react-native';
+import { Image, TouchableOpacity, Alert } from 'react-native';
 import { BlurView } from 'expo-blur';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
+import Constants from 'expo-constants';
 
 // Screens
 import MentalScoreScreen from './MentalScoreScreen';
@@ -19,116 +18,89 @@ import LoadScreen from './LoadScreen';
 // GPT Reminder Helper
 import { generatePersonalizedReminder } from './utils/generatePersonalizedReminder';
 
-const Stack = createNativeStackNavigator();
-
-// ✅ Ensure notifications show even in foreground
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldShowAlert: true,
+    shouldShowBanner: true,
     shouldPlaySound: true,
-    shouldSetBadge: false,
+    shouldSetBadge: true,
   }),
 });
 
-function getNextOccurrence(hour, minute) {
-  const now = new Date();
-  const next = new Date(now);
-  next.setHours(hour, minute, 0, 0);
-  if (next <= now) next.setDate(next.getDate() + 1);
-  return next;
-}
-
-async function scheduleGPTReminders() {
-  const triggers = [
-    { hour: 9, minute: 0, window: 'checkIn1' },
-    { hour: 16, minute: 0, window: 'checkIn2' },
-    { hour: 21, minute: 0, window: 'checkIn3' },
-  ];
-
-  console.log('💬 Scheduling GPT-powered notifications...');
-  for (const { hour, minute, window } of triggers) {
-    const triggerDate = getNextOccurrence(hour, minute);
-    let message = '';
-
-    try {
-      message = await generatePersonalizedReminder(window);
-    } catch (err) {
-      console.error(`❌ GPT generation failed for ${window}:`, err);
-      message = "Don't miss your check-in. Keep your clarity streak alive.";
-    }
-
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title: '🧠 ZenAI Reminder',
-        body: message,
-        sound: 'default',
-        data: { screen: 'CheckIn', window },
-      },
-      trigger: { date: triggerDate },
-    });
-
-    console.log(`⏰ Scheduled ${window} → "${message}" at ${triggerDate.toLocaleTimeString()}`);
-  }
-}
-
-async function registerForPushNotificationsAsync() {
-  console.log('🚀 Registering for push notifications...');
-  if (!Device.isDevice) {
-    Alert.alert('⚠️ Error', 'Push notifications require a physical device.');
-    return false;
-  }
-
-  const { status: existingStatus } = await Notifications.getPermissionsAsync();
-  let finalStatus = existingStatus;
-
-  if (existingStatus !== 'granted') {
-    const { status } = await Notifications.requestPermissionsAsync();
-    finalStatus = status;
-  }
-
-  if (finalStatus !== 'granted') {
-    Alert.alert('Permission Required', 'Enable notifications in settings to continue.');
-    return false;
-  }
-
-  try {
-    const projectId = Constants.expoConfig?.extra?.eas?.projectId;
-    const token = projectId
-      ? (await Notifications.getExpoPushTokenAsync({ projectId })).data
-      : (await Notifications.getExpoPushTokenAsync()).data;
-    console.log('✅ Push token:', token);
-  } catch (err) {
-    console.error('❌ Failed to get push token:', err);
-  }
-
-  if (Platform.OS === 'android') {
-    await Notifications.setNotificationChannelAsync('default', {
-      name: 'default',
-      importance: Notifications.AndroidImportance.HIGH,
-      sound: 'default',
-      vibrationPattern: [0, 250, 250, 250],
-      lightColor: '#FF231F7C',
-    });
-    console.log('📣 Android notification channel configured.');
-  }
-
-  return true;
-}
+const Stack = createNativeStackNavigator();
 
 export default function App() {
   const navigationRef = useRef();
 
   useEffect(() => {
-    const setup = async () => {
-      console.log('🧠 ZenAI initializing...');
-      const granted = await registerForPushNotificationsAsync();
-      if (granted) {
-        await scheduleGPTReminders();
-      }
-    };
-
-    setup();
+    initializeNotifications();
   }, []);
+
+  async function initializeNotifications() {
+    const permission = await requestNotificationPermission();
+    if (!permission) return;
+
+    await Notifications.cancelAllScheduledNotificationsAsync();
+
+    await scheduleReminder('checkIn1', 9, 0);   // Morning
+    await scheduleReminder('checkIn2', 16, 0);  // Afternoon
+    await scheduleReminder('checkIn3', 21, 0);  // Evening
+  }
+
+  async function requestNotificationPermission() {
+    if (!Device.isDevice) {
+      Alert.alert('Error', 'Notifications only work on physical devices.');
+      return false;
+    }
+
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
+
+    if (existingStatus !== 'granted') {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+
+    if (finalStatus !== 'granted') {
+      Alert.alert('Permission Required', 'Enable notifications in your settings.');
+      return false;
+    }
+
+    try {
+      await Notifications.getExpoPushTokenAsync({
+        projectId: Constants.expoConfig?.extra?.eas?.projectId,
+      });
+    } catch (e) {}
+
+    return true;
+  }
+
+  async function scheduleReminder(window, hour, minute) {
+    let message;
+    try {
+      message = await generatePersonalizedReminder(window);
+    } catch {
+      message = `Don't miss your ${window} check-in — it matters.`;
+    }
+
+    const now = new Date();
+    const triggerDate = new Date();
+    triggerDate.setHours(hour, minute, 0, 0);
+    if (triggerDate <= now) {
+      triggerDate.setDate(triggerDate.getDate() + 1);
+    }
+
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: 'zen-kAI',
+        body: message,
+        sound: true,
+      },
+      trigger: {
+        type: 'date',
+        date: triggerDate,
+      },
+    });
+  }
 
   return (
     <NavigationContainer ref={navigationRef}>
@@ -168,7 +140,8 @@ export default function App() {
                     navigationRef.current?.navigate('MentalScore');
                   }
                 }}
-                style={{ marginLeft: 16 }}>
+                style={{ marginLeft: 16 }}
+              >
                 <Image
                   source={require('./assets/logo-japan.png')}
                   style={{ width: 50, height: 50, marginLeft: 8, marginBottom: 8 }}
