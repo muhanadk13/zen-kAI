@@ -4,8 +4,8 @@
     "slug": "zen-kai",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/logo1.png",
-    "userInterfaceStyle": "light",
+    "icon": "./assets/logo-japan.png",
+    "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/logo1.png",
@@ -37,7 +37,7 @@
       [
         "expo-notifications",
         {
-          "icon": "./assets/notification-icon.png",
+          "icon": "./assets/logo-japan.png",
           "color": "#ffffff"
         }
       ]
