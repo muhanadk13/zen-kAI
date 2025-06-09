@@ -1,0 +1,50 @@
+import 'dotenv/config';
+
+export default {
+  expo: {
+    name: "zen-kAI",
+    slug: "zen-kai",
+    version: "1.0.0",
+    orientation: "portrait",
+    icon: "./assets/logo1.png",
+    userInterfaceStyle: "light",
+    newArchEnabled: true,
+    splash: {
+      image: "./assets/logo1.png",
+      resizeMode: "contain",
+      backgroundColor: "#ffffff"
+    },
+    ios: {
+      supportsTablet: true,
+      bundleIdentifier: "com.muhanadk13.zen-kai"
+    },
+    android: {
+      adaptiveIcon: {
+        foregroundImage: "./assets/adaptive-icon.png",
+        backgroundColor: "#ffffff",
+        package: "com.yourname.zenai"
+      },
+      edgeToEdgeEnabled: true,
+      package: "com.muhanadk13.zenkAI"
+    },
+    web: {
+      favicon: "./assets/favicon.png"
+    },
+    extra: {
+      eas: {
+        projectId: "ed9f9ba9-1009-47ba-9f6c-32982d3efe45"
+      },
+      env: process.env.ENV
+    },
+    plugins: [
+      [
+        "expo-notifications",
+        {
+          icon: "./assets/notification-icon.png",
+          color: "#ffffff"
+        }
+      ]
+    ],
+    scheme: "zen-kai"
+  }
+};

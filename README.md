@@ -14,3 +14,13 @@ The `utils/scoring.js` file implements the logic for updating the user's scores 
 ## Testing
 
 Run `npm test` to verify the project setup. This placeholder script simply prints `No tests`.
+
+## Build Profiles
+
+The project uses [EAS Build](https://docs.expo.dev/build/introduction/) profiles to control environment-specific behavior. Each profile sets an `ENV` variable that can be read in the code with `process.env.ENV`:
+
+- `development` – includes debug tools and experimental features.
+- `preview` – internal QA build with moderate logging.
+- `production` – optimized for real users.
+
+Use `eas build --profile <name>` to create the desired version.
