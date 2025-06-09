@@ -614,59 +614,90 @@ export default function MentalScoreScreen() {
         />
       ),
       headerTitle: () => (
-        <TouchableOpacity activeOpacity={0.8} onPress={handleLogoPress}>
-          <Image
-            source={require('./assets/logo-text-only.png')}
-            style={{ width: 360, height: 120, marginBottom: 8, marginLeft: 75, }}
-            resizeMode="contain"
-          />
-        </TouchableOpacity>
-      ),
-      headerLeft: () =>
-        devMode ? (
-          <TouchableOpacity
-            onPress={() => navigation.navigate('History')}
-            style={{ paddingLeft: 16 }}
-          >
+        <View
+          style={{
+            width: '100%',
+            height: 100,
+            justifyContent: 'center',
+            alignItems: 'center',
+            position: 'relative',
+          }}
+        >
+          {/* Center - ZenKai Logo */}
+          <TouchableOpacity activeOpacity={0.8} onPress={handleLogoPress}>
             <Image
-              source={require('./assets/logo-japan.png')}
-              style={{ width: 50, height: 50, marginLeft: 8, marginBottom: 8 }}
+              source={require('./assets/logo-text-only.png')}
+              style={{ width: 320, height: 100 }}
               resizeMode="contain"
             />
           </TouchableOpacity>
-        ) : (
-          <Image
-            source={require('./assets/logo-japan.png')}
-            style={{ width: 50, height: 50, marginLeft: 16, marginBottom: 8 }}
-            resizeMode="contain"
-          />
-        ),
-      headerRight: () =>
-        devMode ? (
-          <Animatable.Text
-            ref={checkInButtonRef}
-            onPress={handleCheckInPress}
+  
+          {/* Left - Japanese Logo */}
+          <View
             style={{
-              fontSize: 16,
-              fontWeight: '700',
-              color: '#51C4FF',
-              paddingRight: 16,
+              position: 'absolute',
+              left: 20,
+              top: '50%',
+              transform: [{ translateY: -25 }],
             }}
           >
-            Check In
-          </Animatable.Text>
-        ) : (
-          <TouchableOpacity onPress={handleCheckInPress} style={{ paddingRight: 0 }}>
-            <Image
-              source={require('./assets/check.png')}
-              style={{ width: 120, height: 120, marginLeft: 48, marginBottom: 8 }}
-              resizeMode="contain"
-            />
-          </TouchableOpacity>
-        ),
+            {devMode ? (
+              <TouchableOpacity onPress={() => navigation.navigate('History')}>
+                <Image
+                  source={require('./assets/logo-japan.png')}
+                  style={{ width: 50, height: 50 }}
+                  resizeMode="contain"
+                />
+              </TouchableOpacity>
+            ) : (
+              <Image
+                source={require('./assets/logo-japan.png')}
+                style={{ width: 50, height: 50 }}
+                resizeMode="contain"
+              />
+            )}
+          </View>
+  
+          {/* Right - Check In */}
+          <View
+            style={{
+              position: 'absolute',
+              right: 0,
+              top: '60%',
+              transform: [{ translateY: -60 }],
+            }}
+          >
+            {devMode ? (
+              <Animatable.Text
+                ref={checkInButtonRef}
+                onPress={handleCheckInPress}
+                style={{
+                  fontSize: 16,
+                  fontWeight: '700',
+                  color: '#51C4FF',
+                }}
+              >
+                Check In
+              </Animatable.Text>
+            ) : (
+              <TouchableOpacity onPress={handleCheckInPress}>
+                <Image
+                  source={require('./assets/check.png')}
+                  style={{ width: 100, height: 100 }}
+                  resizeMode="contain"
+                />
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+      ),
       headerTitleAlign: 'center',
     });
   }, [navigation, devMode]);
+  
+  
+  
+  
 
   useEffect(() => {
     if (!insightRevealed) return;
