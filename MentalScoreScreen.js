@@ -155,6 +155,9 @@ export default function MentalScoreScreen() {
   const prevLevel = useRef(0);
   const [showConfetti, setShowConfetti] = useState(false); // Confetti state
   const scoreAnim = useRef(new Animated.Value(BASELINE)).current;
+  const [displayedInsight, setDisplayedInsight] = useState('');
+  const insightIntervalRef = useRef(null);
+  const [insightRevealed, setInsightRevealed] = useState(false); // Insight reveal state
 
   useEffect(() => {
     if (microInsight && microInsight !== 'Loading insight...') {
@@ -630,6 +633,54 @@ export default function MentalScoreScreen() {
       headerTitleAlign: 'center',
     });
   }, [navigation]);
+
+  useEffect(() => {
+    if (!insightRevealed) return;
+  
+    // Only animate if microInsight is a clean, valid string
+    if (
+      typeof microInsight !== 'string' ||
+      microInsight.length < 10 ||
+      microInsight === 'Loading insight...'
+    ) {
+      setDisplayedInsight('⚠️ Insight unavailable. Try again.');
+      return;
+    }
+  
+    // Cancel previous interval if it exists
+    if (insightIntervalRef.current) {
+      clearInterval(insightIntervalRef.current);
+      insightIntervalRef.current = null;
+    }
+  
+    // Clean up the text but DO NOT overtrim
+    const cleanedInsight = microInsight
+      .replace(/\bundefined\b/gi, '')       // Remove weird 'undefined'
+      .replace(/\s+/g, ' ')                 // Normalize spaces
+      .replace(/\.\.+/g, '.')               // Remove double periods
+      .trim();
+  
+    let index = 0;
+    setDisplayedInsight('');
+  
+    // Animate character-by-character safely
+    insightIntervalRef.current = setInterval(() => {
+      setDisplayedInsight((prev) => {
+        // Stop if string goes out of bounds
+        if (index >= cleanedInsight.length) {
+          clearInterval(insightIntervalRef.current);
+          insightIntervalRef.current = null;
+          return prev;
+        }
+        return prev + cleanedInsight.charAt(index++);
+      });
+    }, 30); // ~60fps speed
+  }, [insightRevealed]);
+  
+  
+  
+  
+  
   
   return (
 <LinearGradient
@@ -705,18 +756,32 @@ start={{ x: 0, y: 0 }}
 
 
 <LinearGradient
-colors={['#646DFF', '#D7A4FF']} // Duolingo-style gradient
-start={{ x: 0, y: 0 }}
+  colors={['#646DFF', '#D7A4FF']} // Duolingo-style gradient
+  start={{ x: 0, y: 0 }}
   end={{ x: 1, y: 1 }}
   style={styles.cardGradient}
 >
-  <Animatable.View animation="fadeInUp" duration={600} delay={200} style={styles.cardInner}>
+  <TouchableOpacity
+    activeOpacity={0.8}
+    onPress={() => setInsightRevealed(true)}
+    disabled={insightRevealed} // Disable tap after revealing
+    style={[
+      styles.cardInner,
+      !insightRevealed && { backgroundColor: '#2E3340', opacity: 0.6 }, // Grayed-out style
+    ]}
+  >
     <View style={styles.cardHeader}>
       <Image source={require('./assets/advice.png')} style={styles.cardIcon} />
       <Text style={styles.cardTitle}>Today’s Insight</Text>
     </View>
-    <Text style={styles.cardText}>{microInsight}</Text>
-  </Animatable.View>
+    {insightRevealed ? (
+      <Text style={styles.cardText}>{displayedInsight}</Text>
+    ) : (
+      <Text style={[styles.cardText, { textAlign: 'center', fontStyle: 'italic' }]}>
+        Tap to Reveal Insight
+      </Text>
+    )}
+  </TouchableOpacity>
 </LinearGradient>
 
 
