@@ -569,6 +569,11 @@ export default function MentalScoreScreen() {
     navigation.navigate('CheckIn', { window: 'checkIn1' });
   };
 
+  const devLaunchOnboarding = () => {
+    Haptics.selectionAsync();
+    navigation.navigate('Onboarding');
+  };
+
   const resetAllData = async () => {
     await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
     try {
@@ -948,6 +953,12 @@ start={{ x: 0, y: 0 }}
           style={[styles.resetButton, { marginTop: 12, backgroundColor: '#10b981' }]}
         >
           <Text style={styles.resetButtonText}>Generate MindMirror (Dev)</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={devLaunchOnboarding}
+          style={[styles.resetButton, { marginTop: 12, backgroundColor: '#646DFF' }]}
+        >
+          <Text style={styles.resetButtonText}>Open Onboarding (Dev)</Text>
         </TouchableOpacity>
       </View>
       )}
