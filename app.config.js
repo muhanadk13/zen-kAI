@@ -6,26 +6,35 @@ export default {
     slug: "zen-kai",
     version: "1.0.0",
     orientation: "portrait",
-    icon: "./assets/logo1.png",
+    icon: "./assets/icon-japan.png",
     userInterfaceStyle: "light",
     newArchEnabled: true,
     splash: {
-      image: "./assets/logo1.png",
+      image: "./assets/icon-japan.png",
       resizeMode: "contain",
       backgroundColor: "#ffffff"
     },
     ios: {
       supportsTablet: true,
-      bundleIdentifier: "com.muhanadk13.zen-kai"
+      bundleIdentifier: "com.muhanadk13.zen-kai",
+      infoPlist: {
+        ITSAppUsesNonExemptEncryption: false
+      }
     },
     android: {
+      package: "com.muhanadk13.zenkAI",
+      edgeToEdgeEnabled: true,
       adaptiveIcon: {
         foregroundImage: "./assets/adaptive-icon.png",
-        backgroundColor: "#ffffff",
-        package: "com.yourname.zenai"
+        backgroundColor: "#ffffff"
       },
-      edgeToEdgeEnabled: true,
-      package: "com.muhanadk13.zenkAI"
+      permissions: [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.INTERNET"
+      ]
     },
     web: {
       favicon: "./assets/favicon.png"

@@ -2,7 +2,7 @@
   "expo": {
     "name": "zen-kAI",
     "slug": "zen-kai",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon-japan.png",
     "userInterfaceStyle": "dark",
@@ -16,20 +16,12 @@
     "ios": {
       "bundleIdentifier": "com.muhanadk13.zen-kai",
       "supportsTablet": true,
-      "icon": "./assets/icon-japan.png",
-      "infoPlist": {
-        "CFBundleIcons": {
-          "CFBundlePrimaryIcon": {
-            "CFBundleIconFiles": [
-              "icon-120.png"
-            ],
-            "UIPrerenderedIcon": true
-          }
-        }
-      }
+      "buildNumber": "5",
+      "icon": "./assets/icon-japan.png"
     },
     "android": {
       "package": "com.muhanadk13.zenkAI",
+      "versionCode": 3,
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon-japan.png",
         "backgroundColor": "#ffffff"
