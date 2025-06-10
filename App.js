@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Image, TouchableOpacity, Alert } from 'react-native';
@@ -6,6 +6,7 @@ import { BlurView } from 'expo-blur';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Screens
 import MentalScoreScreen from './MentalScoreScreen';
@@ -14,6 +15,7 @@ import ReflectionScreen from './ReflectionScreen';
 import TestInsightScreen from './TestInsightScreen';
 import HistoryScreen from './HistoryScreen';
 import LoadScreen from './LoadScreen';
+import OnboardingScreen from './OnboardingScreen';
 
 // GPT Reminder Helper
 import { generatePersonalizedReminder } from './utils/generatePersonalizedReminder';
@@ -30,20 +32,34 @@ const Stack = createNativeStackNavigator();
 
 export default function App() {
   const navigationRef = useRef();
+  const [initialRoute, setInitialRoute] = useState(null);
 
   useEffect(() => {
-    initializeNotifications();
+    (async () => {
+      const done = await AsyncStorage.getItem('onboardingComplete');
+      setInitialRoute(done ? 'Load' : 'Onboarding');
+      if (done) initializeNotifications();
+    })();
   }, []);
+
 
   async function initializeNotifications() {
     const permission = await requestNotificationPermission();
     if (!permission) return;
 
     await Notifications.cancelAllScheduledNotificationsAsync();
+    const [t1, t2, t3] = await Promise.all([
+      AsyncStorage.getItem('checkIn1Time'),
+      AsyncStorage.getItem('checkIn2Time'),
+      AsyncStorage.getItem('checkIn3Time'),
+    ]);
+    const { hour: h1, minute: m1 } = parseTime(t1, 8, 0);
+    const { hour: h2, minute: m2 } = parseTime(t2, 14, 0);
+    const { hour: h3, minute: m3 } = parseTime(t3, 21, 0);
 
-    await scheduleReminder('checkIn1', 9, 0);   // Morning
-    await scheduleReminder('checkIn2', 16, 0);  // Afternoon
-    await scheduleReminder('checkIn3', 21, 0);  // Evening
+    await scheduleReminder('checkIn1', h1, m1);
+    await scheduleReminder('checkIn2', h2, m2);
+    await scheduleReminder('checkIn3', h3, m3);
   }
 
   async function requestNotificationPermission() {
@@ -102,9 +118,24 @@ export default function App() {
     });
   }
 
+  function parseTime(str, defH, defM) {
+    if (str) {
+      const parts = str.split(':');
+      const h = parseInt(parts[0], 10);
+      const m = parseInt(parts[1], 10);
+      if (!isNaN(h) && !isNaN(m)) {
+        return { hour: h, minute: m };
+      }
+    }
+    return { hour: defH, minute: defM };
+  }
+
+  if (!initialRoute) return null;
+
   return (
     <NavigationContainer ref={navigationRef}>
-      <Stack.Navigator initialRouteName="Load">
+      <Stack.Navigator initialRouteName={initialRoute}>
+        <Stack.Screen name="Onboarding" component={OnboardingScreen} options={{ headerShown: false }} />
         <Stack.Screen name="MentalScore" component={MentalScoreScreen} options={{ headerShown: false }} />
         <Stack.Screen
           name="CheckIn"
