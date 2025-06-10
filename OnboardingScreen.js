@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, Pressable, TextInput, Keyboard } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import * as Notifications from 'expo-notifications';
+import { Ionicons } from '@expo/vector-icons';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 import PagerView from 'react-native-pager-view';
@@ -142,7 +143,7 @@ export default function OnboardingScreen() {
             end={{ x: 0, y: 1 }}
             style={styles.page}
           >
-            <Image source={require('./assets/logo-japan.png')} style={styles.logo} />
+            <Image source={require('./assets/icon-japan.png')} style={styles.logo} />
             <Text style={styles.title}>Welcome to zen-kAI</Text>
             <Text style={styles.subtext}>Tap to begin your journey.</Text>
           </LinearGradient>
@@ -158,23 +159,36 @@ export default function OnboardingScreen() {
           style={[styles.page, { paddingTop: 60 }]}
         >
           <Text style={styles.titleCenter}>Check 3x a day, reflection 3 comes with a reflection (Next page)</Text>
-          {[{ label: 'Energy', value: energy, set: setEnergy },
+          {[
+            { label: 'Energy', value: energy, set: setEnergy },
             { label: 'Clarity', value: clarity, set: setClarity },
-            { label: 'Emotion', value: emotion, set: setEmotion }].map((s) => (
-            <View key={s.label} style={{ width: '100%', marginTop: 24 }}>
-              <Text style={styles.label}>{s.label}</Text>
-              <Slider
-                style={styles.slider}
-                minimumValue={0}
-                maximumValue={100}
-                value={s.value}
-                minimumTrackTintColor="#646DFF"
-                maximumTrackTintColor="#555"
-                thumbTintColor="#D7A4FF"
-                onValueChange={(v) => s.set(v)}
-              />
-              <View style={styles.range}><Text style={styles.rangeText}>Low</Text><Text style={styles.rangeText}>High</Text></View>
-            </View>
+            { label: 'Emotion', value: emotion, set: setEmotion },
+          ].map((s) => (
+            <LinearGradient
+              key={s.label}
+              colors={["#646DFF", "#D7A4FF"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.cardGradient}
+            >
+              <View style={styles.cardInner}>
+                <Text style={styles.label}>{s.label}</Text>
+                <Slider
+                  style={styles.slider}
+                  minimumValue={0}
+                  maximumValue={100}
+                  value={s.value}
+                  minimumTrackTintColor="#646DFF"
+                  maximumTrackTintColor="#555"
+                  thumbTintColor="#D7A4FF"
+                  onValueChange={(v) => s.set(v)}
+                />
+                <View style={styles.range}>
+                  <Text style={styles.rangeText}>Low</Text>
+                  <Text style={styles.rangeText}>High</Text>
+                </View>
+              </View>
+            </LinearGradient>
           ))}
           <TouchableOpacity
             style={[styles.begin, { marginTop: 20 }]}
@@ -194,24 +208,42 @@ export default function OnboardingScreen() {
           colors={["#1C1F2E", "#12131C"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
-          style={[styles.page, { paddingTop: 60 }]}
+          style={styles.chatPage}
         >
-          <Text style={styles.titleCenter}>Reflection after Check in 3</Text>
-          <View style={styles.chatBubble}><Text style={styles.chatText}>Are you ready to understand you?</Text></View>
-          <TextInput
-            ref={chatRef}
-            style={styles.chatInput}
-            value={chat}
-            onChangeText={setChat}
-            placeholder="Type here..."
-            placeholderTextColor="#888"
-            onSubmitEditing={() => {
-              Keyboard.dismiss();
-              Haptics.selectionAsync();
-              pagerRef.current?.setPage(3);
-            }}
-            returnKeyType="done"
-          />
+          <View style={styles.reflectionHeader}>
+            <Text style={styles.title}>Reflection</Text>
+            <Text style={styles.subtitle}>Guided by zen-kAI</Text>
+          </View>
+          <View style={{ flex: 1, justifyContent: 'center', width: '100%' }}>
+            <View style={styles.chatBubble}>
+              <Text style={styles.chatText}>Are you ready to understand you?</Text>
+            </View>
+          </View>
+          <View style={styles.inputContainer}>
+            <TextInput
+              ref={chatRef}
+              style={styles.input}
+              value={chat}
+              onChangeText={setChat}
+              placeholder="Type your response..."
+              placeholderTextColor="#7C7C8A"
+              onSubmitEditing={() => {
+                Keyboard.dismiss();
+                Haptics.selectionAsync();
+                pagerRef.current?.setPage(3);
+              }}
+              returnKeyType="send"
+            />
+            <Pressable
+              onPress={() => {
+                Haptics.selectionAsync();
+                pagerRef.current?.setPage(3);
+              }}
+              style={styles.sendButton}
+            >
+              <Ionicons name="arrow-up-circle" size={40} color="#51C4FF" />
+            </Pressable>
+          </View>
         </LinearGradient>
       </View>
 
@@ -329,6 +361,30 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontStyle: 'italic',
   },
+  cardGradient: {
+    borderRadius: 22,
+    padding: 2,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  cardInner: {
+    backgroundColor: '#1C1E29',
+    borderRadius: 20,
+    padding: 18,
+  },
+  chatPage: {
+    flex: 1,
+    width: '100%',
+    paddingTop: 70,
+  },
+  reflectionHeader: {
+    alignItems: 'center',
+    marginBottom: 10,
+  },
   chatBubble: {
     backgroundColor: '#2E3340',
     borderRadius: 16,
@@ -339,12 +395,36 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
   },
-  chatInput: {
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 14,
+    borderTopWidth: 1,
+    borderTopColor: '#1F232B',
+    backgroundColor: '#12141B',
+  },
+  input: {
+    flex: 1,
     backgroundColor: '#1F2233',
-    borderRadius: 12,
-    padding: 12,
-    width: '100%',
+    borderRadius: 18,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    fontSize: 16,
     color: '#FFFFFF',
+  },
+  sendButton: {
+    marginLeft: 12,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#1F2233',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#51C4FF',
+    shadowOpacity: 0.5,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 6,
+    elevation: 4,
   },
   gauge: {
     width: 200,
