@@ -466,14 +466,6 @@ export default function MentalScoreScreen() {
         timestamp: latestEntry.timestamp,
       });
       setMicroInsight(insight);
-      // Schedule notification for insight
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: 'Your Daily Insight is Ready! 🧠',
-          body: 'Check out your mental performance insight for today.',
-        },
-        trigger: { seconds: 1 },
-      });
     } catch (err) {
       console.error('❌ Error loading check-in data:', err);
       setEnergy(BASELINE);
