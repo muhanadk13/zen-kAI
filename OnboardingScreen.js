@@ -27,6 +27,7 @@ import { useNavigation } from '@react-navigation/native';
 import Slider from '@react-native-community/slider';
 import { BlurView } from 'expo-blur';
 import { generatePersonalizedReminder } from './utils/generatePersonalizedReminder';
+import * as Animatable from 'react-native-animatable';
 
 
 function formatTime(date) {
@@ -184,12 +185,14 @@ const interpolatedGlow = glowAnim.interpolate({
   
 
   return (
-    <PagerView
-      style={{ flex: 1 }}
-      initialPage={0}
-      ref={pagerRef}
-      onPageSelected={(e) => setCurrentPage(e.nativeEvent.position)}
-    >
+    <Animatable.View animation="fadeIn" duration={400} style={{ flex: 1 }}>
+      <PagerView
+        style={{ flex: 1 }}
+        initialPage={0}
+        ref={pagerRef}
+        onPageSelected={(e) => setCurrentPage(e.nativeEvent.position)}
+        scrollEnabled={false}
+      >
       {/* Page 0: Welcome */}
       <View key="0">
         <Pressable style={{ flex: 1 }} onPress={() => pagerRef.current?.setPage(1)}>
@@ -593,6 +596,7 @@ Your Mind’s Dashboard    </Text>
 
 
     </PagerView>
+    </Animatable.View>
   );
 }
 

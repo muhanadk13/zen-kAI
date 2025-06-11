@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import * as Animatable from 'react-native-animatable';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 function formatTime(iso) {
@@ -100,6 +101,7 @@ export default function HistoryScreen() {
   }, []);
 
   return (
+    <Animatable.View animation="fadeIn" duration={400} style={{ flex: 1 }}>
     <ScrollView contentContainerStyle={styles.container}>
       {days.map((day, idx) => (
         <View key={day.date} style={styles.dayBox}>
@@ -134,6 +136,7 @@ export default function HistoryScreen() {
         </View>
       ))}
     </ScrollView>
+    </Animatable.View>
   );
 }
 

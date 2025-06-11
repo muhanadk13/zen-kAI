@@ -126,6 +126,7 @@ export default function CheckInScreen() {
   };
 
   return (
+    <Animatable.View animation="fadeIn" duration={400} style={{ flex: 1 }}>
     <LinearGradient colors={['#1C1F2E', '#12131C']} style={{ flex: 1 }}>
       <SafeAreaView style={{ flex: 1 }}>
         <KeyboardAvoidingView
@@ -224,6 +225,7 @@ export default function CheckInScreen() {
         toggleTag={toggleTag}
       />
     </LinearGradient>
+    </Animatable.View>
   );
 }
 

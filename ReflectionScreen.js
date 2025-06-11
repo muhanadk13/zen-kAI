@@ -192,6 +192,7 @@ export default function ReflectionScreen() {
   };
 
   return (
+    <Animatable.View animation="fadeIn" duration={400} style={{ flex: 1 }}>
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <SafeAreaView style={styles.container}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
@@ -238,6 +239,7 @@ export default function ReflectionScreen() {
         </KeyboardAvoidingView>
       </SafeAreaView>
     </TouchableWithoutFeedback>
+    </Animatable.View>
   );
 }
 
