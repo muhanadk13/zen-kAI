@@ -51,7 +51,7 @@ export default function OnboardingScreen() {
   const fullMessage = "Welcome to the reflection. These happen once a day after the 3rd check-in. You ready for change?";
 
   useEffect(() => {
-    if (currentPage === 2) {
+    if (currentPage === 3) {
       let i = 0;
       setTypedText('');
       const interval = setInterval(() => {
@@ -169,9 +169,55 @@ export default function OnboardingScreen() {
         </LinearGradient>
       </View>
 
-     {/* Page 2: Reflection */}
-{/* Page 2: Reflection */}
-<View key="2" style={{ flex: 1, backgroundColor: '#0E1117' }}>
+     {/* Page 2: Time Picker */}
+      <View key="2">
+        <LinearGradient colors={["#1C1F2E", "#12131C"]} style={styles.page}>
+          <Text style={styles.title}>Choose Check-in Times</Text>
+          <View style={styles.timeRow}>
+            {[0, 1, 2].map((i) => (
+              <TouchableOpacity key={i} style={styles.time} onPress={() => setShowPickerIndex(i)}>
+                <Text style={styles.timeText}>{formatTime(times[i])}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          <TouchableOpacity style={styles.begin} onPress={() => pagerRef.current?.setPage(3)}>
+            <Text style={styles.beginText}>Next →</Text>
+          </TouchableOpacity>
+
+          {/* iOS Picker Modal */}
+          {showPickerIndex !== null && Platform.OS === 'ios' && (
+            <Modal transparent animationType="fade">
+              <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#00000088' }}>
+                <View style={{ backgroundColor: '#1F2233', borderRadius: 16, padding: 12 }}>
+                  <DateTimePicker
+                    value={times[showPickerIndex]}
+                    mode="time"
+                    display="spinner"
+                    textColor="#FFFFFF"
+                    onChange={handleTimeChange}
+                    style={{ backgroundColor: '#1F2233' }}
+                  />
+                  <TouchableOpacity onPress={() => setShowPickerIndex(null)} style={{ marginTop: 10, alignSelf: 'center' }}>
+                    <Text style={{ color: '#51C4FF', fontWeight: '600', fontSize: 16 }}>Done</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </Modal>
+          )}
+
+          {/* Android Default Picker */}
+          {showPickerIndex !== null && Platform.OS !== 'ios' && (
+            <DateTimePicker
+              value={times[showPickerIndex]}
+              mode="time"
+              display="default"
+              onChange={handleTimeChange}
+            />
+          )}
+        </LinearGradient>
+      </View>
+{/* Page 3: Reflection */}
+<View key="3" style={{ flex: 1, backgroundColor: '#0E1117' }}>
   <KeyboardAvoidingView
     style={{ flex: 1, paddingHorizontal: 20 }}
     behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -252,9 +298,9 @@ export default function OnboardingScreen() {
           placeholder="Type your response..."
           placeholderTextColor="#7C7C8A"
           returnKeyType="done"
-          onSubmitEditing={() => pagerRef.current?.setPage(3)}
+          onSubmitEditing={() => pagerRef.current?.setPage(4)}
         />
-        <Pressable onPress={() => pagerRef.current?.setPage(3)} style={{
+        <Pressable onPress={() => pagerRef.current?.setPage(4)} style={{
           marginLeft: 12,
           width: 44,
           height: 44,
@@ -280,8 +326,8 @@ export default function OnboardingScreen() {
 
 
 
-      {/* Page 3: Mental Score */}
-      <View key="3">
+      {/* Page 4: Mental Score */}
+      <View key="4">
   <LinearGradient
     colors={["#1C1F2E", "#12131C"]}
     style={{
@@ -354,7 +400,7 @@ export default function OnboardingScreen() {
         shadowRadius: 12,
         elevation: 10,
       }}
-      onPress={() => pagerRef.current?.setPage(4)}
+      onPress={saveAndStart}
     >
       <Text
         style={{
@@ -372,53 +418,6 @@ export default function OnboardingScreen() {
 
 
 
-      {/* Page 4: Time Picker */}
-      <View key="4">
-        <LinearGradient colors={["#1C1F2E", "#12131C"]} style={styles.page}>
-          <Text style={styles.title}>Choose Check-in Times</Text>
-          <View style={styles.timeRow}>
-            {[0, 1, 2].map((i) => (
-              <TouchableOpacity key={i} style={styles.time} onPress={() => setShowPickerIndex(i)}>
-                <Text style={styles.timeText}>{formatTime(times[i])}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-          <TouchableOpacity style={styles.begin} onPress={saveAndStart}>
-            <Text style={styles.beginText}>Let's Start →</Text>
-          </TouchableOpacity>
-
-          {/* iOS Picker Modal */}
-          {showPickerIndex !== null && Platform.OS === 'ios' && (
-            <Modal transparent animationType="fade">
-              <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#00000088' }}>
-                <View style={{ backgroundColor: '#1F2233', borderRadius: 16, padding: 12 }}>
-                  <DateTimePicker
-                    value={times[showPickerIndex]}
-                    mode="time"
-                    display="spinner"
-                    textColor="#FFFFFF"
-                    onChange={handleTimeChange}
-                    style={{ backgroundColor: '#1F2233' }}
-                  />
-                  <TouchableOpacity onPress={() => setShowPickerIndex(null)} style={{ marginTop: 10, alignSelf: 'center' }}>
-                    <Text style={{ color: '#51C4FF', fontWeight: '600', fontSize: 16 }}>Done</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </Modal>
-          )}
-
-          {/* Android Default Picker */}
-          {showPickerIndex !== null && Platform.OS !== 'ios' && (
-            <DateTimePicker
-              value={times[showPickerIndex]}
-              mode="time"
-              display="default"
-              onChange={handleTimeChange}
-            />
-          )}
-        </LinearGradient>
-      </View>
     </PagerView>
   );
 }

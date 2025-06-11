@@ -37,8 +37,8 @@ export default function App() {
   useEffect(() => {
     (async () => {
       const done = await AsyncStorage.getItem('onboardingComplete');
-      setInitialRoute(done ? 'Load' : 'Onboarding');
       if (done) initializeNotifications();
+      setInitialRoute('Load');
     })();
   }, []);
 
