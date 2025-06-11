@@ -145,7 +145,10 @@ export default function App() {
 
   return (
     <NavigationContainer ref={navigationRef}>
-      <Stack.Navigator initialRouteName={initialRoute}>
+      <Stack.Navigator
+        initialRouteName={initialRoute}
+        screenOptions={{ animation: 'fade', gestureEnabled: false }}
+      >
         <Stack.Screen name="Onboarding" component={OnboardingScreen} options={{ headerShown: false }} />
         <Stack.Screen name="MentalScore" component={MentalScoreScreen} options={{ headerShown: false }} />
         <Stack.Screen

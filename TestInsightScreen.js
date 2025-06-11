@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView } from 'react-native';
+import * as Animatable from 'react-native-animatable';
 import { generateMicroInsight } from './utils/generateTodaysInsight';
 
 export default function TestInsightScreen() {
@@ -19,6 +20,7 @@ export default function TestInsightScreen() {
   };
 
   return (
+    <Animatable.View animation="fadeIn" duration={400} style={{ flex: 1 }}>
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.header}>🧠 Test Micro Insight</Text>
       <TouchableOpacity style={styles.button} onPress={handleTest}>
@@ -27,6 +29,7 @@ export default function TestInsightScreen() {
       <Text style={styles.resultLabel}>Result:</Text>
       <Text style={styles.resultText}>{insight}</Text>
     </ScrollView>
+    </Animatable.View>
   );
 }
 

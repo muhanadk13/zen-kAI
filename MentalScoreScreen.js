@@ -749,8 +749,8 @@ export default function MentalScoreScreen() {
   
   
   
-  
   return (
+    <Animatable.View animation="fadeIn" duration={400} style={{ flex: 1 }}>
 <LinearGradient
   colors={['#1C1F2E', '#12131C']}
   start={{ x: 0, y: 0 }}
@@ -958,6 +958,7 @@ start={{ x: 0, y: 0 }}
       )}
       </ScrollView>
 </LinearGradient>
+    </Animatable.View>
   );
 }
 

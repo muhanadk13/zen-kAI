@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
+import * as Animatable from 'react-native-animatable';
 import { Video } from 'expo-av';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -20,6 +21,7 @@ export default function LoadScreen() {
   }, [videoLoaded]);
 
   return (
+    <Animatable.View animation="fadeIn" duration={400} style={{ flex: 1 }}>
     <View style={styles.container}>
       <Video
         ref={videoRef}
@@ -31,6 +33,7 @@ export default function LoadScreen() {
         style={StyleSheet.absoluteFill}
       />
     </View>
+    </Animatable.View>
   );
 }
 
