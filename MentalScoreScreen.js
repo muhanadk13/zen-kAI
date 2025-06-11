@@ -608,11 +608,12 @@ export default function MentalScoreScreen() {
     navigation.setOptions({
       headerShown: true,
       headerTransparent: true,
-headerBackground: () => (
-  <BlurView
-    tint="dark" // You can change this to 'light' or 'default' if needed
-    intensity={90}
-    style={{ flex: 1 }}
+      headerLeft: () => null,
+      headerBackground: () => (
+        <BlurView
+          tint="dark" // You can change this to 'light' or 'default' if needed
+          intensity={90}
+          style={{ flex: 1 }}
   />
 ),
 
