@@ -492,7 +492,7 @@ Your Mind’s Dashboard    </Text>
         shadowRadius: 12,
         elevation: 10,
       }}
-      onPress={saveAndStart}
+      onPress={() => pagerRef.current?.setPage(5)}
     >
       <Text
         style={{
