@@ -3,7 +3,7 @@ import { View, StyleSheet } from 'react-native';
 import { Video } from 'expo-av';
 import { useNavigation } from '@react-navigation/native';
 
-export default function LoadScreen() {
+export default function LoadScreen({ onboardingDone }) {
   const navigation = useNavigation();
   const videoRef = useRef(null);
   const [videoLoaded, setVideoLoaded] = useState(false);
@@ -11,11 +11,11 @@ export default function LoadScreen() {
   useEffect(() => {
     if (videoLoaded) {
       const timer = setTimeout(() => {
-        navigation.replace('MentalScore');
-      }, 3000); // wait 3s after load, then jump
+        navigation.replace(onboardingDone ? 'MentalScore' : 'Onboarding');
+      }, 3000);
       return () => clearTimeout(timer);
     }
-  }, [videoLoaded]);
+  }, [videoLoaded, onboardingDone]);
 
   return (
     <View style={styles.container}>

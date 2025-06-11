@@ -32,12 +32,12 @@ const Stack = createNativeStackNavigator();
 
 export default function App() {
   const navigationRef = useRef();
-  const [initialRoute, setInitialRoute] = useState(null);
+  const [onboardingDone, setOnboardingDone] = useState(null);
 
   useEffect(() => {
     (async () => {
       const done = await AsyncStorage.getItem('onboardingComplete');
-      setInitialRoute(done ? 'Load' : 'Onboarding');
+      setOnboardingDone(!!done);
       if (done) initializeNotifications();
     })();
   }, []);
@@ -130,11 +130,11 @@ export default function App() {
     return { hour: defH, minute: defM };
   }
 
-  if (!initialRoute) return null;
+  if (onboardingDone === null) return null;
 
   return (
     <NavigationContainer ref={navigationRef}>
-      <Stack.Navigator initialRouteName={initialRoute}>
+      <Stack.Navigator initialRouteName="Load">
         <Stack.Screen name="Onboarding" component={OnboardingScreen} options={{ headerShown: false }} />
         <Stack.Screen name="MentalScore" component={MentalScoreScreen} options={{ headerShown: false }} />
         <Stack.Screen
@@ -184,7 +184,12 @@ export default function App() {
         <Stack.Screen name="Reflection" component={ReflectionScreen} options={{ headerShown: false }} />
         <Stack.Screen name="TestInsight" component={TestInsightScreen} />
         <Stack.Screen name="History" component={HistoryScreen} />
-        <Stack.Screen name="Load" component={LoadScreen} options={{ headerShown: false }} />
+        <Stack.Screen
+          name="Load"
+          options={{ headerShown: false }}
+        >
+          {(props) => <LoadScreen {...props} onboardingDone={onboardingDone} />}
+        </Stack.Screen>
       </Stack.Navigator>
     </NavigationContainer>
   );

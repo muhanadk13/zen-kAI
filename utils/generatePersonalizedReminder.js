@@ -41,8 +41,7 @@ export async function generatePersonalizedReminder(window) {
 
     const message = response.data.choices[0]?.message?.content?.trim();
     if (message) {
-      console.log(`✅ GPT Reminder (${label}): "${message}"`);
-      return message;
+      return message.replace(/\u2014/g, '-');
     } else {
       throw new Error('No message returned from GPT');
     }
