@@ -54,12 +54,8 @@ export default function ReflectionScreen() {
 
   const animateAIResponse = async (response) => {
     let displayedText = '';
-    let currentWord = '';
-
     for (const letter of response) {
       displayedText += letter;
-      currentWord += letter;
-
       setChatMessages((prev) => {
         const lastMessage = prev[prev.length - 1];
         if (lastMessage && !lastMessage.fromUser) {
@@ -68,18 +64,11 @@ export default function ReflectionScreen() {
           return [...prev, { text: displayedText, fromUser: false }];
         }
       });
-
-      // Trigger selection haptic feedback when a word is completed (on space or punctuation)nctuation)
-      if (letter === ' ' || letter === '.' || letter === ',' || letter === '!' || letter === '?') {
-        await Haptics.selectionAsync();
-        currentWord = ''; // Reset the current word
-      }
-
       await new Promise((res) => setTimeout(res, 25));
     }
 
-    // Trigger selection haptic feedback when the AI message is fully displayedyed
-    await Haptics.selectionAsync();
+    // Trigger haptic feedback when the AI message is fully displayed
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
   };
 
   const fetchOpenAIResponse = async (messages) => {
@@ -252,7 +241,7 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    paddingTop: 10, // Reduced by 10 pixels
+    paddingTop: 20, // Reduced by 16
     paddingBottom: 10,
     width: '100%',
     position: 'absolute',
@@ -275,7 +264,7 @@ const styles = StyleSheet.create({
   chatScroll: {
     flex: 1,
     paddingHorizontal: 16,
-    marginTop: 64, // Reduced by 10 pixels to align with the header adjustment
+    marginTop: 74, // Reduced by 16
   },
   chatBubble: {
     maxWidth: '80%',

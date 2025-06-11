@@ -2,10 +2,12 @@ import axios from 'axios';
 import { OPENAI_API_KEY } from './apiKey';
 
 export async function generatePersonalizedReminder(window) {
-  const label =
-    window === 'checkIn1' ? 'morning' :
-    window === 'checkIn2' ? 'afternoon' :
-    'evening';
+  const labelMap = {
+    checkIn1: 'morning',
+    checkIn2: 'afternoon',
+    checkIn3: 'evening',
+  };
+  const label = labelMap[window] || 'evening';
 
   const prompt = `You are ZenKai, a wise, friendly coach. Write one short sentence to remind a user to complete their ${label} check-in. Be warm, motivating, and use slight FOMO like Duolingo. Keep it under 15 words. Use 1 emoji`;
 
@@ -17,12 +19,13 @@ export async function generatePersonalizedReminder(window) {
         messages: [
           {
             role: 'system',
-            content: 'You are ZenKai, a wise, friendly assistant who motivates users to keep up their self-reflection streaks using concise, kind nudges with a tiny bit of urgency.'
+            content:
+              'You are ZenKai, a wise, friendly assistant who motivates users to keep up their self-reflection streaks using concise, kind nudges with a tiny bit of urgency.',
           },
           {
             role: 'user',
-            content: prompt
-          }
+            content: prompt,
+          },
         ],
         max_tokens: 40,
         temperature: 0.9,
@@ -32,6 +35,7 @@ export async function generatePersonalizedReminder(window) {
           Authorization: `Bearer ${OPENAI_API_KEY}`,
           'Content-Type': 'application/json',
         },
+        timeout: 5000,
       }
     );
 
@@ -44,6 +48,6 @@ export async function generatePersonalizedReminder(window) {
     }
   } catch (err) {
     console.error(`❌ GPT reminder fallback (${label}):`, err.message);
-    return `Don't miss your ${label} check-in — your streak is counting on it.`;
+    return `Don't miss your ${label} check-in. Your streak is counting on it.`;
   }
 }
