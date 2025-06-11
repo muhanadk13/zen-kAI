@@ -1,6 +1,3 @@
-// OnboardingScreen.js — Fully Refactored and Bulletproof
-
-import React, { useRef, useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -13,7 +10,11 @@ import {
   KeyboardAvoidingView,
   Platform,
   Modal,
+  Animated, // ✅ ADD THIS LINE
 } from 'react-native';
+
+import React, { useRef, useState, useEffect } from 'react';
+
 import * as Haptics from 'expo-haptics';
 import * as Notifications from 'expo-notifications';
 import { Ionicons } from '@expo/vector-icons';
@@ -55,7 +56,31 @@ export default function OnboardingScreen() {
   const chatRef = useRef(null);
   const [showPickerIndex, setShowPickerIndex] = useState(null);
 
-  const fullMessage = "Welcome to the reflection. These happen once a day after the 3rd check-in. You ready for change?";
+  const fullMessage = "At the end of the day, zen-kAI will talk with you. It asks questions. You answer. Together, you uncover what really matters. This builds your personalized insights over time. (Type 'Understood')";
+
+  const glowAnim = useRef(new Animated.Value(0)).current;
+
+useEffect(() => {
+  Animated.loop(
+    Animated.sequence([
+      Animated.timing(glowAnim, {
+        toValue: 1,
+        duration: 2500,
+        useNativeDriver: false,
+      }),
+      Animated.timing(glowAnim, {
+        toValue: 0,
+        duration: 2500,
+        useNativeDriver: false,
+      }),
+    ])
+  ).start();
+}, []);
+
+const interpolatedGlow = glowAnim.interpolate({
+  inputRange: [0, 1],
+  outputRange: [0.98, 1],
+});
 
   useEffect(() => {
     if (currentPage === 3) {
@@ -135,16 +160,28 @@ export default function OnboardingScreen() {
     await scheduleReminder('checkIn3', times[2].getHours(), times[2].getMinutes());
   }
 
+  const [isLoading, setIsLoading] = useState(false);
+
   const saveAndStart = async () => {
-    await AsyncStorage.multiSet([
-      ['checkIn1Time', formatTime(times[0])],
-      ['checkIn2Time', formatTime(times[1])],
-      ['checkIn3Time', formatTime(times[2])],
-      ['onboardingComplete', 'true'],
-    ]);
-    await scheduleNotifications();
+    setIsLoading(true);
+    try {
+      await Promise.all([
+        AsyncStorage.multiSet([
+          ['checkIn1Time', formatTime(times[0])],
+          ['checkIn2Time', formatTime(times[1])],
+          ['checkIn3Time', formatTime(times[2])],
+          ['onboardingComplete', 'true'],
+        ]),
+        scheduleNotifications()
+      ]);
+    } catch (err) {
+      console.error('Setup failed:', err);
+    }
+  
+    setIsLoading(false);
     navigation.reset({ index: 0, routes: [{ name: 'MentalScore' }] });
   };
+  
 
   return (
     <PagerView
@@ -167,8 +204,9 @@ export default function OnboardingScreen() {
       {/* Page 1: Sliders */}
       <View key="1">
         <LinearGradient colors={["#1C1F2E", "#12131C"]} style={[styles.page, { paddingTop: 60 }]}>
-          <Text style={styles.title}>Check-In</Text>
-          <Text style={styles.subtext}>Check in 3× a day at your chosen times.</Text>
+          <Text style={styles.title}>30-Second Check-Ins</Text>
+          <Text style={styles.subtext}>Three times a day, you’ll slide to rate how you feel.
+That’s it. Add a note (Optional: Highly Recommended)</Text>
           {[{
             label: 'ENERGY', value: energy, set: setEnergy, color: '#26D07C', leftText: 'Depleted', rightText: 'Energized'
           }, {
@@ -185,7 +223,7 @@ export default function OnboardingScreen() {
             </LinearGradient>
           ))}
           <TouchableOpacity style={[styles.begin, { marginTop: 20 }]} onPress={() => pagerRef.current?.setPage(2)}>
-            <Text style={styles.beginText}>Submit</Text>
+            <Text style={styles.beginText}>Got it</Text>
           </TouchableOpacity>
         </LinearGradient>
       </View>
@@ -193,7 +231,10 @@ export default function OnboardingScreen() {
      {/* Page 2: Time Picker */}
       <View key="2">
         <LinearGradient colors={["#1C1F2E", "#12131C"]} style={styles.page}>
-          <Text style={styles.title}>Choose Check-in Times</Text>
+          <Text style={styles.title}>Pick Your Check-In Times</Text>
+          <Text style={styles.subtext}>
+          Choose when you want to be reminded to check in.
+          </Text>
           <View style={styles.timeRow}>
             {[0, 1, 2].map((i) => (
               <TouchableOpacity key={i} style={styles.time} onPress={() => setShowPickerIndex(i)}>
@@ -202,7 +243,7 @@ export default function OnboardingScreen() {
             ))}
           </View>
           <TouchableOpacity style={styles.begin} onPress={() => pagerRef.current?.setPage(3)}>
-            <Text style={styles.beginText}>Next →</Text>
+            <Text style={styles.beginText}>Set Reminders →</Text>
           </TouchableOpacity>
 
           {/* iOS Picker Modal */}
@@ -368,13 +409,25 @@ export default function OnboardingScreen() {
         textAlign: 'center',
       }}
     >
-      Mental Score
-    </Text>
+Your Mind’s Dashboard    </Text>
 
+<Animated.View
+  style={{
+    padding: 3,
+    borderRadius: 26,
+  }}
+>
+  <LinearGradient
+    colors={['#646DFF', '#D7A4FF']}
+    style={{
+      borderRadius: 24,
+      padding: 2,
+    }}
+  >
     <View
       style={{
         backgroundColor: '#1F2235',
-        borderRadius: 24,
+        borderRadius: 22,
         paddingVertical: 30,
         paddingHorizontal: 20,
         alignItems: 'center',
@@ -390,23 +443,28 @@ export default function OnboardingScreen() {
       <Image
         source={require('./assets/mentalscore.png')}
         style={{
-          width: 320, // ⬆️ Slightly larger
-          height: 220,
+          width: 320,
+          height: 170,
           marginBottom: 24,
         }}
         resizeMode="contain"
       />
       <Text
         style={{
-          fontSize: 18, // ⬆️ Larger description text
+          fontSize: 18,
           color: '#C5C7D0',
           textAlign: 'center',
           lineHeight: 26,
         }}
       >
-        Your Mental Score reflects the balance of energy, clarity, and emotion throughout your day.
+       Zen-kAI analyzes every check-in and reflection to uncover evolving mental patterns — in real time.{"\n\n"}
+  Your Mental Score is a live indicator of how aligned, energized, and emotionally clear you are throughout the day.{"\n\n"}
+  With each update, Zen-kAI adapts — revealing trends, pinpointing stressors, and guiding your growth like never before.
       </Text>
     </View>
+  </LinearGradient>
+</Animated.View>
+
 
     <TouchableOpacity
       style={{
@@ -436,6 +494,91 @@ export default function OnboardingScreen() {
     </TouchableOpacity>
   </LinearGradient>
 </View>
+
+
+      {/* Page 5: Success Screen */}
+      <View key="5">
+  <LinearGradient
+    colors={["#1C1F2E", "#12131C"]}
+    style={{
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: 32,
+    }}
+  >
+    <Image
+      source={require('./assets/logo-japan.png')}
+      style={{
+        width: 200,
+        height: 200,
+        marginBottom: 32,
+        resizeMode: 'contain',
+      }}
+    />
+
+    <Text
+      style={{
+        fontSize: 30,
+        fontWeight: '800',
+        color: '#FFFFFF',
+        textAlign: 'center',
+        marginBottom: 16,
+      }}
+    >
+      You’re all set 🎉
+    </Text>
+
+    <Text
+      style={{
+        fontSize: 18,
+        color: '#A0A5B9',
+        textAlign: 'center',
+        lineHeight: 26,
+        marginBottom: 40,
+      }}
+    >
+      Zen-kAI is ready to guide your mind.{"\n"}
+      Daily insights, clarity, and growth start now.
+    </Text>
+
+    <TouchableOpacity
+      disabled={isLoading}
+      onPress={saveAndStart}
+      style={{
+        backgroundColor: '#5A5DF0',
+        paddingVertical: 16,
+        paddingHorizontal: 48,
+        borderRadius: 100,
+        shadowColor: '#5A5DF0',
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.3,
+        shadowRadius: 10,
+        elevation: 10,
+        opacity: isLoading ? 0.6 : 1,
+      }}
+    >
+      <Text
+        style={{
+          fontSize: 18,
+          fontWeight: '700',
+          color: '#FFFFFF',
+          textAlign: 'center',
+        }}
+      >
+        {isLoading ? 'Loading...' : 'Enter the App →'}
+      </Text>
+    </TouchableOpacity>
+
+    {isLoading && (
+      <Text style={{ color: '#A0A5B9', marginTop: 16 }}>
+        Preparing your experience...
+      </Text>
+    )}
+  </LinearGradient>
+</View>
+
+
 
 
 
