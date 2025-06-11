@@ -217,7 +217,17 @@ That’s it. Add a note (Optional: Highly Recommended)</Text>
             <LinearGradient key={s.label} colors={['#646DFF', '#D7A4FF']} style={styles.cardGradient}>
               <View style={styles.cardInner}>
                 <Text style={styles.sliderLabel}>{s.label}</Text>
-                <Slider style={styles.slider} minimumValue={0} maximumValue={100} value={s.value} onValueChange={(v) => s.set(v)} minimumTrackTintColor={s.color} maximumTrackTintColor="#ccc" thumbTintColor={s.color} />
+                <Slider
+                  style={styles.slider}
+                  minimumValue={0}
+                  maximumValue={100}
+                  value={s.value}
+                  onValueChange={(v) => s.set(v)}
+                  minimumTrackTintColor={s.color}
+                  maximumTrackTintColor="#ccc"
+                  thumbTintColor={s.color}
+                />
+                <Text style={styles.sliderValue}>{Math.round(s.value)}</Text>
                 <View style={styles.range}><Text style={styles.rangeText}>{s.leftText}</Text><Text style={styles.rangeText}>{s.rightText}</Text></View>
               </View>
             </LinearGradient>
@@ -644,6 +654,12 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     marginTop: 8,
     marginBottom: 8,
+  },
+  sliderValue: {
+    color: '#FFFFFF',
+    alignSelf: 'flex-end',
+    marginBottom: 4,
+    fontWeight: '600',
   },
   range: {
     flexDirection: 'row',
