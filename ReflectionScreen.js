@@ -145,7 +145,14 @@ export default function ReflectionScreen() {
     ) {
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       await markReflectionComplete();
-      setTimeout(() => navigation.navigate('MentalScore'), 500);
+      setTimeout(
+        () =>
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'MentalScore' }],
+          }),
+        500
+      );
       return;
     }
 
