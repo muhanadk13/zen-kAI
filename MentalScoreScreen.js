@@ -847,7 +847,7 @@ start={{ x: 0, y: 0 }}
   >
     <View style={styles.cardHeader}>
       <Image source={require('./assets/advice.png')} style={styles.cardIcon} />
-      <Text style={styles.cardTitle}>Today’s Insight</Text>
+      <Text style={styles.cardTitle}>Check-in Insight</Text>
     </View>
     {insightRevealed ? (
       <Text style={styles.cardText}>{displayedInsight}</Text>
