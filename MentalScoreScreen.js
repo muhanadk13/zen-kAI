@@ -566,6 +566,11 @@ export default function MentalScoreScreen() {
     navigation.navigate('Onboarding');
   };
 
+  const resetOnboardingFlag = async () => {
+    await AsyncStorage.removeItem('onboardingComplete');
+    Alert.alert('Flag Reset', 'Onboarding will show on next app load.');
+  };
+
   const resetAllData = async () => {
     await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
     try {
@@ -951,6 +956,12 @@ start={{ x: 0, y: 0 }}
           style={[styles.resetButton, { marginTop: 12, backgroundColor: '#646DFF' }]}
         >
           <Text style={styles.resetButtonText}>Open Onboarding (Dev)</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={resetOnboardingFlag}
+          style={[styles.resetButton, { marginTop: 12, backgroundColor: '#fbbf24' }]}
+        >
+          <Text style={styles.resetButtonText}>Reset Onboarding Flag (Dev)</Text>
         </TouchableOpacity>
       </View>
       )}
