@@ -116,6 +116,17 @@ export default function App() {
         date: triggerDate,
       },
     });
+
+    const labelMap = { checkIn1: 'morning', checkIn2: 'afternoon', checkIn3: 'evening' };
+    const label = labelMap[window] || window;
+    const timeStr = formatDisplayTime(hour, minute);
+    console.log(`✅ GPT Reminder (${label}): "${message}" (${timeStr})`);
+  }
+
+  function formatDisplayTime(hour, minute) {
+    const suffix = hour >= 12 ? 'pm' : 'am';
+    const h12 = hour % 12 === 0 ? 12 : hour % 12;
+    return `${h12}:${minute.toString().padStart(2, '0')}${suffix}`;
   }
 
   function parseTime(str, defH, defM) {

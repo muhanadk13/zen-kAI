@@ -25,10 +25,17 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import Slider from '@react-native-community/slider';
 import { BlurView } from 'expo-blur';
+import { generatePersonalizedReminder } from './utils/generatePersonalizedReminder';
 
 
 function formatTime(date) {
   return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+}
+
+function formatDisplayTime(hour, minute) {
+  const suffix = hour >= 12 ? 'pm' : 'am';
+  const h12 = hour % 12 === 0 ? 12 : hour % 12;
+  return `${h12}:${minute.toString().padStart(2, '0')}${suffix}`;
 }
 
 export default function OnboardingScreen() {
@@ -80,6 +87,15 @@ export default function OnboardingScreen() {
   };
 
   async function scheduleReminder(window, hour, minute) {
+    let message;
+    try {
+      message = await generatePersonalizedReminder(window);
+    } catch {
+      const labelMap = { checkIn1: 'morning', checkIn2: 'afternoon', checkIn3: 'evening' };
+      const label = labelMap[window] || window;
+      message = `Don't miss today's ${label} check-in—your growth awaits! 🌱`;
+    }
+
     const triggerDate = new Date();
     triggerDate.setHours(hour, minute, 0, 0);
     if (triggerDate <= new Date()) triggerDate.setDate(triggerDate.getDate() + 1);
@@ -87,11 +103,16 @@ export default function OnboardingScreen() {
     await Notifications.scheduleNotificationAsync({
       content: {
         title: 'zen-kAI',
-        body: `Don't miss your ${window} check-in — it matters.`,
+        body: message,
         sound: true,
       },
       trigger: { type: 'date', date: triggerDate },
     });
+
+    const labelMap = { checkIn1: 'morning', checkIn2: 'afternoon', checkIn3: 'evening' };
+    const label = labelMap[window] || window;
+    const timeStr = formatDisplayTime(hour, minute);
+    console.log(`✅ GPT Reminder (${label}): "${message}" (${timeStr})`);
   }
 
   async function requestPermission() {
