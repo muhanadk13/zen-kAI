@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Video } from 'expo-av';
 import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function LoadScreen() {
   const navigation = useNavigation();
@@ -10,8 +11,9 @@ export default function LoadScreen() {
 
   useEffect(() => {
     if (videoLoaded) {
-      const timer = setTimeout(() => {
-        navigation.replace('MentalScore');
+      const timer = setTimeout(async () => {
+        const done = await AsyncStorage.getItem('onboardingComplete');
+        navigation.replace(done ? 'MentalScore' : 'Onboarding');
       }, 3000); // wait 3s after load, then jump
       return () => clearTimeout(timer);
     }
