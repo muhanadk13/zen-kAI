@@ -23,7 +23,6 @@ import Svg, { Circle, Defs, LinearGradient as SvgLinearGradient, Stop } from 're
 import LottieView from 'lottie-react-native'; // Import Lottie
 import { BlurView } from 'expo-blur'; // Add this import if not already at the top
 
-
 const AnimatedProgressBar = ({ progress, color }) => {
   const width = progress.interpolate({
     inputRange: [0, 1],
@@ -131,7 +130,6 @@ const getScoreColor = (score) => {
   return '#2ECC71';
 };
   
-
 
 export default function MentalScoreScreen() {
   const navigation = useNavigation();
@@ -609,16 +607,15 @@ export default function MentalScoreScreen() {
       headerShown: true,
       headerTransparent: true,
       headerLeft: () => null,
-      headerBackground: () => (
-        <BlurView
-          tint="dark" // You can change this to 'light' or 'default' if needed
-          intensity={90}
-          style={{ flex: 1 }}
-  />
-),
-
-      
-      headerTitle: () => (
+      headerBackVisible: false,
+        headerBackground: () => (
+          <BlurView
+            tint="dark" // You can change this to 'light' or 'default' if needed
+            intensity={90}
+            style={{ flex: 1 }}
+          />
+        ),
+        headerTitle: () => (
         <View
           style={{
             width: '100%',
@@ -664,51 +661,46 @@ export default function MentalScoreScreen() {
           </View>
   
           {/* Right - Check In */}
-         {/* Right - Check In */}
-<View
-  style={{
-    position: 'absolute',
-    right: 0,
-    top: '60%',
-    transform: [{ translateY: -60 }],
-    width: 100,
-    height: 100,
-    justifyContent: 'center',
-    alignItems: 'center',
-  }}
->
-  {devMode ? (
-    <TouchableOpacity onPress={handleCheckInPress}>
-      <Text
-        style={{
-          fontSize: 16,
-          fontWeight: '700',
-          color: '#51C4FF',
-        }}
-      >
-        Check In
-      </Text>
-    </TouchableOpacity>
-  ) : (
-    <TouchableOpacity onPress={handleCheckInPress}>
-      <Image
-        source={require('./assets/check.png')}
-        style={{ width: 100, height: 100 }}
-        resizeMode="contain"
-      />
-    </TouchableOpacity>
-  )}
-</View>
+          <View
+            style={{
+              position: 'absolute',
+              right: 0,
+              top: '60%',
+              transform: [{ translateY: -60 }],
+              width: 100,
+              height: 100,
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
+          >
+            {devMode ? (
+              <TouchableOpacity onPress={handleCheckInPress}>
+                <Text
+                  style={{
+                    fontSize: 16,
+                    fontWeight: '700',
+                    color: '#51C4FF',
+                  }}
+                >
+                  Check In
+                </Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity onPress={handleCheckInPress}>
+                <Image
+                  source={require('./assets/check.png')}
+                  style={{ width: 100, height: 100 }}
+                  resizeMode="contain"
+                />
+              </TouchableOpacity>
+            )}
+          </View>
 
         </View>
       ),
       headerTitleAlign: 'center',
     });
   }, [navigation, devMode]);
-  
-  
-  
-  
 
   useEffect(() => {
     if (!insightRevealed) return;
@@ -800,8 +792,6 @@ export default function MentalScoreScreen() {
           +{xpDelta}
         </Animatable.Text>
       </Animatable.View>
-
-
 
       <View style={styles.streakContainer}>
         <Animatable.Text ref={streakRef} style={styles.streakText}>

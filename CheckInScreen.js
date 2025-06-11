@@ -163,6 +163,7 @@ export default function CheckInScreen() {
                       maximumTrackTintColor="#e5e7eb"
                       thumbTintColor={item.thumb}
                     />
+                    <Text style={styles.sliderValue}>{Math.round(item.value)}</Text>
                     <View style={styles.range}><Text style={styles.rangeText}>{item.left}</Text><Text style={styles.rangeText}>{item.right}</Text></View>
                   </Animatable.View>
                 </LinearGradient>
@@ -251,6 +252,12 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 40,
     marginBottom: 4,
+  },
+  sliderValue: {
+    color: '#FFFFFF',
+    alignSelf: 'flex-end',
+    marginBottom: 4,
+    fontWeight: '600',
   },
   range: {
     flexDirection: 'row',
