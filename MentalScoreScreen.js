@@ -399,18 +399,20 @@ export default function MentalScoreScreen() {
         setEmotion(BASELINE);
         setFocus(BASELINE);
         setScore(BASELINE);
-        await AsyncStorage.setItem(
-          'lastMetrics',
-          JSON.stringify({
-            energy: BASELINE,
-            clarity: BASELINE,
-            emotion: BASELINE,
-            focus: BASELINE,
-            score: BASELINE,
-          })
-        );
-        setMicroInsight('🔍 Start checking in to uncover patterns. Ready to begin?');
-        return;
+      await AsyncStorage.setItem(
+        'lastMetrics',
+        JSON.stringify({
+          energy: BASELINE,
+          clarity: BASELINE,
+          emotion: BASELINE,
+          focus: BASELINE,
+          score: BASELINE,
+        })
+      );
+      setMicroInsight('🔍 Start checking in to uncover patterns. Ready to begin?');
+      setInsightRevealed(false);
+      setDisplayedInsight('');
+      return;
       }
 
       let currentEnergy = BASELINE;
@@ -464,6 +466,8 @@ export default function MentalScoreScreen() {
         timestamp: latestEntry.timestamp,
       });
       setMicroInsight(insight);
+      setInsightRevealed(false);
+      setDisplayedInsight('');
     } catch (err) {
       console.error('❌ Error loading check-in data:', err);
       setEnergy(BASELINE);
@@ -484,6 +488,8 @@ export default function MentalScoreScreen() {
       setMicroInsight(
         '🔍 Keep checking in to uncover patterns. What’s on your mind today?'
       );
+      setInsightRevealed(false);
+      setDisplayedInsight('');
     }
   };
 
@@ -580,6 +586,8 @@ export default function MentalScoreScreen() {
       setEmotion(BASELINE);
       setFocus(BASELINE);
       setMicroInsight('Loading insight...');
+      setInsightRevealed(false);
+      setDisplayedInsight('');
       setWeeklyMindMirror('No MindMirror yet.');
       setXp({ xpToday: 0, total: 0, level: 1, progress: 0 });
     } catch (err) {
