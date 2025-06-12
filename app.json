@@ -16,7 +16,7 @@
     "ios": {
       "bundleIdentifier": "com.muhanadk13.zen-kai",
       "supportsTablet": true,
-      "buildNumber": "5",
+      "buildNumber": "7",
       "icon": "./assets/icon-japan.png"
     },
     "android": {

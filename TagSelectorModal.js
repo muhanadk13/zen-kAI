@@ -250,10 +250,11 @@ const styles = StyleSheet.create({
   footer: {
     position: 'absolute',
     bottom: 30,
-    width: '100%',
-    paddingHorizontal: 20,
+    left: 0,
+    right: 0,
     alignItems: 'center',
   },
+  
   done: {
     backgroundColor: '#646DFF',
     paddingVertical: 16,
