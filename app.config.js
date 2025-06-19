@@ -16,18 +16,14 @@ export default {
     },
     ios: {
       supportsTablet: true,
-      bundleIdentifier: "com.muhanadk13.zen-kai",
+      bundleIdentifier: "com.zenkai.app",
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false
       }
     },
     android: {
-      package: "com.muhanadk13.zenkAI",
+      package: "com.zenkai.app",
       edgeToEdgeEnabled: true,
-      adaptiveIcon: {
-        foregroundImage: "./assets/adaptive-icon.png",
-        backgroundColor: "#ffffff"
-      },
       permissions: [
         "android.permission.RECORD_AUDIO",
         "android.permission.MODIFY_AUDIO_SETTINGS",
@@ -49,7 +45,7 @@ export default {
       [
         "expo-notifications",
         {
-          icon: "./assets/notification-icon.png",
+          icon: "./assets/icon-japan.png",
           color: "#ffffff"
         }
       ]

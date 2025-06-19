@@ -1,4 +1,4 @@
-package com.muhanadk13.zenkAI
+package com.zenkai.app
 
 import android.os.Build
 import android.os.Bundle

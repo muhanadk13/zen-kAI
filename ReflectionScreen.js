@@ -29,212 +29,215 @@ const BASE_SYSTEM_MESSAGE = {
     'Acknowledge the user in one short line and always finish with a thoughtful question.',
 };
 
-export default function ReflectionScreen() {
-  const navigation = useNavigation();
-  const [message, setMessage] = useState('');
-  const [chatMessages, setChatMessages] = useState([]);
-  const [isAIResponding, setIsAIResponding] = useState(false);
-  const scrollViewRef = useRef();
-  const sendButtonRef = useRef(null);
+export default function ReflectionScreen() { // this is the start that contains all the pages information
+  const navigation = useNavigation(); // giving the import a name
+  const [message, setMessage] = useState(''); // message is '' but setMessage is what changes it 
+  const [chatMessages, setChatMessages] = useState([]); // chatMessage is an empty array that setChatMessages changes
+  const [isAIResponding, setIsAIResponding] = useState(false); // isAIResponding is false bit setIsAIResponding changes it
+  const scrollViewRef = useRef(); // create a remote for scrollViewRef
+  const sendButtonRef = useRef(null); // remote but set to null
 
-  useEffect(() => {
-    const loadChatHistory = async () => {
-      const savedChatHistory = await AsyncStorage.getItem('chatHistory');
-      if (savedChatHistory) {
-        setChatMessages(JSON.parse(savedChatHistory));
+  useEffect(() => { // run immediately 
+    const loadChatHistory = async () => { // get the chat history - await: there will be some waiting in function
+      const savedChatHistory = await AsyncStorage.getItem('chatHistory'); // await means wait for the get item to finish and save
+      if (savedChatHistory) { // now if there is history
+        setChatMessages(JSON.parse(savedChatHistory)); // convert to understandable format
       }
     };
-    loadChatHistory();
-    startConversation();
+    loadChatHistory(); // run the method 
+    startConversation(); // later
   }, []);
 
   useEffect(() => {
-    scrollViewRef.current?.scrollToEnd({ animated: true });
-  }, [chatMessages]);
+    scrollViewRef.current?.scrollToEnd({ animated: true }); // lets scroll to the end if there is one 
+  }, [chatMessages]); // runs everytime the chatMessages changes
 
-  const animateAIResponse = async (response) => {
-    let displayedText = '';
-    for (const letter of response) {
-      displayedText += letter;
-      setChatMessages((prev) => {
-        const lastMessage = prev[prev.length - 1];
-        if (lastMessage && !lastMessage.fromUser) {
-          return [...prev.slice(0, -1), { text: displayedText, fromUser: false }];
+  const animateAIResponse = async (response) => { // will take an input of response
+    let displayedText = ''; // no text to start
+    for (const letter of response) { //for each letter in the response
+      displayedText += letter; // add a new letter to diplayedText
+      setChatMessages((prev) => { // create function that takes the previous chat messages
+        const lastMessage = prev[prev.length - 1]; // get the last message
+        if (lastMessage && !lastMessage.fromUser) { // if there is a last message it its from AI
+          return [...prev.slice(0, -1), { text: displayedText, fromUser: false }]; // take all message except last and add a new messgage
         } else {
-          return [...prev, { text: displayedText, fromUser: false }];
+          return [...prev, { text: displayedText, fromUser: false }]; // add a new message since there is no last message
         }
       });
-      await new Promise((res) => setTimeout(res, 25));
+      await new Promise((res) => setTimeout(res, 25)); // add a pause of 25 milliseconds to each letter
     }
 
     // Trigger haptic feedback when the AI message is fully displayed
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
   };
 
-  const fetchOpenAIResponse = async (messages) => {
-    try {
-      await new Promise((res) => setTimeout(res, 800));
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
+  const fetchOpenAIResponse = async (messages) => { // function for getting AI response with message parameter
+    try { // try this code 
+      await new Promise((res) => setTimeout(res, 800)); // wait 800 milliseconds before starting 
+      const response = await fetch('https://api.openai.com/v1/chat/completions', { // response comes from this url
+        method: 'POST', // I will be sending data to openAI
         headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${OPENAI_API_KEY}`,
+          'Content-Type': 'application/json', // I am sending JSON
+          Authorization: `Bearer ${OPENAI_API_KEY}`, // Password
         },
-        body: JSON.stringify({
-          model: 'gpt-4o-mini',
-          messages,
-          temperature: 0.7,
-          max_tokens: 150,
+        body: JSON.stringify({ // what I am sending
+          model: 'gpt-4o-mini', // the model I am using 
+          messages, // previous messages
+          temperature: 0.7, // creativity 0-1
+          max_tokens: 150, // length of response
         }),
       });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error.message);
-      const aiResponse = data.choices[0].message.content.trim();
-      await animateAIResponse(aiResponse);
-      return aiResponse;
-    } catch (err) {
-      Alert.alert('Error', err.message);
-      return 'Something went wrong. Please try again.';
+      const data = await response.json(); // data is the response in JSON format
+      if (!response.ok) throw new Error(data.error.message); // if response is not ok throw error
+      const aiResponse = data.choices[0].message.content.trim(); // take the first array and trim it
+      await animateAIResponse(aiResponse); // take the AI response and animate it
+      return aiResponse; // return the response
+    } catch (err) { // if there is an error
+      Alert.alert('Error', err.message); // send an alert with the message
+      return 'Something went wrong. Please try again.'; // say there was something that went wrong
     }
   };
 
-  const startConversation = async () => {
-    setChatMessages([]);
-    await AsyncStorage.setItem('lastReflectionDate', new Date().toISOString());
-    const historyRaw = await AsyncStorage.getItem('checkInHistory');
-    const history = historyRaw ? JSON.parse(historyRaw) : [];
-    const today = new Date().toISOString().split('T')[0];
+  const startConversation = async () => { // start a conversation function
+    setChatMessages([]); // clear chat messages
+    await AsyncStorage.setItem('lastReflectionDate', new Date().toISOString()); // set the last reflection date to today
+    const historyRaw = await AsyncStorage.getItem('checkInHistory'); // get the check in history
+    const history = historyRaw ? JSON.parse(historyRaw) : []; // if there is history parse it to JSON otherwise empty array
+    const today = new Date().toISOString().split('T')[0]; // get todays date, split it at T and take the first part
     const context = {
-      today: history.filter((e) => e.timestamp.startsWith(today)),
-      previousDays: history.filter((e) => !e.timestamp.startsWith(today)),
+      today: history.filter((e) => e.timestamp.startsWith(today)), // only keep today 
+      previousDays: history.filter((e) => !e.timestamp.startsWith(today)), // keep everything but today
     };
     const initialMessages = [
-      BASE_SYSTEM_MESSAGE,
+      BASE_SYSTEM_MESSAGE, // how AI should behave
       {
         role: 'user',
+        // Give information and prompt 
         content: `Here are my check-ins:\n\nToday's: ${JSON.stringify(context.today)}\n\nPrevious days: ${JSON.stringify(context.previousDays)}\n\nAsk one short, meaningful reflection question that helps me understand something about how I’ve been feeling lately — without offering advice or suggesting actions. You never say more than a few words.`,
       },
     ];
-    const response = await fetchOpenAIResponse(initialMessages);
-    if (!chatMessages.some((m) => m.text === response && !m.fromUser)) {
-      setChatMessages([{ text: response, fromUser: false }]);
+    const response = await fetchOpenAIResponse(initialMessages); // response is the AI response with the parameter intialMessages
+    if (!chatMessages.some((m) => m.text === response && !m.fromUser)) { // prevent duplicate AI messages (not needed)
+      setChatMessages([{ text: response, fromUser: false }]); // set chat messages to the response
     }
   };
 
-  const handleSend = async () => {
-    if (isAIResponding || !message.trim()) return;
+  const handleSend = async () => { // function to handle the sending
+    if (isAIResponding || !message.trim()) return; // if AI is responding or there is no message do nothing
 
-    await Haptics.selectionAsync();
-    sendButtonRef.current?.rubberBand(400);
+    await Haptics.selectionAsync(); // add haptiics when the message is sent
+    sendButtonRef.current?.rubberBand(400); // now we use the remote to make it do a rubber band animation for 400 milliseconds
 
-    const userMessage = { text: message.trim(), fromUser: true };
-    const newChatMessages = [...chatMessages, userMessage];
-    setChatMessages(newChatMessages);
-    setMessage('');
+    const userMessage = { text: message.trim(), fromUser: true }; // object of the user message
+    const newChatMessages = [...chatMessages, userMessage]; // add the new messages to the old
+    setChatMessages(newChatMessages); // set the chat message to the updated array
+    setMessage(''); // clear the message
 
-    await AsyncStorage.setItem('chatHistory', JSON.stringify(newChatMessages));
+    await AsyncStorage.setItem('chatHistory', JSON.stringify(newChatMessages)); // chat history is the JSON of newChatMessage 
     await AsyncStorage.setItem(
       'importantInfo',
-      JSON.stringify(newChatMessages.filter((m) => m.fromUser).map((m) => m.text))
+      JSON.stringify(newChatMessages.filter((m) => m.fromUser).map((m) => m.text)) // importantInfo is the JSON pf newChatMessages that only keeps the users information and converts to text string 
     );
 
     if (
-      newChatMessages.length >= 2 &&
-      newChatMessages.at(-2).text === 'What will you do differently tomorrow?' &&
-      newChatMessages.at(-1).fromUser
+      newChatMessages.length >= 2 && // check that there is at least 2 messages
+      newChatMessages.at(-2).text === 'What will you do differently tomorrow?' && // check that the second last message is this
+      newChatMessages.at(-1).fromUser // make sure last message is from user
     ) {
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      await markReflectionComplete();
-      setTimeout(
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); // give success haptics
+      await markReflectionComplete(); // mark the reflection as complete
+      setTimeout( // set a delay
         () =>
           navigation.reset({
             index: 0,
-            routes: [{ name: 'MentalScore' }],
+            routes: [{ name: 'MentalScore' }], // take me  to MentalScore screen
           }),
         500
       );
-      return;
+      return; // say I am done 
     }
 
-    if (newChatMessages.filter((m) => !m.fromUser).length >= 4) {
-      await animateAIResponse('What will you do differently tomorrow?');
-      return;
+    if (newChatMessages.filter((m) => !m.fromUser).length >= 4) { // if there is at least 4 AI messages
+      await animateAIResponse('What will you do differently tomorrow?'); // animate the response ""
+      return; // stop 
     }
 
     const messages = [
-      BASE_SYSTEM_MESSAGE,
-      ...newChatMessages.map((m) => ({
-        role: m.fromUser ? 'user' : 'assistant',
-        content: m.text,
+      BASE_SYSTEM_MESSAGE, // how AI should behave
+      ...newChatMessages.map((m) => ({ // do same thing for evey newChatMessage
+        role: m.fromUser ? 'user' : 'assistant', // role is either user or assistant
+        content: m.text, // content is the text
       })),
     ];
 
-    setIsAIResponding(true);
+    setIsAIResponding(true); // AI is responding now (right before)
 
     try {
-      const response = await fetchOpenAIResponse(messages);
+      const response = await fetchOpenAIResponse(messages); // try to get the response from AI 
 
       // Prevent duplicate AI messages by checking the last AI message
       setChatMessages((prev) => {
-        const lastMessage = prev[prev.length - 1];
-        if (lastMessage && lastMessage.text === response && !lastMessage.fromUser) {
+        const lastMessage = prev[prev.length - 1]; // get the last message
+        if (lastMessage && lastMessage.text === response && !lastMessage.fromUser) { // if there is a last message and its the same as the response and its from AI
           return prev; // Do not add duplicate AI message
         }
-        const updatedMessages = [...prev, { text: response, fromUser: false }];
-        AsyncStorage.setItem('chatHistory', JSON.stringify(updatedMessages));
-        return updatedMessages;
+        const updatedMessages = [...prev, { text: response, fromUser: false }]; // add the new message to the old messages
+        AsyncStorage.setItem('chatHistory', JSON.stringify(updatedMessages)); // update the chat history as the JSON of updatedMessages
+        return updatedMessages; // return the updated messages
       });
     } catch (error) {
-      console.error('Error fetching AI response:', error);
+      console.error('Error fetching AI response:', error); // catch error
     } finally {
-      setIsAIResponding(false);
+      setIsAIResponding(false); // AI is done responding (end)
     }
   };
 
   return (
-    <Animatable.View animation="fadeIn" duration={400} style={{ flex: 1 }}>
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <SafeAreaView style={styles.container}>
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
-          <BlurView intensity={25} tint="dark" style={styles.header}>
-            <Text style={styles.title}>Reflection</Text>
-            <Text style={styles.subtitle}>Guided by zen-kAI</Text>
-          </BlurView>
+    <Animatable.View animation="fadeIn" duration={400} style={{ flex: 1 }}> {/* a "box" that has animation */}
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}> {/* if I tap the screen the keyboard will go away */}
+      <SafeAreaView style={styles.container}> {/* safe area view is the whole screen */}
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}> {/* keyboard avoiding view makes sure the keyboard does not cover the input field */}
+          <BlurView intensity={25} tint="dark" style={styles.header}> {/* the header with a blur effect */}
+            <Text style={styles.title}>Reflection</Text> {/* title text */}
+            <Text style={styles.subtitle}>Guided by zen-kAI</Text> {/* subtitle text */}
+          </BlurView> {/* end of the header (blur) */}
 
           <ScrollView
             style={styles.chatScroll}
             contentContainerStyle={{ paddingVertical: 10 }}
-            ref={scrollViewRef}
-            keyboardShouldPersistTaps="handled"
+            ref={scrollViewRef} // allow for use to do scrolling functions
+            keyboardShouldPersistTaps="handled" // tap to dismiss keyboard
           >
-            {chatMessages.map((msg, index) => (
-              <Animatable.View
+            {chatMessages.map((msg, index) => ( // for each chat message do this
+              <Animatable.View 
                 key={index}
                 animation="fadeInUp"
                 duration={400}
-                style={[styles.chatBubble, msg.fromUser ? styles.userBubble : styles.aiBubble]}
+                style={[styles.chatBubble, msg.fromUser ? styles.userBubble : styles.aiBubble]} // check if the message is from user or AI and style accordingly
               >
-                <Text style={styles.chatText}>{msg.text}</Text>
+                <Text style={styles.chatText}>{msg.text}</Text> {/* the text of the message */}
               </Animatable.View>
             ))}
           </ScrollView>
 
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.input}
-              placeholder={isAIResponding ? 'AI is responding...' : 'Type your response...'}
+          <View style={styles.inputContainer}> {/* the input container at the bottom */}
+           {/* the input field */}
+            <TextInput 
+              style={styles.input} 
+              placeholder={isAIResponding ? 'AI is responding...' : 'Type your response...'} // if AI is responding show this otherwise show this
               placeholderTextColor="#7C7C8A"
-              value={message}
-              onChangeText={setMessage}
-              returnKeyType="send"
-              onSubmitEditing={handleSend}
-              editable={!isAIResponding}
+              value={message} // value is the message
+              onChangeText={setMessage} // set the message when text changes
+              returnKeyType="send" // return key is send
+              onSubmitEditing={handleSend} // when I press send run handleSend function
+              editable={!isAIResponding} // if AI is responding do not let user edit
             />
-            <Pressable onPress={handleSend} style={styles.sendButton} disabled={isAIResponding}>
-              <Animatable.View ref={sendButtonRef}>
-                <Ionicons name="arrow-up-circle" size={40} color="#51C4FF" />
+            <Pressable onPress={handleSend} style={styles.sendButton} disabled={isAIResponding}> {/* the send button */}
+              <Animatable.View ref={sendButtonRef}> 
+                <Ionicons name="arrow-up-circle" size={40} color="#51C4FF" /> 
               </Animatable.View>
             </Pressable>
+
           </View>
         </KeyboardAvoidingView>
       </SafeAreaView>
