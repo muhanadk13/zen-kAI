@@ -15,57 +15,50 @@ import { useNavigation } from '@react-navigation/native';
 import * as Animatable from 'react-native-animatable';
 import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { generateTodaysInsight } from './utils/generateTodaysInsight';
-import { getWeeklyMindMirror } from './utils/mindMirror';
+import { generateTodaysInsight } from './utils/generateTodaysInsight'; // gets the functions from this page
+import { getWeeklyMindMirror } from './utils/mindMirror'; // gets the functions from this page
 import { markInsightRead, getCurrentScores, xpForLevel } from './utils/scoring';
 import { LinearGradient } from 'expo-linear-gradient';
-import Svg, { Circle, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
+import Svg, { Circle, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg'; // create circle
 import LottieView from 'lottie-react-native'; // Import Lottie
-import { BlurView } from 'expo-blur'; // Add this import if not already at the top
+import { BlurView } from 'expo-blur'; // blur the header
 
-const AnimatedProgressBar = ({ progress, color }) => {
-  const width = progress.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0%', '100%'],
-  });
-  return (
-    <View style={styles.barBackground}>
-      <Animated.View style={[styles.barFill, { backgroundColor: color, width }]} />
-    </View>
-  );
-};
 
 const AnimatedMomentumBar = ({ value }) => {
+  // Create a persistent animated value that starts at 0
   const anim = useRef(new Animated.Value(0)).current;
 
+  // Animate to the new value whenever 'value' changes
   useEffect(() => {
     Animated.timing(anim, {
-      toValue: value,
-      duration: 600,
-      useNativeDriver: false,
+      toValue: value,           // Animate from current to new value
+      duration: 600,            // Animation duration in ms
+      useNativeDriver: false,   // Native driver doesn't support width animation
     }).start();
   }, [value]);
 
+  // Interpolate 0–100 range into percentage widths for styling
   const width = anim.interpolate({
     inputRange: [0, 100],
     outputRange: ['0%', '100%'],
   });
 
+  // Render the background bar and animated fill
   return (
     <View style={styles.barBackground}>
       <Animated.View style={{ width, height: '100%' }}>
         <LinearGradient
-colors={[
-  '#04ca76', // green
-  '#1cf1b7', // aqua
-  '#00a6cb', // cyan blue
-  '#1cadf1', // sky blue
-  '#6279f5', // indigo-blue bridge
-  '#9048f7', // purple
-  '#ae6ef7', // soft lavender end
-]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
+          colors={[
+            '#04ca76', // green
+            '#1cf1b7', // aqua
+            '#00a6cb', // cyan blue
+            '#1cadf1', // sky blue
+            '#6279f5', // indigo-blue bridge
+            '#9048f7', // purple
+            '#ae6ef7', // soft lavender end
+          ]}
+          start={{ x: 0, y: 0 }} // Left side of bar
+          end={{ x: 1, y: 0 }}   // Right side of bar
           style={styles.barFill}
         />
       </Animated.View>
@@ -73,7 +66,9 @@ colors={[
   );
 };
 
+
 const ScoreCircle = ({ score, size = 170, strokeWidth = 18 }) => {
+  // Calculate geometry for the circle
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const progress = (score / 100) * circumference;
@@ -84,17 +79,18 @@ const ScoreCircle = ({ score, size = 170, strokeWidth = 18 }) => {
     <View style={styles.gaugeGlow}>
       <Svg width={size} height={size} style={styles.gaugeSvg}>
         <Defs>
-        <SvgLinearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-  <Stop offset="0%" stopColor="#04ca76" />
-  <Stop offset="16.6%" stopColor="#1cf1b7" />
-  <Stop offset="33.3%" stopColor="#00a6cb" />
-  <Stop offset="50%" stopColor="#1cadf1" />
-  <Stop offset="66.6%" stopColor="#6279f5" />
-  <Stop offset="83.3%" stopColor="#9048f7" />
-  <Stop offset="100%" stopColor="#ae6ef7" />
-</SvgLinearGradient>
-
+          <SvgLinearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <Stop offset="0%" stopColor="#04ca76" />
+            <Stop offset="16.6%" stopColor="#1cf1b7" />
+            <Stop offset="33.3%" stopColor="#00a6cb" />
+            <Stop offset="50%" stopColor="#1cadf1" />
+            <Stop offset="66.6%" stopColor="#6279f5" />
+            <Stop offset="83.3%" stopColor="#9048f7" />
+            <Stop offset="100%" stopColor="#ae6ef7" />
+          </SvgLinearGradient>
         </Defs>
+
+        {/* Background ring (unfilled) */}
         <Circle
           cx={cx}
           cy={cy}
@@ -103,6 +99,8 @@ const ScoreCircle = ({ score, size = 170, strokeWidth = 18 }) => {
           strokeWidth={strokeWidth}
           fill="none"
         />
+
+        {/* Progress ring with gradient fill */}
         <Circle
           cx={cx}
           cy={cy}
@@ -121,111 +119,103 @@ const ScoreCircle = ({ score, size = 170, strokeWidth = 18 }) => {
   );
 };
 
-const getScoreColor = (score) => {
-  if (score <= 20) return '#FF3B30';
-  if (score <= 40) return '#FF9500';
-  if (score <= 55) return '#FFCC00';
-  if (score <= 70) return '#AEF359';
-  if (score <= 85) return '#4CD964';
-  return '#2ECC71';
-};
   
 
 export default function MentalScoreScreen() {
   const navigation = useNavigation();
   const scrollViewRef = useRef(null); // Add a reference for the ScrollView
-  const BASELINE = 75;
+  const BASELINE = 75; // start for all metrics
   const [energy, setEnergy] = useState(BASELINE);
   const [clarity, setClarity] = useState(BASELINE);
   const [emotion, setEmotion] = useState(BASELINE);
   const [focus, setFocus] = useState(BASELINE);
   const [score, setScore] = useState(BASELINE); // Define score state
-  const [microInsight, setMicroInsight] = useState('Loading insight...');
-  const [weeklyMindMirror, setWeeklyMindMirror] = useState('No MindMirror yet.');
-  const [streak, setStreak] = useState(0);
-  const [longestStreak, setLongestStreak] = useState(0);
-  const [xp, setXp] = useState({ xpToday: 0, total: 0, level: 1, progress: 0 });
-  const [dailyGoal, setDailyGoal] = useState(null);
-  const xpGainRef = useRef(null);
-  const xpBarRef = useRef(null);
-  const prevXp = useRef(0);
-  const [xpDelta, setXpDelta] = useState(0);
-  const prevLevel = useRef(0);
+  const [microInsight, setMicroInsight] = useState('Loading insight...'); // insight will be loading.. unless set
+  const [weeklyMindMirror, setWeeklyMindMirror] = useState('No MindMirror yet.'); // mindmirror is the same
+  const [streak, setStreak] = useState(0); 
+  const [longestStreak, setLongestStreak] = useState(0); // not used yet
+  const [xp, setXp] = useState({ xpToday: 0, total: 0, level: 1, progress: 0 }); // xp state
+  const [dailyGoal, setDailyGoal] = useState(null); // not used
+  const xpGainRef = useRef(null); // ref for xp gain animation
+  const xpBarRef = useRef(null);  // ref for xp bar animation
+  const prevXp = useRef(0); // previous xp to calculate delta
+  const [xpDelta, setXpDelta] = useState(0); // xp delta state
+  const prevLevel = useRef(0); // previous level to detect level up
   const [showConfetti, setShowConfetti] = useState(false); // Confetti state
-  const scoreAnim = useRef(new Animated.Value(BASELINE)).current;
+  const scoreAnim = useRef(new Animated.Value(BASELINE)).current; 
   const [displayedInsight, setDisplayedInsight] = useState('');
   const insightIntervalRef = useRef(null);
   const [insightRevealed, setInsightRevealed] = useState(false); // Insight reveal state
   const [devMode, setDevMode] = useState(false);
   const tapTracker = useRef({ count: 0, lastTap: 0 });
 
-  const handleLogoPress = () => {
-    const now = Date.now();
-    if (now - tapTracker.current.lastTap < 1000) {
-      tapTracker.current.count += 1;
-    } else {
-      tapTracker.current.count = 1;
+  const handleLogoPress = () => { // dev mode
+    const now = Date.now(); // current time
+    if (now - tapTracker.current.lastTap < 1000) { // if time between tap is less than 1000
+      tapTracker.current.count += 1; // increment count
+    } else { 
+      tapTracker.current.count = 1; // reset count
     }
-    tapTracker.current.lastTap = now;
-    if (tapTracker.current.count >= 7) {
-      setDevMode((prev) => !prev);
-      tapTracker.current.count = 0;
+    tapTracker.current.lastTap = now; // update last tap time
+    if (tapTracker.current.count >= 7) { // if count is 7
+      setDevMode((prev) => !prev); // toggle dev mode. React knows that prev is the current state and we are doing opposite
+      tapTracker.current.count = 0; // reset count
     }
   };
 
   useEffect(() => {
-    if (microInsight && microInsight !== 'Loading insight...') {
-      markInsightRead().then(() => {
-        getCurrentScores().then((data) => {
-          if (data.xp) setXp(data.xp);
+    if (microInsight && microInsight !== 'Loading insight...') { // if microInsight is set and not loading
+      markInsightRead().then(() => { // markInsightRead then do...
+        getCurrentScores().then((data) => { // getCurrentScores then call it data...
+          if (data.xp) setXp(data.xp); // use the data to set the states
           if (data.dailyGoal) setDailyGoal(data.dailyGoal);
           if (data.streak !== undefined) setStreak(data.streak);
           if (data.longestStreak !== undefined) setLongestStreak(data.longestStreak);
         });
       });
     }
-  }, [microInsight]);
+  }, [microInsight]); // do this for every microInsight change
 
   useEffect(() => {
-    getCurrentScores().then((data) => {
-      if (data.xp) setXp(data.xp);
-      if (data.dailyGoal) setDailyGoal(data.dailyGoal);
-      if (data.streak !== undefined) setStreak(data.streak);
-      if (data.longestStreak !== undefined) setLongestStreak(data.longestStreak);
+    getCurrentScores().then((data) => { // get the scores then call it data
+      if (data.xp) setXp(data.xp); // if there is data.xp set the state
+      if (data.dailyGoal) setDailyGoal(data.dailyGoal); // if there is data.dailyGoal set the state
+      if (data.streak !== undefined) setStreak(data.streak); // if there is data.streak set the state
+      if (data.longestStreak !== undefined) setLongestStreak(data.longestStreak); // if there is data.longestStreak set the state
     });
   }, []);
 
   useEffect(() => {
-    if (xp.xpToday > prevXp.current) {
-      const delta = xp.xpToday - prevXp.current;
-      setXpDelta(delta);
-      prevXp.current = xp.xpToday;
-      xpGainRef.current?.fadeInDown(200).then(() => xpGainRef.current?.fadeOutUp(600));
-      xpBarRef.current?.pulse(800);
+    if (xp.xpToday > prevXp.current) { // if the xp is greater than the previous xp
+      const delta = xp.xpToday - prevXp.current; // calculate the delta
+      setXpDelta(delta); // set the delta state
+      prevXp.current = xp.xpToday; // update the previous xp
+      xpGainRef.current?.fadeInDown(200).then(() => xpGainRef.current?.fadeOutUp(600)); // animate the xp gain
+      xpBarRef.current?.pulse(800); // animate the xp bar
     } else {
-      prevXp.current = xp.xpToday;
+      prevXp.current = xp.xpToday; // just update the previous xp
     }
-  }, [xp.xpToday]);
+  }, [xp.xpToday]); // do this for every xp.xpToday change
 
   useEffect(() => {
-    if (xp.level > prevLevel.current) {
+    if (xp.level > prevLevel.current) { // if the xp level is greater than the previous level
       Haptics.notificationAsync(
-        Haptics.NotificationFeedbackType.Success
+        Haptics.NotificationFeedbackType.Success // haptic feedback for level up
       );
-      setShowConfetti(true); // 🎉 Show confetti
+      setShowConfetti(true); // 🎉 Show confetti 
     }
-    prevLevel.current = xp.level;
-  }, [xp.level]);
+    prevLevel.current = xp.level; // update to new level
+  }, [xp.level]); // do this for every xp.level change
 
-  const energyAnim = useRef(new Animated.Value(BASELINE)).current;
+  const energyAnim = useRef(new Animated.Value(BASELINE)).current; // animated values for each metric
   const clarityAnim = useRef(new Animated.Value(BASELINE)).current;
   const emotionAnim = useRef(new Animated.Value(BASELINE)).current;
   const focusAnim = useRef(new Animated.Value(BASELINE)).current;
   const prevScore = useRef(-1); // Define prevScore ref
 
-  const energyProgress = energyAnim.interpolate({
-    inputRange: [-1, 0, 100],
-    outputRange: [0, 0, 1],
+  const energyProgress = energyAnim.interpolate({ 
+    inputRange: [-1, 0, 100], // interpolate from -1 to 100 if lower than 0 it will be 0
+    outputRange: [0, 0, 1], // output range from 0 to 1
   });
   const clarityProgress = clarityAnim.interpolate({
     inputRange: [-1, 0, 100],
@@ -240,7 +230,7 @@ export default function MentalScoreScreen() {
     outputRange: [0, 0, 1],
   });
 
-  const [displayEnergy, setDisplayEnergy] = useState(-1);
+  const [displayEnergy, setDisplayEnergy] = useState(-1); 
   const [displayClarity, setDisplayClarity] = useState(-1);
   const [displayEmotion, setDisplayEmotion] = useState(-1);
   const [displayFocus, setDisplayFocus] = useState(-1);
@@ -249,9 +239,12 @@ export default function MentalScoreScreen() {
   const streakRef = useRef(null);
 
   useEffect(() => {
-    const id = scoreAnim.addListener(({ value }) =>
+    // create an animation for the change 
+    const id = scoreAnim.addListener(({ value }) => 
+      // set the display to the rounded value
       setDisplayScore(Math.round(value))
-    );
+    )
+    // clean up the listener
     return () => scoreAnim.removeListener(id);
   }, []);
 
@@ -262,21 +255,22 @@ export default function MentalScoreScreen() {
     return () => energyAnim.removeListener(id);
   }, []);
 
-  useEffect(() => {
-    Animated.timing(energyAnim, {
-      toValue: energy,
-      duration: 800,
-      useNativeDriver: false,
-    }).start();
-  }, [energy]);
+  useEffect(() => { 
+    Animated.timing(energyAnim, { // animate the energyAnim value
+      toValue: energy, // to the energy state
+      duration: 800, // duration of 800ms
+      useNativeDriver: false, // cannot use native driver for width animation
+    }).start(); // start the animation
+  }, [energy]); // repeat when energy changes
 
+  // listening for change and updating display value
   useEffect(() => {
     const id = clarityAnim.addListener(({ value }) =>
       setDisplayClarity(Math.round(value))
     );
     return () => clarityAnim.removeListener(id);
   }, []);
-
+// actually causing the change in values 
   useEffect(() => {
     Animated.timing(clarityAnim, {
       toValue: clarity,
@@ -316,59 +310,59 @@ export default function MentalScoreScreen() {
   }, [focus]);
 
   useEffect(() => {
-    const target = Math.round((energy + clarity + emotion + focus) / 4);
+    const target = Math.round((energy + clarity + emotion + focus) / 4); // target = avg
     setScore(target); // Update score state
-  }, [energy, clarity, emotion, focus]);
+  }, [energy, clarity, emotion, focus]); // runs if anyone changes
 
   useEffect(() => {
-    if (score < 0) return;
-    if (prevScore.current > -1 && score < prevScore.current) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (score < 0) return; // ignore invalid scores
+    if (prevScore.current > -1 && score < prevScore.current) { // so if score is valid and lower than previous
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); // light haptic feedback
     }
-    prevScore.current = score;
-    Animated.timing(scoreAnim, {
+    prevScore.current = score; // update the score
+    Animated.timing(scoreAnim, { // animate the score change 
       toValue: score,
       duration: 800,
       useNativeDriver: false,
     }).start();
-  }, [score]);
+  }, [score]); // every time score changes
 
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchData = async () => { // fetch data async
       try {
-        const stored = await AsyncStorage.getItem('lastMetrics');
-        if (stored) {
-          const metrics = JSON.parse(stored);
-          energyAnim.setValue(metrics.energy);
-          clarityAnim.setValue(metrics.clarity);
-          emotionAnim.setValue(metrics.emotion);
-          focusAnim.setValue(metrics.focus);
-          scoreAnim.setValue(metrics.score);
-          setEnergy(metrics.energy);
-          setClarity(metrics.clarity);
-          setEmotion(metrics.emotion);
-          setFocus(metrics.focus);
-          setScore(metrics.score);
+        const stored = await AsyncStorage.getItem('lastMetrics'); // get last metrics
+        if (stored) { // if there are stored metrics
+          const metrics = JSON.parse(stored); // turn to readable
+          energyAnim.setValue(metrics.energy); // set the animated values to stored values
+          clarityAnim.setValue(metrics.clarity); 
+          emotionAnim.setValue(metrics.emotion); 
+          focusAnim.setValue(metrics.focus); 
+          scoreAnim.setValue(metrics.score); 
+          setEnergy(metrics.energy); // set the states to stored values
+          setClarity(metrics.clarity); 
+          setEmotion(metrics.emotion); 
+          setFocus(metrics.focus); 
+          setScore(metrics.score); 
         }
       } catch (err) {
-        console.error('❌ Error loading last metrics:', err);
+        console.error('❌ Error loading last metrics:', err); // catch error
       }
 
-      await fetchCheckInData();
-      const mirror = await getWeeklyMindMirror();
-      setWeeklyMindMirror(mirror);
-      await calculateStreak();
-      const data = await getCurrentScores();
-      if (data.xp) setXp(data.xp);
+      await fetchCheckInData(); // wait for the check in data
+      const mirror = await getWeeklyMindMirror(); // get the mind mirror
+      setWeeklyMindMirror(mirror); // set the state
+      await calculateStreak(); // calculate the streak
+      const data = await getCurrentScores(); // get the current scores
+      if (data.xp) setXp(data.xp); // set the states
       if (data.dailyGoal) setDailyGoal(data.dailyGoal);
       if (data.streak !== undefined) setStreak(data.streak);
       if (data.longestStreak !== undefined) setLongestStreak(data.longestStreak);
     };
-    fetchData();
+    fetchData(); // call the fetch data function
 
-    const unsubscribe = navigation.addListener('focus', () => {
-      fetchCheckInData();
+    const unsubscribe = navigation.addListener('focus', () => { // when screen is focused refresh
+      fetchCheckInData(); 
       calculateStreak();
       getCurrentScores().then((data) => {
         if (data.xp) setXp(data.xp);
@@ -378,28 +372,27 @@ export default function MentalScoreScreen() {
       });
     });
 
-    return unsubscribe;
+    return unsubscribe; // clean up the listener
   }, [navigation]);
 
   const fetchCheckInData = async () => {
     try {
-      const historyRaw = await AsyncStorage.getItem('checkInHistory');
-      const history = historyRaw ? JSON.parse(historyRaw) : [];
-      const today = new Date().toISOString().split('T')[0];
-      const yesterday = new Date();
+      const historyRaw = await AsyncStorage.getItem('checkInHistory'); // get the check in history
+      const history = historyRaw ? JSON.parse(historyRaw) : []; // parse it or empty array
+      const today = new Date().toISOString().split('T')[0]; // get today's date in yyyy-mm-dd
+      const yesterday = new Date(); // get yesterday's date
       yesterday.setDate(yesterday.getDate() - 1);
-      const yesterdayStr = yesterday.toISOString().split('T')[0];
 
-      const todayEntries = history.filter((entry) => entry.timestamp.startsWith(today));
-      const sortedEntries = todayEntries.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+      const todayEntries = history.filter((entry) => entry.timestamp.startsWith(today)); // filter only for today
+      const sortedEntries = todayEntries.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp)); // sort by time
 
-      if (sortedEntries.length === 0) {
-        setEnergy(BASELINE);
+      if (sortedEntries.length === 0) { // if no entries for today
+        setEnergy(BASELINE); // keep everything at baseline
         setClarity(BASELINE);
         setEmotion(BASELINE);
         setFocus(BASELINE);
         setScore(BASELINE);
-      await AsyncStorage.setItem(
+      await AsyncStorage.setItem( // wait to set the last metrics to baseline
         'lastMetrics',
         JSON.stringify({
           energy: BASELINE,
@@ -409,40 +402,40 @@ export default function MentalScoreScreen() {
           score: BASELINE,
         })
       );
-      setMicroInsight('🔍 Start checking in to uncover patterns. Ready to begin?');
-      setInsightRevealed(false);
-      setDisplayedInsight('');
-      return;
+      setMicroInsight('🔍 Start checking in to uncover patterns. Ready to begin?'); // what to leave in the insight
+      setInsightRevealed(false); // hide the insight
+      setDisplayedInsight(''); // clear the displayed insight
+      return; // exit the function
       }
 
-      let currentEnergy = BASELINE;
+      let currentEnergy = BASELINE; // start at baseline
       let currentClarity = BASELINE;
       let currentEmotion = BASELINE;
 
-      const impactPerCheckIn = 20;
+      const impactPerCheckIn = 20; // each check-in impacts 20% towards the new value
 
-      sortedEntries.forEach((entry) => {
+      sortedEntries.forEach((entry) => { // for each entry
         if (entry.energy != null) {
-          currentEnergy += ((entry.energy - currentEnergy) * impactPerCheckIn) / 100;
+          currentEnergy += ((entry.energy - currentEnergy) * impactPerCheckIn) / 100; // move 20% towards the new value
           currentClarity += ((entry.clarity - currentClarity) * impactPerCheckIn) / 100;
           currentEmotion += ((entry.emotion - currentEmotion) * impactPerCheckIn) / 100;
         }
       });
 
-      currentEnergy = Math.max(0, Math.round(currentEnergy));
+      currentEnergy = Math.max(0, Math.round(currentEnergy)); // make sure not below 0 and round it
       currentClarity = Math.max(0, Math.round(currentClarity));
       currentEmotion = Math.max(0, Math.round(currentEmotion));
-      const currentFocus = Math.round(0.6 * currentClarity + 0.4 * currentEnergy);
+      const currentFocus = Math.round(0.6 * currentClarity + 0.4 * currentEnergy); // focus is weighted 60% clarity and 40% energy
       const computedScore = Math.round(
-        (currentEnergy + currentClarity + currentEmotion + currentFocus) / 4
+        (currentEnergy + currentClarity + currentEmotion + currentFocus) / 4 // overall score is average of all four
       );
 
-      setEnergy(currentEnergy);
+      setEnergy(currentEnergy); // set the states
       setClarity(currentClarity);
       setEmotion(currentEmotion);
       setFocus(currentFocus);
       setScore(computedScore);
-      await AsyncStorage.setItem(
+      await AsyncStorage.setItem( // store the last metrics
         'lastMetrics',
         JSON.stringify({
           energy: currentEnergy,
@@ -454,9 +447,9 @@ export default function MentalScoreScreen() {
       );
 
       // Generate Today's Insight with GPT after any check-in
-      const latestEntry = sortedEntries[sortedEntries.length - 1];
-      const insight = await generateTodaysInsight({
-        energy: currentEnergy,
+      const latestEntry = sortedEntries[sortedEntries.length - 1]; // get last entry
+      const insight = await generateTodaysInsight({ // generate the insight
+        energy: currentEnergy, // pass the current values
         clarity: currentClarity,
         emotion: currentEmotion,
         focus: currentFocus,
@@ -465,10 +458,10 @@ export default function MentalScoreScreen() {
         window: latestEntry.window,
         timestamp: latestEntry.timestamp,
       });
-      setMicroInsight(insight);
-      setInsightRevealed(false);
-      setDisplayedInsight('');
-    } catch (err) {
+      setMicroInsight(insight); // set the insight off the insight
+      setInsightRevealed(false); // update that the insight is shown
+      setDisplayedInsight(''); // clear the displayed insight so we can display the new
+    } catch (err) { // catch any errors
       console.error('❌ Error loading check-in data:', err);
       setEnergy(BASELINE);
       setClarity(BASELINE);
@@ -486,102 +479,103 @@ export default function MentalScoreScreen() {
         })
       );
       setMicroInsight(
-        '🔍 Keep checking in to uncover patterns. What’s on your mind today?'
+        '🔍 Keep checking in to uncover patterns. What’s on your mind today?' // if there is nothing, display this 
       );
-      setInsightRevealed(false);
-      setDisplayedInsight('');
+      setInsightRevealed(false); // hide the insight
+      setDisplayedInsight(''); // clear the insight 
     }
   };
 
 
   const calculateStreak = async () => {
     try {
-      const [curRaw, longRaw] = await Promise.all([
-        AsyncStorage.getItem('currentStreak'),
-        AsyncStorage.getItem('longestStreak'),
+      const [curRaw, longRaw] = await Promise.all([ // get both values at the same time
+        AsyncStorage.getItem('currentStreak'), // get current streak
+        AsyncStorage.getItem('longestStreak'), // get longest streak
       ]);
-      const count = curRaw ? parseInt(curRaw, 10) : 0;
-      const longest = longRaw ? parseInt(longRaw, 10) : 0;
-      setStreak(count);
-      setLongestStreak(longest);
-      streakRef.current?.bounceIn();
-      if (count > 0) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    } catch (err) {
+      const count = curRaw ? parseInt(curRaw, 10) : 0; // check if it exist and parse it
+      const longest = longRaw ? parseInt(longRaw, 10) : 0; // check if it exist and parse it
+      setStreak(count); // set the streak state
+      setLongestStreak(longest); // set the longest streak state
+      streakRef.current?.bounceIn(); // add animation to the streak
+      if (count > 0) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); // if streak is longer than 0 give haptic
+    } catch (err) { // catch errors
       console.error('❌ Error calculating streak:', err);
-      setStreak(0);
+      setStreak(0); // set streak to 0
     }
   };
 
-  const getCheckInWindow = () => {
-    const hour = new Date().getHours();
-    if (hour >= 6 && hour < 12) return 'checkIn1';
-    if (hour >= 12 && hour < 17) return 'checkIn2';
-    return 'checkIn3';
+  const getCheckInWindow = () => { // determine which check-in window it is
+    const hour = new Date().getHours(); // get the current hour
+    if (hour >= 6 && hour < 12) return 'checkIn1'; // time frame for check in 1
+    if (hour >= 12 && hour < 17) return 'checkIn2'; // time frame for check in 2  
+    return 'checkIn3'; // else it is check in 3
   };
 
-  const handleCheckInPress = async () => {
+  const handleCheckInPress = async () => { // when check in button is pressed
     // Scroll to the top before triggering the animation
-    await new Promise((resolve) => {
-      scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+    await new Promise((resolve) => { // await - wait. new Promise - create what needs to be waited on. 
+      scrollViewRef.current?.scrollTo({ y: 0, animated: true }); // use the reference to scroll to top
       setTimeout(resolve, 500); // Wait for the scroll animation to complete (adjust duration if needed)
     });
   
     // Trigger the check-in animation and navigation
-    checkInButtonRef.current?.rubberBand(600);
-    await Haptics.selectionAsync();
-    const today = new Date().toISOString().split('T')[0];
-    const window = getCheckInWindow();
-    const key = `${today}-${window}`;
-    const existing = await AsyncStorage.getItem(key);
-    if (!existing) {
-      navigation.navigate('CheckIn', { window });
-      await calculateStreak();
-    } else {
-      Alert.alert('Already Checked In', 'You already completed this check-in.');
+    checkInButtonRef.current?.rubberBand(600); // animate the checkin button
+    await Haptics.selectionAsync(); // wait until the haptics done then move on
+    const today = new Date().toISOString().split('T')[0]; // get today's date
+    const window = getCheckInWindow(); // get the check-in window from the function
+    const key = `${today}-${window}`; // create a passcode so that it is easy to find with functions
+    const existing = await AsyncStorage.getItem(key); // check if there is already an entry for today and this window
+    if (!existing) { // if there is no entry
+      navigation.navigate('CheckIn', { window }); // navigate to the check-in screen
+      await calculateStreak(); // then run the calculate streak function
+    } else { 
+      Alert.alert('Already Checked In', 'You already completed this check-in.'); // if you already check in then this pops up
     }
   };
 
+  //DEV
   const resetCheckIn3 = async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    const today = new Date().toISOString().split('T')[0];
-    await AsyncStorage.removeItem(`${today}-checkIn3`);
-    Alert.alert('✅ Reset Complete', 'Check-In 3 has been cleared.');
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); // give haptic before starting
+    const today = new Date().toISOString().split('T')[0]; // get today's date
+    await AsyncStorage.removeItem(`${today}-checkIn3`); // remove the check-in 3 entry for today
+    Alert.alert('✅ Reset Complete', 'Check-In 3 has been cleared.'); // show that its was deleted
   };
 
-  const devLaunchCheckIn3 = () => {
-    Haptics.selectionAsync();
-    navigation.navigate('CheckIn', { window: 'checkIn3' });
+  const devLaunchCheckIn3 = async () => { // dev function to launch check-in 3 directly
+    await Haptics.selectionAsync(); // give haptic
+    navigation.navigate('CheckIn', { window: 'checkIn3' }); // navigate to check-in 3
   };
 
-  const resetCheckIn1 = async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    const today = new Date().toISOString().split('T')[0];
-    await AsyncStorage.removeItem(`${today}-checkIn1`);
-    Alert.alert('✅ Reset Complete', 'Check-In 1 has been cleared.');
+  const resetCheckIn1 = async () => { // dev function to reset check-in 1
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); // give haptic
+    const today = new Date().toISOString().split('T')[0]; // get todays date
+    await AsyncStorage.removeItem(`${today}-checkIn1`); // remove the check-in 1 entry for today
+    Alert.alert('✅ Reset Complete', 'Check-In 1 has been cleared.'); // give alert
   };
 
-  const devLaunchCheckIn1 = () => {
-    Haptics.selectionAsync();
-    navigation.navigate('CheckIn', { window: 'checkIn1' });
+  const devLaunchCheckIn1 = async () => { // dev function to launch check-in 1 directly
+    await Haptics.selectionAsync(); // give haptic
+    navigation.navigate('CheckIn', { window: 'checkIn1' }); // navigate to check-in 1
   };
 
-  const devLaunchOnboarding = () => {
-    Haptics.selectionAsync();
-    navigation.navigate('Onboarding');
+  const devLaunchOnboarding = async () => { // dev open the onboarding screen
+    await Haptics.selectionAsync(); // give a haptic
+    navigation.navigate('Onboarding'); // take the user to onboarding screen
   };
 
-  const resetOnboardingFlag = async () => {
-    await AsyncStorage.removeItem('onboardingComplete');
-    Alert.alert('Flag Reset', 'Onboarding will show on next app load.');
+  const resetOnboardingFlag = async () => { // dev reset the onboarding flag
+    await AsyncStorage.removeItem('onboardingComplete'); // remove the onboarding complete flag
+    Alert.alert('Flag Reset', 'Onboarding will show on next app load.'); // alert the user
   };
 
-  const resetAllData = async () => {
-    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+  const resetAllData = async () => { // reset all data
+    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning); // give a warning haptic
     try {
-      await AsyncStorage.clear();
-      console.log('✅ All data cleared successfully');
-      Alert.alert('Reset Complete', 'All app data has been cleared.');
-      setEnergy(BASELINE);
+      await AsyncStorage.clear(); // clear the storage
+      console.log('✅ All data cleared successfully'); // display in console
+      Alert.alert('Reset Complete', 'All app data has been cleared.'); // alert the user
+      setEnergy(BASELINE); // set everything back to defaults 
       setClarity(BASELINE);
       setEmotion(BASELINE);
       setFocus(BASELINE);
@@ -590,13 +584,13 @@ export default function MentalScoreScreen() {
       setDisplayedInsight('');
       setWeeklyMindMirror('No MindMirror yet.');
       setXp({ xpToday: 0, total: 0, level: 1, progress: 0 });
-    } catch (err) {
+    } catch (err) { // if there is any errors
       console.error('❌ Error clearing data:', err);
       Alert.alert('Error', 'Failed to clear data');
     }
   };
 
-  const renderMarkdown = (text) => {
+  const renderMarkdown = (text) => {  // used in mentalMirror to render the markdown text
     const lines = text.split('\n');
     return lines.map((line, index) => {
       if (line.startsWith('📈 **') || line.startsWith('📉 **') || line.startsWith('🔁 **') || line.startsWith('🧠 **')) {
@@ -610,35 +604,35 @@ export default function MentalScoreScreen() {
     });
   };
 
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      headerShown: true,
-      headerTransparent: true,
-      headerLeft: () => null,
-      headerBackVisible: false,
+  useLayoutEffect(() => { // layout means it happens before the screen is drawn
+    navigation.setOptions({ // set the options for the screen
+      headerShown: true, // show the header 
+      headerTransparent: true, // make it transparent
+      headerLeft: () => null, // no left button
+      headerBackVisible: false, // no back button
         headerBackground: () => (
-          <BlurView
+          <BlurView // add blur
             tint="dark" // You can change this to 'light' or 'default' if needed
-            intensity={90}
-            style={{ flex: 1 }}
+            intensity={90} // how strong 
+            style={{ flex: 1 }} // take up full space
           />
         ),
-        headerTitle: () => (
+        headerTitle: () => ( // custom title component
         <View
           style={{
             width: '100%',
             height: 100,
             justifyContent: 'center',
             alignItems: 'center',
-            position: 'relative',
+            position: 'relative', 
           }}
         >
-          {/* Center - ZenKai Logo */}
-          <TouchableOpacity activeOpacity={0.8} onPress={handleLogoPress}>
+          {/* Center - zen-kAI Logo */}
+          <TouchableOpacity activeOpacity={1} onPress={handleLogoPress}>
             <Image
-              source={require('./assets/logo-text-only.png')}
-              style={{ width: 320, height: 100 }}
-              resizeMode="contain"
+              source={require('./assets/logo-text-only.png')} // image 
+              style={{ width: 320, height: 100 }} // style 
+              resizeMode="contain" // fit without cropping
             />
           </TouchableOpacity>
   
@@ -681,19 +675,6 @@ export default function MentalScoreScreen() {
               alignItems: 'center',
             }}
           >
-            {devMode ? (
-              <TouchableOpacity onPress={handleCheckInPress}>
-                <Text
-                  style={{
-                    fontSize: 16,
-                    fontWeight: '700',
-                    color: '#51C4FF',
-                  }}
-                >
-                  Check In
-                </Text>
-              </TouchableOpacity>
-            ) : (
               <TouchableOpacity onPress={handleCheckInPress}>
                 <Image
                   source={require('./assets/check.png')}
@@ -701,17 +682,16 @@ export default function MentalScoreScreen() {
                   resizeMode="contain"
                 />
               </TouchableOpacity>
-            )}
           </View>
 
         </View>
       ),
-      headerTitleAlign: 'center',
+      headerTitleAlign: 'center', // center the title
     });
-  }, [navigation, devMode]);
+  }, [navigation, devMode]); // run this when navigation or devMode changes
 
   useEffect(() => {
-    if (!insightRevealed) return;
+    if (!insightRevealed) return; // only run if the insight is revealed
   
     // Only animate if microInsight is a clean, valid string
     if (
@@ -719,12 +699,12 @@ export default function MentalScoreScreen() {
       microInsight.length < 10 ||
       microInsight === 'Loading insight...'
     ) {
-      setDisplayedInsight('⚠️ Insight unavailable. Try again.');
+      setDisplayedInsight('⚠️ Insight unavailable. Try again.'); // if conditions are not met 
       return;
-    }
+    }         
   
     // Cancel previous interval if it exists
-    if (insightIntervalRef.current) {
+    if (insightIntervalRef.current) { 
       clearInterval(insightIntervalRef.current);
       insightIntervalRef.current = null;
     }
