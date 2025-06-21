@@ -41,7 +41,7 @@ export default function CheckInScreen() {
   const lastClarity = useRef(50);
   const lastEmotion = useRef(50);
 
-  useLayoutEffect(() => {
+  useLayoutEffect(() => { // before screen shows
     navigation.setOptions({
       headerTransparent: true, // Make the header transparent
       headerBackground: () => (
@@ -56,69 +56,71 @@ export default function CheckInScreen() {
   }, [navigation]);
 
   useEffect(() => {
+    // listen for when the keyboard is about to show 
     const show = Keyboard.addListener('keyboardWillShow', () => {
       if (Platform.OS === 'ios') LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     });
+    // listen for when the keyboard is about to hide
     const hide = Keyboard.addListener('keyboardWillHide', () => {
       if (Platform.OS === 'ios') LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     });
-    return () => {
-      show.remove();
+    return () => { 
+      show.remove(); // cleanup 
       hide.remove();
     };
   }, []);
 
-  const getCheckInWindow = () => {
-    const hour = new Date().getHours();
-    if (hour >= 6 && hour < 12) return 'checkIn1';
-    if (hour >= 12 && hour < 17) return 'checkIn2';
-    return 'checkIn3';
+  const getCheckInWindow = () => { // find the time we are checking in 
+    const hour = new Date().getHours(); // 0-23
+    if (hour >= 6 && hour < 12) return 'checkIn1'; // morning
+    if (hour >= 12 && hour < 17) return 'checkIn2'; // afternoon
+    return 'checkIn3'; // evening
   };
 
-  const handleSliderChange = (value, setValue, lastRef) => {
-    const rounded = Math.round(value);
-    const isNearMilestone = milestones.some((m) => Math.abs(rounded - m) <= 1);
-    if (isNearMilestone) {
-      const nearest = milestones.reduce((a, b) => Math.abs(a - rounded) < Math.abs(b - rounded) ? a : b);
-      if (nearest !== lastRef.current) {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-        lastRef.current = nearest;
+  const handleSliderChange = (value, setValue, lastRef) => { // take in the value, the setter, and the ref to last value
+    const rounded = Math.round(value); // round to nearest integer
+    const isNearMilestone = milestones.some((m) => Math.abs(rounded - m) <= 1); // if 1 away from the milestone
+    if (isNearMilestone) { // if we are near a milestone
+      const nearest = milestones.reduce((a, b) => Math.abs(a - rounded) < Math.abs(b - rounded) ? a : b); // compare all milestones to find nearest
+      if (nearest !== lastRef.current) { // only fire the haptic if we are at a new milestone
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); // meduim impact
+        lastRef.current = nearest; // update the ref to the new milestone
       }
-      setValue(nearest);
+      setValue(nearest); // make the value the milestone
     } else {
-      setValue(value);
-      lastRef.current = rounded;
+      setValue(value); // set to exact value
+      lastRef.current = rounded; // update the ref to the exact value
     }
   };
 
-  const toggleTag = (tag) => {
-    setSelectedTags((prev) => prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]);
+  const toggleTag = (tag) => { // add or remove tag from selectedTags, the only way we can access the array is with setSelectedTags
+    setSelectedTags((prev) => prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]); // remove if exists, add if not
   };
 
-  const handleSave = async () => {
-    const timestamp = new Date().toISOString();
-    const today = timestamp.split('T')[0];
-    const window = route.params?.window || getCheckInWindow();
-    const entry = { energy, clarity, emotion, note, window, timestamp, tags: selectedTags };
+  const handleSave = async () => { // save the check-in
+    const timestamp = new Date().toISOString(); // current time in ISO format
+    const today = timestamp.split('T')[0]; // only get data
+    const window = route.params?.window || getCheckInWindow(); // get the window from params or determine it
+    const entry = { energy, clarity, emotion, note, window, timestamp, tags: selectedTags }; // create the entry object (default values)
 
     try {
-      const key = `${today}-${window}`;
-      const existing = await AsyncStorage.getItem(key);
-      if (existing) return Alert.alert('Already Checked In', `You've already completed ${window}.`);
+      const key = `${today}-${window}`; // unique key for today and window
+      const existing = await AsyncStorage.getItem(key); // check if already exists
+      if (existing) return Alert.alert('Already Checked In', `You've already completed ${window}.`); // if exists, alert and return
 
-      await AsyncStorage.setItem(key, JSON.stringify(entry));
-      const historyRaw = await AsyncStorage.getItem('checkInHistory');
-      const history = historyRaw ? JSON.parse(historyRaw) : [];
-      history.push(entry);
-      await AsyncStorage.setItem('checkInHistory', JSON.stringify(history));
-      await processCheckIn(entry);
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      if (window === 'checkIn3') {
-        navigation.navigate('Reflection');
+      await AsyncStorage.setItem(key, JSON.stringify(entry)); // save with the key then stringify the entry
+      const historyRaw = await AsyncStorage.getItem('checkInHistory'); // get the check in history
+      const history = historyRaw ? JSON.parse(historyRaw) : []; // check if history exists, if not make empty array
+      history.push(entry); // add the entry to history
+      await AsyncStorage.setItem('checkInHistory', JSON.stringify(history)); // stringify and save the history with the new entry
+      await processCheckIn(entry); // update scores and momentum
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); // success haptic
+      if (window === 'checkIn3') { // if we are on check in 3 
+        navigation.navigate('Reflection');// navigate to reflection screen
       } else {
-        navigation.goBack();
+        navigation.goBack(); // go back to previous screen (mentalScore)
       }
-    } catch (err) {
+    } catch (err) { // catch any errors
       console.error('❌ Error saving check-in:', err);
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       Alert.alert('Error', 'Failed to save your check-in.');
