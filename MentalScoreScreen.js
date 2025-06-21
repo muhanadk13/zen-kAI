@@ -361,7 +361,7 @@ export default function MentalScoreScreen() {
     };
     fetchData(); // call the fetch data function
 
-    const unsubscribe = navigation.addListener('focus', () => { // when screen is focused refresh
+    const unsubscribe = navigation.addListener('focus', () => {
       fetchCheckInData(); 
       calculateStreak();
       getCurrentScores().then((data) => {
@@ -766,12 +766,12 @@ export default function MentalScoreScreen() {
   >
       <Animatable.View animation="bounceIn" duration={800} style={styles.gaugeContainer}>
         <ScoreCircle score={displayScore} />
-        <Animatable.Text animation="pulse" iterationCount="infinite" iterationDelay={4000} style={styles.mentalScore}>
+        <Text style={styles.mentalScore}>
           {displayScore}
-        </Animatable.Text>
+        </Text>
       </Animatable.View>
 
-      <Animatable.View ref={xpBarRef} style={[styles.momentumContainer, xp.progress > 90 && styles.levelGlow]}>
+      <Animatable.View ref={xpBarRef} style={[styles.momentumContainer, xp.progress > 60 && styles.levelGlow]}>
         <Text style={styles.momentumLabel}>
           Level {xp.level} — {xp.total - xpForLevel(xp.level)} / {xpForLevel(xp.level + 1) - xpForLevel(xp.level)} XP
         </Text>
