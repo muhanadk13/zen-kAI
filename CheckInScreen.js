@@ -25,8 +25,50 @@ import { BlurView } from 'expo-blur';
 import TagSelectorModal from './TagSelectorModal';
 import { processCheckIn } from './utils/scoring';
 
+
+function CustomHeader() {
+  const navigation = useNavigation();
+
+  return (
+    <BlurView
+      tint="dark"
+      intensity={90}
+      
+      style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
+        height: 100,
+        paddingTop: 40,
+        paddingHorizontal: 16,
+        justifyContent: 'center',
+      }}
+    >
+      <TouchableOpacity
+        onPress={() => {
+          if (navigation.canGoBack()) {
+            navigation.goBack();
+          } else {
+            navigation.navigate('MentalScore');
+          }
+        }}
+      >
+        <Image
+          source={require('./assets/logo-japan.png')} // adjust path if needed
+          style={{ width: 50, height: 50, marginLeft: 15, marginTop: 0}}
+        />
+      </TouchableOpacity>
+    </BlurView>
+  );
+}
+
+
+
 export default function CheckInScreen() {
   const navigation = useNavigation();
+  const navigationRef = useRef(null); // this will allow us to navigate no matter the screen
   const route = useRoute();
   const [energy, setEnergy] = useState(50);
   const [clarity, setClarity] = useState(50);
@@ -41,19 +83,6 @@ export default function CheckInScreen() {
   const lastClarity = useRef(50);
   const lastEmotion = useRef(50);
 
-  useLayoutEffect(() => { // before screen shows
-    navigation.setOptions({
-      headerTransparent: true, // Make the header transparent
-      headerBackground: () => (
-        <BlurView
-          tint="dark" // Options: "light", "dark", or "default"
-          intensity={90} // Adjust the blur intensity
-          style={{ flex: 1 }}
-        />
-      ),
-      headerTitle: '', // Optional: Remove the title if not needed
-    });
-  }, [navigation]);
 
   useEffect(() => {
     // listen for when the keyboard is about to show 
@@ -127,10 +156,12 @@ export default function CheckInScreen() {
     }
   };
 
+  
   return (
     <Animatable.View animation="fadeIn" duration={400} style={{ flex: 1 }}>
     <LinearGradient colors={['#1C1F2E', '#12131C']} style={{ flex: 1 }}>
       <SafeAreaView style={{ flex: 1 }}>
+        <CustomHeader />
         <KeyboardAvoidingView
           style={{ flex: 1 }}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -138,7 +169,7 @@ export default function CheckInScreen() {
         >
           <ScrollView
             ref={scrollRef}
-            contentContainerStyle={{ padding: 24, paddingBottom: 120 }}
+            contentContainerStyle={{ padding: 24, paddingBottom: 120, paddingTop: 70 }}
             keyboardShouldPersistTaps="handled"
           >
             <Animatable.View animation="fadeInUp" duration={600}>

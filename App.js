@@ -31,53 +31,60 @@ Notifications.setNotificationHandler({
 const Stack = createNativeStackNavigator();
 
 export default function App() {
-  const navigationRef = useRef();
-  const [initialRoute, setInitialRoute] = useState(null);
+  const navigationRef = useRef(null); // this will allow us to navigate no matter the screen
 
   useEffect(() => {
     (async () => {
       const done = await AsyncStorage.getItem('onboardingComplete');
-      if (done) initializeNotifications();
-      setInitialRoute('Load');
+      if (done) {
+        initializeNotifications();
+        navigationRef.current?.replace('MentalScore')
+      }
+      else {
+        navigationRef.current?.replace('Onboarding');
+      }
     })();
-  }, []);
+},[]);
 
 
   async function initializeNotifications() {
-    const permission = await requestNotificationPermission();
+    const permission = await Notifications.getPermissionsAsync(); // ask the user for permission to send notifications
     if (!permission) return;
 
-    await Notifications.cancelAllScheduledNotificationsAsync();
-    const [t1, t2, t3] = await Promise.all([
+    await Notifications.cancelAllScheduledNotificationsAsync(); // clear the old notifications
+    const [t1, t2, t3] =  await Promise.all([ // I promise we will wait 
       AsyncStorage.getItem('checkIn1Time'),
       AsyncStorage.getItem('checkIn2Time'),
       AsyncStorage.getItem('checkIn3Time'),
     ]);
-    const { hour: h1, minute: m1 } = parseTime(t1, 8, 0);
-    const { hour: h2, minute: m2 } = parseTime(t2, 14, 0);
-    const { hour: h3, minute: m3 } = parseTime(t3, 21, 0);
 
-    await scheduleReminder('checkIn1', h1, m1);
+    // parse the time from storage or use default
+    const {hour: h1, minute: m1} = parseTime(t1, 8, 0); 
+    const {hour: h2, minute: m2} = parseTime(t2, 14, 0);
+    const {hour: h3, minute: m3} = parseTime(t3, 21, 0);
+
+    // Schedule the reminders
+    await scheduleReminder('checkIn1', h1, m1); 
     await scheduleReminder('checkIn2', h2, m2);
     await scheduleReminder('checkIn3', h3, m3);
   }
 
   async function requestNotificationPermission() {
     if (!Device.isDevice) {
-      Alert.alert('Error', 'Notifications only work on physical devices.');
+      Alert.alert('Error', 'This feature only works on physical devices');
       return false;
     }
 
-    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    const { status: existingStatus } = await Notifications.getPermissionsAsync(); // returns object but only save the status
     let finalStatus = existingStatus;
 
-    if (existingStatus !== 'granted') {
-      const { status } = await Notifications.requestPermissionsAsync();
-      finalStatus = status;
+    if (existingStatus !== 'granted') { // if not granted permission
+      const { status } = await Notifications.requestPermissionsAsync(); // we request permission from the user and save as status
+      finalStatus = status; // the response is called status
     }
-
+    
     if (finalStatus !== 'granted') {
-      Alert.alert('Permission Required', 'Enable notifications in your settings.');
+      Alert.alert('Permission Required', 'You need to enable notifications for this feature to work.');
       return false;
     }
 
@@ -87,40 +94,41 @@ export default function App() {
       });
     } catch (e) {}
 
-    return true;
+    return true; 
   }
 
-  async function scheduleReminder(window, hour, minute) {
-    let message;
+  async function scheduleReminder(window, hour, minute) { 
+    let message = ''; // empty
     try {
-      message = await generatePersonalizedReminder(window);
-    } catch {
-      message = `Don't miss your ${window} check-in — it matters.`;
-    }
+      message = await generatePersonalizedReminder(window); // check if there is a message for the window
+    } catch (e) {
+      message = `Don't miss your ${window} check-in!`; // fallback
+   }
 
-    const now = new Date();
-    const triggerDate = new Date();
-    triggerDate.setHours(hour, minute, 0, 0);
-    if (triggerDate <= now) {
-      triggerDate.setDate(triggerDate.getDate() + 1);
-    }
+   const now = new Date(); // get current time
+   const triggerDate = new Date() // create a new date object
+   triggerDate.setHours(hour, minute, 0, 0); // set the time from the parameters
+   if (triggerDate <= now) { // if the time has past
+    triggerDate.setDate(triggerDate.getDate() + 1); // if the time is in the past, schedule for tomorrow
+   }
+   
+   await Notifications.scheduleNotificationAsync({ // schedule the notification
+    content: {
+      title: 'zen-kAI',
+      body: message,
+      sound: true,
+    },
+    trigger: {
+      type: 'date', // trigger on the date
+      date: triggerDate,
+    },
 
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title: 'zen-kAI',
-        body: message,
-        sound: true,
-      },
-      trigger: {
-        type: 'date',
-        date: triggerDate,
-      },
-    });
+   });
 
-    const labelMap = { checkIn1: 'morning', checkIn2: 'afternoon', checkIn3: 'evening' };
-    const label = labelMap[window] || window;
-    const timeStr = formatDisplayTime(hour, minute);
-    console.log(`✅ GPT Reminder (${label}): "${message}" (${timeStr})`);
+   const labelMap = {checkIn1: 'morning', checkIn2: 'afternoon', checkIn3: 'evening'}; // to display
+   const label = labelMap[window] || window; // make the label "morning", "afternoon", "evening"
+   const timeStr = formatDisplayTime(hour, minute); // format the time for display
+   console.log(`✅ GPT Reminder (${label}): "${message}" (${timeStr})`); // log the reminder
   }
 
   function formatDisplayTime(hour, minute) {
@@ -131,70 +139,24 @@ export default function App() {
 
   function parseTime(str, defH, defM) {
     if (str) {
-      const parts = str.split(':');
+      const parts = str.split(':'); 
       const h = parseInt(parts[0], 10);
       const m = parseInt(parts[1], 10);
       if (!isNaN(h) && !isNaN(m)) {
-        return { hour: h, minute: m };
+        return { hour: h, minute: m};
       }
     }
-    return { hour: defH, minute: defM };
-  }
-
-  if (!initialRoute) return null;
+    return { hour: defH, minute: defM } // if the string is not valid, return the default time
+ }
 
   return (
     <NavigationContainer ref={navigationRef}>
-      <Stack.Navigator
-        initialRouteName={initialRoute}
-        screenOptions={{ animation: 'fade', gestureEnabled: false }}
-      >
-        <Stack.Screen name="Onboarding" component={OnboardingScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="MentalScore" component={MentalScoreScreen} options={{ headerShown: false }} />
-        <Stack.Screen
-          name="CheckIn"
-          component={CheckInScreen}
-          options={{
-            headerTransparent: true,
-            headerBackground: () => (
-              <BlurView
-                intensity={99}
-                tint="dark"
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  backgroundColor: 'rgba(18,19,28,0.7)',
-                }}
-              />
-            ),
-            headerTitle: () => (
-              <Image
-                source={require('./assets/logo-text-only.png')}
-                style={{ width: 130, height: 120, marginBottom: 8 }}
-              />
-            ),
-            headerLeft: () => (
-              <TouchableOpacity
-                onPress={() => {
-                  if (navigationRef.current?.canGoBack()) {
-                    navigationRef.current.goBack();
-                  } else {
-                    navigationRef.current?.navigate('MentalScore');
-                  }
-                }}
-                style={{ marginLeft: 16 }}
-              >
-                <Image
-                  source={require('./assets/logo-japan.png')}
-                  style={{ width: 50, height: 50, marginLeft: 8, marginBottom: 8 }}
-                />
-              </TouchableOpacity>
-            ),
-          }}
-        />
+    <Stack.Navigator
+      initialRouteName='Load'
+      screenOptions={{ animation: 'fade', gestureEnabled: false}}>
+        <Stack.Screen name='Onboarding' component={OnboardingScreen} options={{ headerShown: false }} />
+        <Stack.Screen name='MentalScore' component={MentalScoreScreen} options={{ headerShown: false }} />
+        <Stack.Screen name='CheckIn' component={CheckInScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Reflection" component={ReflectionScreen} options={{ headerShown: false }} />
         <Stack.Screen name="TestInsight" component={TestInsightScreen} />
         <Stack.Screen name="History" component={HistoryScreen} />

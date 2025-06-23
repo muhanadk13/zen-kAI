@@ -23,6 +23,68 @@ import Svg, { Circle, Defs, LinearGradient as SvgLinearGradient, Stop } from 're
 import LottieView from 'lottie-react-native'; // Import Lottie
 import { BlurView } from 'expo-blur'; // blur the header
 
+const CustomHeader = ({ onLogoPress, devMode, navigation, handleCheckInPress }) => {
+  return (
+    <BlurView
+      tint="dark"
+      intensity={80}
+      style={{ width: '100%', height: 100, paddingTop: 40, paddingHorizontal: 16, zIndex: 1000, position: 'absolute' }}
+    >
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', position: 'relative' }}>
+        {/* Center: Logo */}
+        <TouchableOpacity activeOpacity={1} onPress={onLogoPress}>
+          <Image
+            source={require('./assets/logo-text-only.png')}
+            style={{ width: 320, height: 100 }}
+            resizeMode="contain"
+          />
+        </TouchableOpacity>
+
+        {/* Left: Japan logo */}
+        <View style={{ position: 'absolute', left: 20, top: '50%', transform: [{ translateY: -25 }] }}>
+          {devMode ? (
+            <TouchableOpacity onPress={() => navigation.navigate('History')}>
+              <Image
+                source={require('./assets/logo-japan.png')}
+                style={{ width: 50, height: 50 }}
+                resizeMode="contain"
+              />
+            </TouchableOpacity>
+          ) : (
+            <Image
+              source={require('./assets/logo-japan.png')}
+              style={{ width: 50, height: 50 }}
+              resizeMode="contain"
+            />
+          )}
+        </View>
+
+        {/* Right: Check-In */}
+        <View
+          style={{
+            position: 'absolute',
+            right: 0,
+            top: '60%',
+            transform: [{ translateY: -60 }],
+            width: 100,
+            height: 100,
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
+          <TouchableOpacity onPress={handleCheckInPress}>
+            <Image
+              source={require('./assets/check.png')}
+              style={{ width: 100, height: 100 }}
+              resizeMode="contain"
+            />
+          </TouchableOpacity>
+        </View>
+      </View>
+    </BlurView>
+  );
+};
+
 
 const AnimatedMomentumBar = ({ value }) => {
   // Create a persistent animated value that starts at 0
@@ -604,91 +666,7 @@ export default function MentalScoreScreen() {
     });
   };
 
-  useLayoutEffect(() => { // layout means it happens before the screen is drawn
-    navigation.setOptions({ // set the options for the screen
-      headerShown: true, // show the header 
-      headerTransparent: true, // make it transparent
-      headerLeft: () => null, // no left button
-      headerBackVisible: false, // no back button
-        headerBackground: () => (
-          <BlurView // add blur
-            tint="dark" // You can change this to 'light' or 'default' if needed
-            intensity={90} // how strong 
-            style={{ flex: 1 }} // take up full space
-          />
-        ),
-        headerTitle: () => ( // custom title component
-        <View
-          style={{
-            width: '100%',
-            height: 100,
-            justifyContent: 'center',
-            alignItems: 'center',
-            position: 'relative', 
-          }}
-        >
-          {/* Center - zen-kAI Logo */}
-          <TouchableOpacity activeOpacity={1} onPress={handleLogoPress}>
-            <Image
-              source={require('./assets/logo-text-only.png')} // image 
-              style={{ width: 320, height: 100 }} // style 
-              resizeMode="contain" // fit without cropping
-            />
-          </TouchableOpacity>
   
-          {/* Left - Japanese Logo */}
-          <View
-            style={{
-              position: 'absolute',
-              left: 20,
-              top: '50%',
-              transform: [{ translateY: -25 }],
-            }}
-          >
-            {devMode ? (
-              <TouchableOpacity onPress={() => navigation.navigate('History')}>
-                <Image
-                  source={require('./assets/logo-japan.png')}
-                  style={{ width: 50, height: 50 }}
-                  resizeMode="contain"
-                />
-              </TouchableOpacity>
-            ) : (
-              <Image
-                source={require('./assets/logo-japan.png')}
-                style={{ width: 50, height: 50 }}
-                resizeMode="contain"
-              />
-            )}
-          </View>
-  
-          {/* Right - Check In */}
-          <View
-            style={{
-              position: 'absolute',
-              right: 0,
-              top: '60%',
-              transform: [{ translateY: -60 }],
-              width: 100,
-              height: 100,
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}
-          >
-              <TouchableOpacity onPress={handleCheckInPress}>
-                <Image
-                  source={require('./assets/check.png')}
-                  style={{ width: 100, height: 100 }}
-                  resizeMode="contain"
-                />
-              </TouchableOpacity>
-          </View>
-
-        </View>
-      ),
-      headerTitleAlign: 'center', // center the title
-    });
-  }, [navigation, devMode]); // run this when navigation or devMode changes
 
   useEffect(() => {
     if (!insightRevealed) return; // only run if the insight is revealed
@@ -739,215 +717,231 @@ export default function MentalScoreScreen() {
   
   return (
     <Animatable.View animation="fadeIn" duration={400} style={{ flex: 1 }}>
-<LinearGradient
-  colors={['#1C1F2E', '#12131C']}
-  start={{ x: 0, y: 0 }}
-  end={{ x: 0, y: 1 }}
-  style={styles.container}
->
-  {showConfetti && (
-    <LottieView
-      source={require('./assets/animations/confetti.json')}
-      autoPlay
-      loop={false}
-      onAnimationFinish={() => setShowConfetti(false)}
-      style={{
-        position: 'absolute',
-        width: '100%',
-        height: '100%',
-        zIndex: 10,
-        pointerEvents: 'none',
-      }}
-    />
-  )}
-  <ScrollView 
-    ref={scrollViewRef} // Attach the reference to the ScrollView
-    contentContainerStyle={styles.scrollContainer}
-  >
-      <Animatable.View animation="bounceIn" duration={800} style={styles.gaugeContainer}>
-        <ScoreCircle score={displayScore} />
-        <Text style={styles.mentalScore}>
-          {displayScore}
-        </Text>
-      </Animatable.View>
-
-      <Animatable.View ref={xpBarRef} style={[styles.momentumContainer, xp.progress > 60 && styles.levelGlow]}>
-        <Text style={styles.momentumLabel}>
-          Level {xp.level} — {xp.total - xpForLevel(xp.level)} / {xpForLevel(xp.level + 1) - xpForLevel(xp.level)} XP
-        </Text>
-        <AnimatedMomentumBar value={xp.progress} />
-        <Animatable.Text ref={xpGainRef} style={styles.xpGainText}>
-          +{xpDelta}
-        </Animatable.Text>
-      </Animatable.View>
-
-      <View style={styles.streakContainer}>
-        <Animatable.Text ref={streakRef} style={styles.streakText}>
-          <Image
-            source={require('./assets/GIF/fire.gif')}
-            style={styles.streakIcon}
-          /> {streak} Day Streak{ [3,7,14,30,50].includes(streak) ? '🏅' : '' }
-        </Animatable.Text>
-      </View>
-      {/* XP gain animation will show here */}
-
-      
-
       <LinearGradient
-colors={['#646DFF', '#D7A4FF']} // Duolingo-style gradient
-start={{ x: 0, y: 0 }}
-  end={{ x: 1, y: 1 }}
-  style={styles.cardGradient}
->
-  <Animatable.View animation="fadeInUp" duration={600} style={styles.cardInner}>
-    <View style={styles.cardHeader}>
-      <Image source={require('./assets/mirror.png')} style={styles.cardIcon} />
-      <Text style={styles.cardTitle}>Weekly MindMirror</Text>
-    </View>
-    {renderMarkdown(weeklyMindMirror)}
-  </Animatable.View>
-</LinearGradient>
-
-
-<LinearGradient
-  colors={['#646DFF', '#D7A4FF']} // Duolingo-style gradient
-  start={{ x: 0, y: 0 }}
-  end={{ x: 1, y: 1 }}
-  style={styles.cardGradient}
->
-  <TouchableOpacity
-    activeOpacity={0.8}
-    onPress={() => setInsightRevealed(true)}
-    disabled={insightRevealed} // Disable tap after revealing
-    style={[
-      styles.cardInner,
-      !insightRevealed && { backgroundColor: '#2E3340', opacity: 0.6 }, // Grayed-out style
-    ]}
-  >
-    <View style={styles.cardHeader}>
-      <Image source={require('./assets/advice.png')} style={styles.cardIcon} />
-      <Text style={styles.cardTitle}>Check-in Insight</Text>
-    </View>
-    {insightRevealed ? (
-      <Text style={styles.cardText}>{displayedInsight}</Text>
-    ) : (
-      <Text style={[styles.cardText, { textAlign: 'center', fontStyle: 'italic' }]}>
-        Tap to Reveal Insight
-      </Text>
-    )}
-  </TouchableOpacity>
-</LinearGradient>
-
-
-<View style={styles.metricsGradient}>
-  <Animatable.View animation="fadeInUp" duration={600} delay={400} style={styles.metricsGrid}>
-    <View style={styles.metricsRow}>
-      <LinearGradient
-        colors={['#00e89f', '#04ca76']}
+        colors={['#1C1F2E', '#12131C']}
         start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.metricBorder}
+        end={{ x: 0, y: 1 }}
+        style={styles.container}
       >
-        <View style={styles.metricPill}>
-          <Text style={styles.metricIcon}>⚡</Text>
-          <Text style={styles.metricName}>Energy</Text>
-          <Text style={styles.metricValue}>{displayEnergy}%</Text>
-        </View>
-      </LinearGradient>
-
-      <LinearGradient
-        colors={['#facc15', '#f59e0b']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.metricBorder}
-      >
-        <View style={styles.metricPill}>
-          <Text style={styles.metricIcon}>💡</Text>
-          <Text style={styles.metricName}>Clarity</Text>
-          <Text style={styles.metricValue}>{displayClarity}%</Text>
-        </View>
-      </LinearGradient>
-    </View>
-
-    <View style={styles.metricsRow}>
-      <LinearGradient
-        colors={['#22d3ee', '#3b82f6']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.metricBorder}
-      >
-        <View style={styles.metricPill}>
-          <Text style={styles.metricIcon}>💚</Text>
-          <Text style={styles.metricName}>Emotion</Text>
-          <Text style={styles.metricValue}>{displayEmotion}%</Text>
-        </View>
-      </LinearGradient>
-
-      <LinearGradient
-        colors={['#a78bfa', '#8b5cf6']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.metricBorder}
-      >
-        <View style={styles.metricPill}>
-          <Text style={styles.metricIcon}>🎯</Text>
-          <Text style={styles.metricName}>Focus</Text>
-          <Text style={styles.metricValue}>{displayFocus}%</Text>
-        </View>
-      </LinearGradient>
-    </View>
-  </Animatable.View>
-</View>
-
-
-
-      {devMode && (
-      <View style={styles.resetContainer}>
-        <TouchableOpacity onPress={resetCheckIn3} style={styles.resetButton}>
-          <Text style={styles.resetButtonText}>Reset Check-In 3 (Dev)</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={devLaunchCheckIn3} style={[styles.resetButton, { marginTop: 12, backgroundColor: '#3b82f6' }]}>
-          <Text style={styles.resetButtonText}>Open Check-In 3 (Dev)</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={resetCheckIn1} style={[styles.resetButton, { marginTop: 12, backgroundColor: '#ef4444' }]}>
-          <Text style={styles.resetButtonText}>Reset Check-In 1 (Dev)</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={devLaunchCheckIn1} style={[styles.resetButton, { marginTop: 12, backgroundColor: '#3b82f6' }]}>
-          <Text style={styles.resetButtonText}>Open Check-In 1 (Dev)</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          onPress={resetAllData} 
-          style={[styles.resetButton, { marginTop: 12, backgroundColor: '#dc2626' }]}
+        {/* 🔷 Custom Header Overlay */}
+        <CustomHeader
+          onLogoPress={handleLogoPress}
+          devMode={devMode}
+          navigation={navigation}
+          handleCheckInPress={handleCheckInPress}
+        />
+  
+        {/* 🎉 Confetti Animation */}
+        {showConfetti && (
+          <LottieView
+            source={require('./assets/animations/confetti.json')}
+            autoPlay
+            loop={false}
+            onAnimationFinish={() => setShowConfetti(false)}
+            style={{
+              position: 'absolute',
+              width: '100%',
+              height: '100%',
+              zIndex: 10,
+              pointerEvents: 'none',
+            }}
+          />
+        )}
+  
+        {/* 🔽 Scrollable Content */}
+        <ScrollView
+          ref={scrollViewRef}
+          contentContainerStyle={styles.scrollContainer}
         >
-          <Text style={styles.resetButtonText}>Reset All Data (Dev)</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={async () => {
-            const mirror = await getWeeklyMindMirror();
-            setWeeklyMindMirror(mirror);
-          }}
-          style={[styles.resetButton, { marginTop: 12, backgroundColor: '#10b981' }]}
-        >
-          <Text style={styles.resetButtonText}>Generate MindMirror (Dev)</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={devLaunchOnboarding}
-          style={[styles.resetButton, { marginTop: 12, backgroundColor: '#646DFF' }]}
-        >
-          <Text style={styles.resetButtonText}>Open Onboarding (Dev)</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={resetOnboardingFlag}
-          style={[styles.resetButton, { marginTop: 12, backgroundColor: '#fbbf24' }]}
-        >
-          <Text style={styles.resetButtonText}>Reset Onboarding Flag (Dev)</Text>
-        </TouchableOpacity>
-      </View>
-      )}
-      </ScrollView>
-</LinearGradient>
+          {/* 🔘 Main Score Circle */}
+          <Animatable.View animation="bounceIn" duration={800} style={styles.gaugeContainer}>
+            <ScoreCircle score={displayScore} />
+            <Text style={styles.mentalScore}>{displayScore}</Text>
+          </Animatable.View>
+  
+          {/* 📈 XP Progress */}
+          <Animatable.View
+            ref={xpBarRef}
+            style={[styles.momentumContainer, xp.progress > 60 && styles.levelGlow]}
+          >
+            <Text style={styles.momentumLabel}>
+              Level {xp.level} — {xp.total - xpForLevel(xp.level)} /{' '}
+              {xpForLevel(xp.level + 1) - xpForLevel(xp.level)} XP
+            </Text>
+            <AnimatedMomentumBar value={xp.progress} />
+            <Animatable.Text ref={xpGainRef} style={styles.xpGainText}>
+              +{xpDelta}
+            </Animatable.Text>
+          </Animatable.View>
+  
+          {/* 🔥 Streak */}
+          <View style={styles.streakContainer}>
+            <Animatable.Text ref={streakRef} style={styles.streakText}>
+              <Image
+                source={require('./assets/GIF/fire.gif')}
+                style={styles.streakIcon}
+              />{' '}
+              {streak} Day Streak{[3, 7, 14, 30, 50].includes(streak) ? '🏅' : ''}
+            </Animatable.Text>
+          </View>
+  
+          {/* 🧠 Weekly MindMirror */}
+          <LinearGradient
+            colors={['#646DFF', '#D7A4FF']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.cardGradient}
+          >
+            <Animatable.View animation="fadeInUp" duration={600} style={styles.cardInner}>
+              <View style={styles.cardHeader}>
+                <Image source={require('./assets/mirror.png')} style={styles.cardIcon} />
+                <Text style={styles.cardTitle}>Weekly MindMirror</Text>
+              </View>
+              {renderMarkdown(weeklyMindMirror)}
+            </Animatable.View>
+          </LinearGradient>
+  
+          {/* 💬 Insight Card */}
+          <LinearGradient
+            colors={['#646DFF', '#D7A4FF']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.cardGradient}
+          >
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => setInsightRevealed(true)}
+              disabled={insightRevealed}
+              style={[
+                styles.cardInner,
+                !insightRevealed && { backgroundColor: '#2E3340', opacity: 0.6 },
+              ]}
+            >
+              <View style={styles.cardHeader}>
+                <Image source={require('./assets/advice.png')} style={styles.cardIcon} />
+                <Text style={styles.cardTitle}>Check-in Insight</Text>
+              </View>
+              {insightRevealed ? (
+                <Text style={styles.cardText}>{displayedInsight}</Text>
+              ) : (
+                <Text style={[styles.cardText, { textAlign: 'center', fontStyle: 'italic' }]}>
+                  Tap to Reveal Insight
+                </Text>
+              )}
+            </TouchableOpacity>
+          </LinearGradient>
+  
+          {/* 📊 Metrics Grid */}
+          <View style={styles.metricsGradient}>
+            <Animatable.View animation="fadeInUp" duration={600} delay={400} style={styles.metricsGrid}>
+              <View style={styles.metricsRow}>
+                {/* Energy */}
+                <LinearGradient
+                  colors={['#00e89f', '#04ca76']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.metricBorder}
+                >
+                  <View style={styles.metricPill}>
+                    <Text style={styles.metricIcon}>⚡</Text>
+                    <Text style={styles.metricName}>Energy</Text>
+                    <Text style={styles.metricValue}>{displayEnergy}%</Text>
+                  </View>
+                </LinearGradient>
+  
+                {/* Clarity */}
+                <LinearGradient
+                  colors={['#facc15', '#f59e0b']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.metricBorder}
+                >
+                  <View style={styles.metricPill}>
+                    <Text style={styles.metricIcon}>💡</Text>
+                    <Text style={styles.metricName}>Clarity</Text>
+                    <Text style={styles.metricValue}>{displayClarity}%</Text>
+                  </View>
+                </LinearGradient>
+              </View>
+  
+              <View style={styles.metricsRow}>
+                {/* Emotion */}
+                <LinearGradient
+                  colors={['#22d3ee', '#3b82f6']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.metricBorder}
+                >
+                  <View style={styles.metricPill}>
+                    <Text style={styles.metricIcon}>💚</Text>
+                    <Text style={styles.metricName}>Emotion</Text>
+                    <Text style={styles.metricValue}>{displayEmotion}%</Text>
+                  </View>
+                </LinearGradient>
+  
+                {/* Focus */}
+                <LinearGradient
+                  colors={['#a78bfa', '#8b5cf6']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.metricBorder}
+                >
+                  <View style={styles.metricPill}>
+                    <Text style={styles.metricIcon}>🎯</Text>
+                    <Text style={styles.metricName}>Focus</Text>
+                    <Text style={styles.metricValue}>{displayFocus}%</Text>
+                  </View>
+                </LinearGradient>
+              </View>
+            </Animatable.View>
+          </View>
+  
+          {/* 🛠 Dev Mode Buttons */}
+          {devMode && (
+            <View style={styles.resetContainer}>
+              <TouchableOpacity onPress={resetCheckIn3} style={styles.resetButton}>
+                <Text style={styles.resetButtonText}>Reset Check-In 3 (Dev)</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={devLaunchCheckIn3} style={[styles.resetButton, { marginTop: 12, backgroundColor: '#3b82f6' }]}>
+                <Text style={styles.resetButtonText}>Open Check-In 3 (Dev)</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={resetCheckIn1} style={[styles.resetButton, { marginTop: 12, backgroundColor: '#ef4444' }]}>
+                <Text style={styles.resetButtonText}>Reset Check-In 1 (Dev)</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={devLaunchCheckIn1} style={[styles.resetButton, { marginTop: 12, backgroundColor: '#3b82f6' }]}>
+                <Text style={styles.resetButtonText}>Open Check-In 1 (Dev)</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={resetAllData} style={[styles.resetButton, { marginTop: 12, backgroundColor: '#dc2626' }]}>
+                <Text style={styles.resetButtonText}>Reset All Data (Dev)</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={async () => {
+                  const mirror = await getWeeklyMindMirror();
+                  setWeeklyMindMirror(mirror);
+                }}
+                style={[styles.resetButton, { marginTop: 12, backgroundColor: '#10b981' }]}
+              >
+                <Text style={styles.resetButtonText}>Generate MindMirror (Dev)</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={devLaunchOnboarding}
+                style={[styles.resetButton, { marginTop: 12, backgroundColor: '#646DFF' }]}
+              >
+                <Text style={styles.resetButtonText}>Open Onboarding (Dev)</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={resetOnboardingFlag}
+                style={[styles.resetButton, { marginTop: 12, backgroundColor: '#fbbf24' }]}
+              >
+                <Text style={styles.resetButtonText}>Reset Onboarding Flag (Dev)</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </ScrollView>
+      </LinearGradient>
     </Animatable.View>
   );
+  
 }
 
 const styles = StyleSheet.create({

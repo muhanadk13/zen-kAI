@@ -193,46 +193,46 @@ export default function ReflectionScreen() { // this is the start that contains 
   };
 
   return (
-    <Animatable.View animation="fadeIn" duration={400} style={{ flex: 1 }}> {/* a "box" that has animation */}
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss}> {/* if I tap the screen the keyboard will go away */}
-      <SafeAreaView style={styles.container}> {/* safe area view is the whole screen */}
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}> {/* keyboard avoiding view makes sure the keyboard does not cover the input field */}
-          <BlurView intensity={25} tint="dark" style={styles.header}> {/* the header with a blur effect */}
-            <Text style={styles.title}>Reflection</Text> {/* title text */}
-            <Text style={styles.subtitle}>Guided by zen-kAI</Text> {/* subtitle text */}
-          </BlurView> {/* end of the header (blur) */}
+    <Animatable.View animation="fadeIn" duration={400} style={{ flex: 1 }}>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}> 
+      <SafeAreaView style={styles.container}> 
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}> 
+          <BlurView intensity={25} tint="dark" style={styles.header}> 
+            <Text style={styles.title}>Reflection</Text> 
+            <Text style={styles.subtitle}>Guided by zen-kAI</Text>
+          </BlurView> 
 
           <ScrollView
             style={styles.chatScroll}
             contentContainerStyle={{ paddingVertical: 10 }}
-            ref={scrollViewRef} // allow for use to do scrolling functions
-            keyboardShouldPersistTaps="handled" // tap to dismiss keyboard
+            ref={scrollViewRef}
+            keyboardShouldPersistTaps="handled" 
           >
-            {chatMessages.map((msg, index) => ( // for each chat message do this
+            {chatMessages.map((msg, index) => ( 
               <Animatable.View 
                 key={index}
                 animation="fadeInUp"
                 duration={400}
-                style={[styles.chatBubble, msg.fromUser ? styles.userBubble : styles.aiBubble]} // check if the message is from user or AI and style accordingly
+                style={[styles.chatBubble, msg.fromUser ? styles.userBubble : styles.aiBubble]} 
               >
-                <Text style={styles.chatText}>{msg.text}</Text> {/* the text of the message */}
+                <Text style={styles.chatText}>{msg.text}</Text> 
               </Animatable.View>
             ))}
           </ScrollView>
 
-          <View style={styles.inputContainer}> {/* the input container at the bottom */}
-           {/* the input field */}
+          <View style={styles.inputContainer}> 
+
             <TextInput 
               style={styles.input} 
-              placeholder={isAIResponding ? 'AI is responding...' : 'Type your response...'} // if AI is responding show this otherwise show this
+              placeholder={isAIResponding ? 'AI is responding...' : 'Type your response...'} 
               placeholderTextColor="#7C7C8A"
-              value={message} // value is the message
-              onChangeText={setMessage} // set the message when text changes
-              returnKeyType="send" // return key is send
-              onSubmitEditing={handleSend} // when I press send run handleSend function
-              editable={!isAIResponding} // if AI is responding do not let user edit
+              value={message} 
+              onChangeText={setMessage} 
+              returnKeyType="send" 
+              onSubmitEditing={handleSend} 
+              editable={!isAIResponding}
             />
-            <Pressable onPress={handleSend} style={styles.sendButton} disabled={isAIResponding}> {/* the send button */}
+            <Pressable onPress={handleSend} style={styles.sendButton} disabled={isAIResponding}> 
               <Animatable.View ref={sendButtonRef}> 
                 <Ionicons name="arrow-up-circle" size={40} color="#51C4FF" /> 
               </Animatable.View>
