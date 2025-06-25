@@ -15,45 +15,66 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const getDateKey = (date = new Date()) => date.toISOString().split('T')[0];
 
 /**
- * Calculate the 7 day rolling MindScore
+ * Momentum-based Mental Score system.
+ *
+ * The score persists between 300–900. Each day, the previous day's
+ * average check-in metrics modify the score. Missing a day deducts 10.
+ * Every 3-day streak grants a +4 bonus.
  */
 export async function updateMindScore() {
   try {
     const historyRaw = await AsyncStorage.getItem('checkInHistory');
     const history = historyRaw ? JSON.parse(historyRaw) : [];
-    const today = new Date();
-    const start = new Date(today.getTime() - 6 * DAY_MS);
-    const days = {};
-    history.forEach((e) => {
-      const d = getDateKey(new Date(e.timestamp));
-      const ts = new Date(e.timestamp);
-      if (ts >= start) {
-        if (!days[d]) days[d] = [];
-        days[d].push(e);
-      }
-    });
-    const scores = Object.values(days).map((entries) => {
-      const avg = (key) =>
-        Math.round(
-          entries.reduce((s, e) => s + (e[key] || 0), 0) / entries.length
+
+    const todayKey = getDateKey();
+    const raw = await AsyncStorage.getItem(MIND_SCORE_KEY);
+    let data = raw ? JSON.parse(raw) : { date: todayKey, value: 600 };
+
+    // Nothing to update if we've already processed today
+    if (data.date === todayKey) return data.value;
+
+    let score = data.value;
+    let day = new Date(data.date);
+    const end = new Date(todayKey);
+
+    while (day < end) {
+      const dayKey = getDateKey(day);
+      const entries = history.filter((e) => e.timestamp.startsWith(dayKey));
+
+      if (entries.length === 0) {
+        // Missed day penalty
+        score -= 10;
+      } else {
+        const dailyAvg = Math.round(
+          entries.reduce(
+            (s, e) => s + (e.energy + e.clarity + e.emotion) / 3,
+            0
+          ) / entries.length
         );
-      const energy = avg('energy');
-      const clarity = avg('clarity');
-      const emotion = avg('emotion');
-      const focus = Math.round(0.6 * clarity + 0.4 * energy);
-      return Math.round((energy + clarity + emotion + focus) / 4);
-    });
-    const mindScore = scores.length
-      ? Math.round(scores.reduce((s, n) => s + n, 0) / scores.length)
-      : 75;
-    await AsyncStorage.setItem(MIND_SCORE_KEY, JSON.stringify({
-      date: getDateKey(),
-      value: mindScore
-    }));
-    return mindScore;
+
+        if (dailyAvg >= 85) score += 7;
+        else if (dailyAvg >= 70) score += 5;
+        else if (dailyAvg >= 50) score += 2;
+        else if (dailyAvg >= 30) score -= 3;
+        else score -= 7;
+
+        const streakRaw = await AsyncStorage.getItem(CURRENT_STREAK_KEY);
+        const streak = streakRaw ? parseInt(streakRaw, 10) : 0;
+        if (streak > 0 && streak % 3 === 0) score += 4;
+      }
+
+      score = Math.min(900, Math.max(300, score));
+      day = new Date(day.getTime() + DAY_MS);
+    }
+
+    await AsyncStorage.setItem(
+      MIND_SCORE_KEY,
+      JSON.stringify({ date: todayKey, value: score })
+    );
+    return score;
   } catch (err) {
     console.error('updateMindScore', err);
-    return 75;
+    return 600;
   }
 }
 
@@ -306,7 +327,7 @@ export async function getCurrentScores() {
   const xpData = xpStatsRaw ? JSON.parse(xpStatsRaw) : { xpToday: 0, total: 0 };
   const { level, progress } = xpStats(xpData.total);
   return {
-    mindScore: mindRaw ? JSON.parse(mindRaw).value : 75,
+    mindScore: mindRaw ? JSON.parse(mindRaw).value : 600,
     momentum: momentumRaw ? JSON.parse(momentumRaw).value : 0,
     streakRings: streakRaw ? JSON.parse(streakRaw)[getDateKey()] || {} : {},
     traitXP: traitRaw ? JSON.parse(traitRaw) : {},
@@ -321,6 +342,7 @@ export async function getCurrentScores() {
  * Update all metrics after a check-in
  */
 export async function processCheckIn(entry) {
+  await updateStreak();
   await updateMindScore();
   await updateMomentum();
   await markEnergyLogged();
@@ -330,5 +352,4 @@ export async function processCheckIn(entry) {
   else if (entry.window === 'checkIn3') xpAmount = 15;
   await updateXP(xpAmount);
   await updateTraitXP(entry.tags || []);
-  await updateStreak();
 }
