@@ -267,6 +267,28 @@ export async function updateStreak() {
   }
 }
 
+// Reset streak if last check-in wasn't yesterday or today. Called on app launch.
+export async function resetStreakIfNeeded() {
+  try {
+    const today = getDateKey();
+    const [lastRaw, currentRaw] = await Promise.all([
+      AsyncStorage.getItem(LAST_CHECKIN_KEY),
+      AsyncStorage.getItem(CURRENT_STREAK_KEY),
+    ]);
+    const current = currentRaw ? parseInt(currentRaw, 10) : 0;
+    if (!lastRaw) return current;
+    const diff = Math.floor((new Date(today) - new Date(lastRaw)) / DAY_MS);
+    if (diff > 1) {
+      await AsyncStorage.setItem(CURRENT_STREAK_KEY, '0');
+      return 0;
+    }
+    return current;
+  } catch (err) {
+    console.error('resetStreakIfNeeded', err);
+    return 0;
+  }
+}
+
 /**
  * Helper to get current scores
  */

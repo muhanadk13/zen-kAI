@@ -144,8 +144,8 @@ export default function CheckInScreen() {
       await AsyncStorage.setItem('checkInHistory', JSON.stringify(history)); // stringify and save the history with the new entry
       await processCheckIn(entry); // update scores and momentum
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); // success haptic
-      if (window === 'checkIn3') { // if we are on check in 3 
-        navigation.navigate('Reflection');// navigate to reflection screen
+      if (window === 'checkIn3') { // if we are on check in 3
+        navigation.navigate('MentalScore'); // return to main screen
       } else {
         navigation.goBack(); // go back to previous screen (mentalScore)
       }
