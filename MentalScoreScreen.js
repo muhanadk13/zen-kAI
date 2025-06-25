@@ -191,7 +191,7 @@ export default function MentalScoreScreen() {
   const [clarity, setClarity] = useState(BASELINE);
   const [emotion, setEmotion] = useState(BASELINE);
   const [focus, setFocus] = useState(BASELINE);
-  const [score, setScore] = useState(BASELINE); // Define score state
+  const [mindScore, setMindScore] = useState(600); // Momentum-based mental score
   const [microInsight, setMicroInsight] = useState('Loading insight...'); // insight will be loading.. unless set
   const [weeklyMindMirror, setWeeklyMindMirror] = useState('No MindMirror yet.'); // mindmirror is the same
   const [streak, setStreak] = useState(0); 
@@ -204,7 +204,7 @@ export default function MentalScoreScreen() {
   const [xpDelta, setXpDelta] = useState(0); // xp delta state
   const prevLevel = useRef(0); // previous level to detect level up
   const [showConfetti, setShowConfetti] = useState(false); // Confetti state
-  const scoreAnim = useRef(new Animated.Value(BASELINE)).current; 
+  const mindScoreAnim = useRef(new Animated.Value(50)).current; // normalized mental score
   const [displayedInsight, setDisplayedInsight] = useState('');
   const insightIntervalRef = useRef(null);
   const [insightRevealed, setInsightRevealed] = useState(false); // Insight reveal state
@@ -230,6 +230,7 @@ export default function MentalScoreScreen() {
       markInsightRead().then(() => { // markInsightRead then do...
         getCurrentScores().then((data) => { // getCurrentScores then call it data...
           if (data.xp) setXp(data.xp); // use the data to set the states
+          if (data.mindScore !== undefined) setMindScore(data.mindScore);
           if (data.dailyGoal) setDailyGoal(data.dailyGoal);
           if (data.streak !== undefined) setStreak(data.streak);
           if (data.longestStreak !== undefined) setLongestStreak(data.longestStreak);
@@ -241,6 +242,7 @@ export default function MentalScoreScreen() {
   useEffect(() => {
     getCurrentScores().then((data) => { // get the scores then call it data
       if (data.xp) setXp(data.xp); // if there is data.xp set the state
+      if (data.mindScore !== undefined) setMindScore(data.mindScore);
       if (data.dailyGoal) setDailyGoal(data.dailyGoal); // if there is data.dailyGoal set the state
       if (data.streak !== undefined) setStreak(data.streak); // if there is data.streak set the state
       if (data.longestStreak !== undefined) setLongestStreak(data.longestStreak); // if there is data.longestStreak set the state
@@ -273,7 +275,6 @@ export default function MentalScoreScreen() {
   const clarityAnim = useRef(new Animated.Value(BASELINE)).current;
   const emotionAnim = useRef(new Animated.Value(BASELINE)).current;
   const focusAnim = useRef(new Animated.Value(BASELINE)).current;
-  const prevScore = useRef(-1); // Define prevScore ref
 
   const energyProgress = energyAnim.interpolate({ 
     inputRange: [-1, 0, 100], // interpolate from -1 to 100 if lower than 0 it will be 0
@@ -292,23 +293,26 @@ export default function MentalScoreScreen() {
     outputRange: [0, 0, 1],
   });
 
-  const [displayEnergy, setDisplayEnergy] = useState(-1); 
+  const [displayEnergy, setDisplayEnergy] = useState(-1);
   const [displayClarity, setDisplayClarity] = useState(-1);
   const [displayEmotion, setDisplayEmotion] = useState(-1);
   const [displayFocus, setDisplayFocus] = useState(-1);
   const [displayScore, setDisplayScore] = useState(-1);
+  const [displayMindScore, setDisplayMindScore] = useState(600);
   const checkInButtonRef = useRef(null);
   const streakRef = useRef(null);
 
+
   useEffect(() => {
-    // create an animation for the change 
-    const id = scoreAnim.addListener(({ value }) => 
-      // set the display to the rounded value
+    const id = mindScoreAnim.addListener(({ value }) =>
       setDisplayScore(Math.round(value))
-    )
-    // clean up the listener
-    return () => scoreAnim.removeListener(id);
+    );
+    return () => mindScoreAnim.removeListener(id);
   }, []);
+
+  useEffect(() => {
+    setDisplayMindScore(mindScore);
+  }, [mindScore]);
 
   useEffect(() => {
     const id = energyAnim.addListener(({ value }) =>
@@ -372,22 +376,13 @@ export default function MentalScoreScreen() {
   }, [focus]);
 
   useEffect(() => {
-    const target = Math.round((energy + clarity + emotion + focus) / 4); // target = avg
-    setScore(target); // Update score state
-  }, [energy, clarity, emotion, focus]); // runs if anyone changes
-
-  useEffect(() => {
-    if (score < 0) return; // ignore invalid scores
-    if (prevScore.current > -1 && score < prevScore.current) { // so if score is valid and lower than previous
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); // light haptic feedback
-    }
-    prevScore.current = score; // update the score
-    Animated.timing(scoreAnim, { // animate the score change 
-      toValue: score,
+    if (mindScore < 0) return;
+    Animated.timing(mindScoreAnim, {
+      toValue: (mindScore - 300) / 6,
       duration: 800,
       useNativeDriver: false,
     }).start();
-  }, [score]); // every time score changes
+  }, [mindScore]);
 
 
   useEffect(() => {
@@ -399,13 +394,11 @@ export default function MentalScoreScreen() {
           energyAnim.setValue(metrics.energy); // set the animated values to stored values
           clarityAnim.setValue(metrics.clarity); 
           emotionAnim.setValue(metrics.emotion); 
-          focusAnim.setValue(metrics.focus); 
-          scoreAnim.setValue(metrics.score); 
+          focusAnim.setValue(metrics.focus);
           setEnergy(metrics.energy); // set the states to stored values
-          setClarity(metrics.clarity); 
-          setEmotion(metrics.emotion); 
-          setFocus(metrics.focus); 
-          setScore(metrics.score); 
+          setClarity(metrics.clarity);
+          setEmotion(metrics.emotion);
+          setFocus(metrics.focus);
         }
       } catch (err) {
         console.error('❌ Error loading last metrics:', err); // catch error
@@ -418,6 +411,7 @@ export default function MentalScoreScreen() {
       await calculateStreak(); // calculate the streak
       const data = await getCurrentScores(); // get the current scores
       if (data.xp) setXp(data.xp); // set the states
+      if (data.mindScore !== undefined) setMindScore(data.mindScore);
       if (data.dailyGoal) setDailyGoal(data.dailyGoal);
       if (data.streak !== undefined) setStreak(data.streak);
       if (data.longestStreak !== undefined) setLongestStreak(data.longestStreak);
@@ -430,6 +424,7 @@ export default function MentalScoreScreen() {
         calculateStreak();
         getCurrentScores().then((data) => {
           if (data.xp) setXp(data.xp);
+          if (data.mindScore !== undefined) setMindScore(data.mindScore);
           if (data.dailyGoal) setDailyGoal(data.dailyGoal);
           if (data.streak !== undefined) setStreak(data.streak);
           if (data.longestStreak !== undefined) setLongestStreak(data.longestStreak);
@@ -456,7 +451,6 @@ export default function MentalScoreScreen() {
         setClarity(BASELINE);
         setEmotion(BASELINE);
         setFocus(BASELINE);
-        setScore(BASELINE);
       await AsyncStorage.setItem( // wait to set the last metrics to baseline
         'lastMetrics',
         JSON.stringify({
@@ -499,7 +493,6 @@ export default function MentalScoreScreen() {
       setClarity(currentClarity);
       setEmotion(currentEmotion);
       setFocus(currentFocus);
-      setScore(computedScore);
       await AsyncStorage.setItem( // store the last metrics
         'lastMetrics',
         JSON.stringify({
@@ -532,7 +525,6 @@ export default function MentalScoreScreen() {
       setClarity(BASELINE);
       setEmotion(BASELINE);
       setFocus(BASELINE);
-      setScore(BASELINE);
       await AsyncStorage.setItem(
         'lastMetrics',
         JSON.stringify({
@@ -764,7 +756,7 @@ export default function MentalScoreScreen() {
           {/* 🔘 Main Score Circle */}
           <Animatable.View animation="bounceIn" duration={800} style={styles.gaugeContainer}>
             <ScoreCircle score={displayScore} />
-            <Text style={styles.mentalScore}>{displayScore}</Text>
+            <Text style={styles.mentalScore}>{displayMindScore}</Text>
           </Animatable.View>
   
           {/* 📈 XP Progress */}
