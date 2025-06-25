@@ -19,7 +19,6 @@ import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import * as Animatable from 'react-native-animatable';
-import { markReflectionComplete } from './utils/scoring';
 import { OPENAI_API_KEY } from './utils/apiKey';
 
 const BASE_SYSTEM_MESSAGE = {
@@ -139,28 +138,7 @@ export default function ReflectionScreen() { // this is the start that contains 
       JSON.stringify(newChatMessages.filter((m) => m.fromUser).map((m) => m.text)) // importantInfo is the JSON pf newChatMessages that only keeps the users information and converts to text string 
     );
 
-    if (
-      newChatMessages.length >= 2 && // check that there is at least 2 messages
-      newChatMessages.at(-2).text === 'What will you do differently tomorrow?' && // check that the second last message is this
-      newChatMessages.at(-1).fromUser // make sure last message is from user
-    ) {
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); // give success haptics
-      await markReflectionComplete(); // mark the reflection as complete
-      setTimeout( // set a delay
-        () =>
-          navigation.reset({
-            index: 0,
-            routes: [{ name: 'MentalScore' }], // take me  to MentalScore screen
-          }),
-        500
-      );
-      return; // say I am done 
-    }
 
-    if (newChatMessages.filter((m) => !m.fromUser).length >= 4) { // if there is at least 4 AI messages
-      await animateAIResponse('What will you do differently tomorrow?'); // animate the response ""
-      return; // stop 
-    }
 
     const messages = [
       BASE_SYSTEM_MESSAGE, // how AI should behave
@@ -173,16 +151,16 @@ export default function ReflectionScreen() { // this is the start that contains 
     setIsAIResponding(true); // AI is responding now (right before)
 
     try {
-      const response = await fetchOpenAIResponse(messages); // try to get the response from AI 
+      const response = await fetchOpenAIResponse(messages); // try to get the response from AI
 
       // Prevent duplicate AI messages by checking the last AI message
       setChatMessages((prev) => {
         const lastMessage = prev[prev.length - 1]; // get the last message
-        if (lastMessage && lastMessage.text === response && !lastMessage.fromUser) { // if there is a last message and its the same as the response and its from AI
+        if (lastMessage && lastMessage.text === response && !lastMessage.fromUser) {
           return prev; // Do not add duplicate AI message
         }
-        const updatedMessages = [...prev, { text: response, fromUser: false }]; // add the new message to the old messages
-        AsyncStorage.setItem('chatHistory', JSON.stringify(updatedMessages)); // update the chat history as the JSON of updatedMessages
+        const updatedMessages = [...prev, { text: response, fromUser: false }]; // add the new message
+        AsyncStorage.setItem('chatHistory', JSON.stringify(updatedMessages)); // update the chat history
         return updatedMessages; // return the updated messages
       });
     } catch (error) {
@@ -197,10 +175,13 @@ export default function ReflectionScreen() { // this is the start that contains 
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}> 
       <SafeAreaView style={styles.container}> 
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}> 
-          <BlurView intensity={25} tint="dark" style={styles.header}> 
-            <Text style={styles.title}>Reflection</Text> 
+          <BlurView intensity={25} tint="dark" style={styles.header}>
+            <Pressable onPress={() => navigation.goBack()} style={styles.backButton}>
+              <Ionicons name="chevron-back" size={28} color="#FFFFFF" />
+            </Pressable>
+            <Text style={styles.title}>Reflection</Text>
             <Text style={styles.subtitle}>Guided by zen-kAI</Text>
-          </BlurView> 
+          </BlurView>
 
           <ScrollView
             style={styles.chatScroll}
@@ -272,6 +253,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#8A8F98',
     marginTop: 4,
+  },
+  backButton: {
+    position: 'absolute',
+    left: 16,
+    top: 20,
+    padding: 6,
   },
   chatScroll: {
     flex: 1,
