@@ -17,7 +17,7 @@ import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { generateTodaysInsight } from './utils/generateTodaysInsight'; // gets the functions from this page
 import { getWeeklyMindMirror } from './utils/mindMirror'; // gets the functions from this page
-import { markInsightRead, getCurrentScores, xpForLevel } from './utils/scoring';
+import { markInsightRead, getCurrentScores, xpForLevel, resetStreakIfNeeded } from './utils/scoring';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg'; // create circle
 import LottieView from 'lottie-react-native'; // Import Lottie
@@ -414,6 +414,7 @@ export default function MentalScoreScreen() {
       await fetchCheckInData(); // wait for the check in data
       const mirror = await getWeeklyMindMirror(); // get the mind mirror
       setWeeklyMindMirror(mirror); // set the state
+      await resetStreakIfNeeded();
       await calculateStreak(); // calculate the streak
       const data = await getCurrentScores(); // get the current scores
       if (data.xp) setXp(data.xp); // set the states
@@ -424,13 +425,15 @@ export default function MentalScoreScreen() {
     fetchData(); // call the fetch data function
 
     const unsubscribe = navigation.addListener('focus', () => {
-      fetchCheckInData(); 
-      calculateStreak();
-      getCurrentScores().then((data) => {
-        if (data.xp) setXp(data.xp);
-        if (data.dailyGoal) setDailyGoal(data.dailyGoal);
-        if (data.streak !== undefined) setStreak(data.streak);
-        if (data.longestStreak !== undefined) setLongestStreak(data.longestStreak);
+      fetchCheckInData();
+      resetStreakIfNeeded().then(() => {
+        calculateStreak();
+        getCurrentScores().then((data) => {
+          if (data.xp) setXp(data.xp);
+          if (data.dailyGoal) setDailyGoal(data.dailyGoal);
+          if (data.streak !== undefined) setStreak(data.streak);
+          if (data.longestStreak !== undefined) setLongestStreak(data.longestStreak);
+        });
       });
     });
 
@@ -566,6 +569,11 @@ export default function MentalScoreScreen() {
       setStreak(0); // set streak to 0
     }
   };
+
+  // Reset streak at app launch based on last check-in date
+  useEffect(() => {
+    resetStreakIfNeeded().then(calculateStreak);
+  }, []);
 
   const getCheckInWindow = () => { // determine which check-in window it is
     const hour = new Date().getHours(); // get the current hour
