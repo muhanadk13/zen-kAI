@@ -193,7 +193,6 @@ const interpolatedGlow = glowAnim.interpolate({
         onPageSelected={(e) => setCurrentPage(e.nativeEvent.position)}
         scrollEnabled={false}
       >
-      {/* Page 0: Welcome */}
       <View key="0">
         <Pressable style={{ flex: 1 }} onPress={() => pagerRef.current?.setPage(1)}>
           <LinearGradient colors={["#1C1F2E", "#12131C"]} style={styles.page}>
@@ -204,7 +203,6 @@ const interpolatedGlow = glowAnim.interpolate({
         </Pressable>
       </View>
 
-      {/* Page 1: Sliders */}
       <View key="1">
         <LinearGradient colors={["#1C1F2E", "#12131C"]} style={[styles.page, { paddingTop: 60 }]}>
           <Text style={styles.title}>30-Second Check-Ins</Text>
@@ -241,7 +239,6 @@ That’s it. Add a note (Optional: Highly Recommended)</Text>
         </LinearGradient>
       </View>
 
-     {/* Page 2: Time Picker */}
       <View key="2">
         <LinearGradient colors={["#1C1F2E", "#12131C"]} style={styles.page}>
           <Text style={styles.title}>Pick Your Check-In Times</Text>
@@ -259,7 +256,6 @@ That’s it. Add a note (Optional: Highly Recommended)</Text>
             <Text style={styles.beginText}>Set Reminders →</Text>
           </TouchableOpacity>
 
-          {/* iOS Picker Modal */}
           {showPickerIndex !== null && Platform.OS === 'ios' && (
             <Modal transparent animationType="fade">
               <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#00000088' }}>
@@ -280,7 +276,6 @@ That’s it. Add a note (Optional: Highly Recommended)</Text>
             </Modal>
           )}
 
-          {/* Android Default Picker */}
           {showPickerIndex !== null && Platform.OS !== 'ios' && (
             <DateTimePicker
               value={times[showPickerIndex]}
@@ -291,14 +286,12 @@ That’s it. Add a note (Optional: Highly Recommended)</Text>
           )}
         </LinearGradient>
       </View>
-{/* Page 3: Reflection */}
 <View key="3" style={{ flex: 1, backgroundColor: '#0E1117' }}>
   <KeyboardAvoidingView
     style={{ flex: 1, paddingHorizontal: 20 }}
     behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     keyboardVerticalOffset={Platform.OS === 'ios' ? 5 : 0}
   >
-    {/* Header */}
     <BlurView
   intensity={30}
   tint="dark"
@@ -324,7 +317,6 @@ That’s it. Add a note (Optional: Highly Recommended)</Text>
 
 
     <View style={{ flex: 1 }}>
-      {/* AI Message Bubble below header */}
       <View style={{
         marginTop: 65,
         alignSelf: 'flex-start',
@@ -343,10 +335,8 @@ That’s it. Add a note (Optional: Highly Recommended)</Text>
         </Text>
       </View>
 
-      {/* Push content to bottom */}
       <View style={{ flex: 1 }} />
 
-      {/* Input bar at bottom */}
       <View style={{
         flexDirection: 'row',
         alignItems: 'center',
@@ -401,7 +391,6 @@ That’s it. Add a note (Optional: Highly Recommended)</Text>
 
 
 
-      {/* Page 4: Mental Score */}
       <View key="4">
   <LinearGradient
     colors={["#1C1F2E", "#12131C"]}
@@ -509,7 +498,6 @@ Your Mind’s Dashboard    </Text>
 </View>
 
 
-      {/* Page 5: Success Screen */}
       <View key="5">
   <LinearGradient
     colors={["#1C1F2E", "#12131C"]}

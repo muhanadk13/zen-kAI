@@ -31,7 +31,6 @@ const CustomHeader = ({ onLogoPress, devMode, navigation, handleCheckInPress }) 
       style={{ width: '100%', height: 100, paddingTop: 40, paddingHorizontal: 16, zIndex: 1000, position: 'absolute' }}
     >
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', position: 'relative' }}>
-        {/* Center: Logo */}
         <TouchableOpacity activeOpacity={1} onPress={onLogoPress}>
           <Image
             source={require('./assets/logo-text-only.png')}
@@ -40,7 +39,6 @@ const CustomHeader = ({ onLogoPress, devMode, navigation, handleCheckInPress }) 
           />
         </TouchableOpacity>
 
-        {/* Left: Japan logo */}
         <View style={{ position: 'absolute', left: 20, top: '50%', transform: [{ translateY: -25 }] }}>
           {devMode ? (
             <TouchableOpacity onPress={() => navigation.navigate('History')}>
@@ -59,7 +57,6 @@ const CustomHeader = ({ onLogoPress, devMode, navigation, handleCheckInPress }) 
           )}
         </View>
 
-        {/* Right: Check-In */}
         <View
           style={{
             position: 'absolute',
@@ -152,7 +149,6 @@ const ScoreCircle = ({ score, size = 170, strokeWidth = 18 }) => {
           </SvgLinearGradient>
         </Defs>
 
-        {/* Background ring (unfilled) */}
         <Circle
           cx={cx}
           cy={cy}
@@ -162,7 +158,6 @@ const ScoreCircle = ({ score, size = 170, strokeWidth = 18 }) => {
           fill="none"
         />
 
-        {/* Progress ring with gradient fill */}
         <Circle
           cx={cx}
           cy={cy}
@@ -723,7 +718,6 @@ export default function MentalScoreScreen() {
         end={{ x: 0, y: 1 }}
         style={styles.container}
       >
-        {/* 🔷 Custom Header Overlay */}
         <CustomHeader
           onLogoPress={handleLogoPress}
           devMode={devMode}
@@ -731,7 +725,6 @@ export default function MentalScoreScreen() {
           handleCheckInPress={handleCheckInPress}
         />
   
-        {/* 🎉 Confetti Animation */}
         {showConfetti && (
           <LottieView
             source={require('./assets/animations/confetti.json')}
@@ -748,18 +741,15 @@ export default function MentalScoreScreen() {
           />
         )}
   
-        {/* 🔽 Scrollable Content */}
         <ScrollView
           ref={scrollViewRef}
           contentContainerStyle={styles.scrollContainer}
         >
-          {/* 🔘 Main Score Circle */}
           <Animatable.View animation="bounceIn" duration={800} style={styles.gaugeContainer}>
             <ScoreCircle score={displayScore} />
             <Text style={styles.mentalScore}>{displayScore}</Text>
           </Animatable.View>
   
-          {/* 📈 XP Progress */}
           <Animatable.View
             ref={xpBarRef}
             style={[styles.momentumContainer, xp.progress > 60 && styles.levelGlow]}
@@ -774,7 +764,6 @@ export default function MentalScoreScreen() {
             </Animatable.Text>
           </Animatable.View>
   
-          {/* 🔥 Streak */}
           <View style={styles.streakContainer}>
             <Animatable.Text ref={streakRef} style={styles.streakText}>
               <Image
@@ -785,7 +774,6 @@ export default function MentalScoreScreen() {
             </Animatable.Text>
           </View>
   
-          {/* 🧠 Weekly MindMirror */}
           <LinearGradient
             colors={['#646DFF', '#D7A4FF']}
             start={{ x: 0, y: 0 }}
@@ -801,7 +789,6 @@ export default function MentalScoreScreen() {
             </Animatable.View>
           </LinearGradient>
   
-          {/* 💬 Insight Card */}
           <LinearGradient
             colors={['#646DFF', '#D7A4FF']}
             start={{ x: 0, y: 0 }}
@@ -831,11 +818,9 @@ export default function MentalScoreScreen() {
             </TouchableOpacity>
           </LinearGradient>
   
-          {/* 📊 Metrics Grid */}
           <View style={styles.metricsGradient}>
             <Animatable.View animation="fadeInUp" duration={600} delay={400} style={styles.metricsGrid}>
               <View style={styles.metricsRow}>
-                {/* Energy */}
                 <LinearGradient
                   colors={['#00e89f', '#04ca76']}
                   start={{ x: 0, y: 0 }}
@@ -849,7 +834,6 @@ export default function MentalScoreScreen() {
                   </View>
                 </LinearGradient>
   
-                {/* Clarity */}
                 <LinearGradient
                   colors={['#facc15', '#f59e0b']}
                   start={{ x: 0, y: 0 }}
@@ -865,7 +849,6 @@ export default function MentalScoreScreen() {
               </View>
   
               <View style={styles.metricsRow}>
-                {/* Emotion */}
                 <LinearGradient
                   colors={['#22d3ee', '#3b82f6']}
                   start={{ x: 0, y: 0 }}
@@ -879,7 +862,6 @@ export default function MentalScoreScreen() {
                   </View>
                 </LinearGradient>
   
-                {/* Focus */}
                 <LinearGradient
                   colors={['#a78bfa', '#8b5cf6']}
                   start={{ x: 0, y: 0 }}
@@ -896,7 +878,6 @@ export default function MentalScoreScreen() {
             </Animatable.View>
           </View>
   
-          {/* 🛠 Dev Mode Buttons */}
           {devMode && (
             <View style={styles.resetContainer}>
               <TouchableOpacity onPress={resetCheckIn3} style={styles.resetButton}>

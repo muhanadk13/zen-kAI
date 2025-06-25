@@ -14,9 +14,6 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 
 const getDateKey = (date = new Date()) => date.toISOString().split('T')[0];
 
-/**
- * Calculate the 7 day rolling MindScore
- */
 export async function updateMindScore() {
   try {
     const historyRaw = await AsyncStorage.getItem('checkInHistory');
@@ -57,9 +54,6 @@ export async function updateMindScore() {
   }
 }
 
-/**
- * Update daily momentum bar
- */
 export async function updateMomentum() {
   try {
     const raw = await AsyncStorage.getItem(MOMENTUM_KEY);
@@ -83,9 +77,6 @@ export async function updateMomentum() {
   }
 }
 
-/**
- * XP handling
- */
 export async function updateXP(amount = 10) {
   try {
     const raw = await AsyncStorage.getItem(XP_KEY);
@@ -172,9 +163,6 @@ export async function updateDailyGoal(action) {
   return data;
 }
 
-/**
- * Mark streak ring progress
- */
 export async function markEnergyLogged() {
   await updateRing('ring1');
   await updateDailyGoal('checkin');
@@ -209,9 +197,6 @@ async function updateRing(ring) {
   }
 }
 
-/**
- * Trait XP system
- */
 export async function updateTraitXP(tags) {
   if (!tags || !tags.length) return;
   try {
@@ -226,9 +211,6 @@ export async function updateTraitXP(tags) {
   }
 }
 
-/**
- * Calculate weekly mind grade once per week
- */
 
 export async function updateStreak() {
   try {
@@ -267,9 +249,6 @@ export async function updateStreak() {
   }
 }
 
-/**
- * Helper to get current scores
- */
 export async function getCurrentScores() {
   const [mindRaw, momentumRaw, streakRaw, traitRaw, xpStatsRaw, goalRaw, streakValRaw, longestRaw] = await Promise.all([
     AsyncStorage.getItem(MIND_SCORE_KEY),
@@ -295,9 +274,6 @@ export async function getCurrentScores() {
   };
 }
 
-/**
- * Update all metrics after a check-in
- */
 export async function processCheckIn(entry) {
   await updateMindScore();
   await updateMomentum();
