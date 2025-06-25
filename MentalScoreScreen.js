@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   Alert,
   Animated,
+  Easing,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import * as Animatable from 'react-native-animatable';
@@ -178,6 +179,58 @@ const ScoreCircle = ({ score, size = 170, strokeWidth = 18 }) => {
         />
       </Svg>
     </View>
+  );
+};
+
+const OrbitingButtons = ({ size = 170 }) => {
+  const navigation = useNavigation();
+  const orbitRadius = size / 2 + 50;
+  const rotation = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.timing(rotation, {
+        toValue: 1,
+        duration: 12000,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    ).start();
+  }, []);
+
+  const rotate = rotation.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  });
+
+  const buttons = Array.from({ length: 6 });
+
+  return (
+    <Animated.View
+      pointerEvents="box-none"
+      style={[
+        styles.orbitContainer,
+        { width: size + 100, height: size + 100, transform: [{ rotate }] },
+      ]}
+    >
+      {buttons.map((_, idx) => {
+        const angle = (idx / buttons.length) * 2 * Math.PI;
+        const x = orbitRadius * Math.cos(angle);
+        const y = orbitRadius * Math.sin(angle);
+        return (
+          <TouchableOpacity
+            key={idx}
+            onPress={() => idx === 0 && navigation.navigate('Reflection')}
+            style={[
+              styles.orbitButton,
+              { transform: [{ translateX: x }, { translateY: y }] },
+            ]}
+          >
+            <Text style={styles.orbitButtonLabel}>{idx + 1}</Text>
+          </TouchableOpacity>
+        );
+      })}
+    </Animated.View>
   );
 };
 
@@ -756,6 +809,7 @@ export default function MentalScoreScreen() {
           {/* 🔘 Main Score Circle */}
           <Animatable.View animation="bounceIn" duration={800} style={styles.gaugeContainer}>
             <ScoreCircle score={displayScore} />
+            <OrbitingButtons size={170} />
             <Text style={styles.mentalScore}>{displayMindScore}</Text>
           </Animatable.View>
   
@@ -965,8 +1019,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 28,
     alignSelf: 'center',
-    width: 170,
-    height: 170,
+    width: 270,
+    height: 270,
   },
 
   gaugeGlow: {
@@ -979,6 +1033,24 @@ const styles = StyleSheet.create({
     width: 170,
     height: 170,
     alignSelf: 'center',
+  },
+  orbitContainer: {
+    position: 'absolute',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  orbitButton: {
+    position: 'absolute',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#646DFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  orbitButtonLabel: {
+    color: '#FFFFFF',
+    fontWeight: '700',
   },
   mentalScore: {
     position: 'absolute',
