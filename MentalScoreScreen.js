@@ -183,56 +183,40 @@ const ScoreCircle = ({ score, size = 170, strokeWidth = 18 }) => {
 };
 
 const OrbitingButtons = ({ size = 170 }) => {
-  const navigation = useNavigation();
-  const orbitRadius = size / 2 + 50;
-  const rotation = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    Animated.loop(
-      Animated.timing(rotation, {
-        toValue: 1,
-        duration: 12000,
-        easing: Easing.linear,
-        useNativeDriver: true,
-      })
-    ).start();
-  }, []);
-
-  const rotate = rotation.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '360deg'],
-  });
-
-  const buttons = Array.from({ length: 6 });
-
-  return (
-    <Animated.View
-      pointerEvents="box-none"
-      style={[
-        styles.orbitContainer,
-        { width: size + 100, height: size + 100, transform: [{ rotate }] },
-      ]}
-    >
-      {buttons.map((_, idx) => {
-        const angle = (idx / buttons.length) * 2 * Math.PI;
-        const x = orbitRadius * Math.cos(angle);
-        const y = orbitRadius * Math.sin(angle);
-        return (
-          <TouchableOpacity
-            key={idx}
-            onPress={() => idx === 0 && navigation.navigate('Reflection')}
-            style={[
-              styles.orbitButton,
-              { transform: [{ translateX: x }, { translateY: y }] },
-            ]}
-          >
-            <Text style={styles.orbitButtonLabel}>{idx + 1}</Text>
-          </TouchableOpacity>
-        );
-      })}
-    </Animated.View>
-  );
-};
+    const navigation = useNavigation();
+    const orbitRadius = size / 2 + 35;
+  
+    const buttons = Array.from({ length: 6 });
+  
+    return (
+      <View
+        pointerEvents="box-none"
+        style={[
+          styles.orbitContainer,
+          { width: size + 100, height: size + 100 },
+        ]}
+      >
+        {buttons.map((_, idx) => {
+          const angle = (idx / buttons.length) * 2 * Math.PI;
+          const x = orbitRadius * Math.cos(angle);
+          const y = orbitRadius * Math.sin(angle);
+          return (
+            <TouchableOpacity
+              key={idx}
+              onPress={() => idx === 0 && navigation.navigate('Reflection')}
+              style={[
+                styles.orbitButton,
+                { transform: [{ translateX: x }, { translateY: y }] },
+              ]}
+            >
+              <Text style={styles.orbitButtonLabel}>{idx + 1}</Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    );
+  };
+  
 
   
 
@@ -1025,7 +1009,7 @@ const styles = StyleSheet.create({
 
   gaugeGlow: {
     shadowColor: '#B48DFF',
-    shadowOpacity: 0.6,
+    shadowOpacity: 0.15,
     shadowRadius: 6,
   },
 
