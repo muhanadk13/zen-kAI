@@ -379,7 +379,7 @@ export default function MentalScoreScreen() {
     if (mindScore < 0) return;
     Animated.timing(mindScoreAnim, {
       toValue: (mindScore - 300) / 6,
-      duration: 800,
+      duration: 3000,
       useNativeDriver: false,
     }).start();
   }, [mindScore]);
@@ -967,6 +967,12 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     width: 170,
     height: 170,
+  },
+
+  gaugeGlow: {
+    shadowColor: '#B48DFF',
+    shadowOpacity: 0.6,
+    shadowRadius: 6,
   },
 
   gaugeSvg: {
