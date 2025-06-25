@@ -35,7 +35,7 @@ export async function generateWeeklyMindMirror(prompt = WEEKLY_MINDMIRROR_PROMPT
     const fullPrompt = `${prompt}\n\nData:\n- Check-ins (past 7 days): ${formatted}\n- Previous week's nudge: ${lastNudge}`;
 
     const response = await axios.post(
-      'https:
+      'https://api.openai.com/v1/chat/completions',
       {
         model: 'gpt-4o-mini',
         messages: [

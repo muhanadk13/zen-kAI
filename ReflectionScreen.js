@@ -74,7 +74,7 @@ export default function ReflectionScreen() {
   const fetchAIResponse = async (messages) => { 
     try { 
       await new Promise((res) => setTimeout(res, 800)); 
-      const response = await fetch('https:
+      const response = await fetch('https://api.openai.com/v1/chat/completions',
         method: 'POST', 
         headers: {
           'Content-Type': 'application/json', 
