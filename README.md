@@ -24,3 +24,14 @@ The project uses [EAS Build](https://docs.expo.dev/build/introduction/) profiles
 - `production` – optimized for real users.
 
 Use `eas build --profile <name>` to create the desired version.
+
+## Environment Variables
+
+The app uses the `OPENAI_API_KEY` environment variable for GPT-powered features.
+Create a `.env` file in the project root and set:
+
+```bash
+OPENAI_API_KEY=your-api-key-here
+```
+
+Without this key, the app falls back to built-in reminder messages.

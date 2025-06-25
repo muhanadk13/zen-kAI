@@ -12,6 +12,9 @@ export async function generatePersonalizedReminder(window) {
   const prompt = `You are ZenKai, a wise, friendly coach. Write one short sentence to remind a user to complete their ${label} check-in. Be warm, motivating, and use slight FOMO like Duolingo. Keep it under 15 words. Use 1 emoji`;
 
   try {
+    if (!OPENAI_API_KEY) {
+      throw new Error('Missing OPENAI_API_KEY');
+    }
     const response = await axios.post(
       'https://api.openai.com/v1/chat/completions',
       {
