@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { OPENAI_API_KEY } from './apiKey';
 
-// Default prompt for generating the weekly MindMirror. Modify as needed.
+
 export const WEEKLY_MINDMIRROR_PROMPT = `You are a weekly mental performance coach for ZenKai. Generate a Weekly MindMirror report that feels like positive therapy. Use this format:
 📈 **Strongest Day:** [Highlight a day and why]
 📉 **Hardest Day:** [Mention the dip and possible cause]
@@ -35,7 +35,7 @@ export async function generateWeeklyMindMirror(prompt = WEEKLY_MINDMIRROR_PROMPT
     const fullPrompt = `${prompt}\n\nData:\n- Check-ins (past 7 days): ${formatted}\n- Previous week's nudge: ${lastNudge}`;
 
     const response = await axios.post(
-      'https://api.openai.com/v1/chat/completions',
+      'https:
       {
         model: 'gpt-4o-mini',
         messages: [

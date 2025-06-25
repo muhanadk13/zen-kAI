@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Image, TouchableOpacity, Alert } from 'react-native';
@@ -8,7 +8,7 @@ import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Screens
+
 import MentalScoreScreen from './MentalScoreScreen';
 import CheckInScreen from './CheckInScreen';
 import ReflectionScreen from './ReflectionScreen';
@@ -17,7 +17,7 @@ import HistoryScreen from './HistoryScreen';
 import LoadScreen from './LoadScreen';
 import OnboardingScreen from './OnboardingScreen';
 
-// GPT Reminder Helper
+
 import { generatePersonalizedReminder } from './utils/generatePersonalizedReminder';
 
 Notifications.setNotificationHandler({
@@ -31,7 +31,7 @@ Notifications.setNotificationHandler({
 const Stack = createNativeStackNavigator();
 
 export default function App() {
-  const navigationRef = useRef(null); // this will allow us to navigate no matter the screen
+  const navigationRef = useRef(null); 
 
   useEffect(() => {
     (async () => {
@@ -48,39 +48,39 @@ export default function App() {
 
 
   async function initializeNotifications() {
-    const permission = await Notifications.getPermissionsAsync(); // ask the user for permission to send notifications
+    const permission = await Notifications.getPermissionsAsync(); 
     if (!permission) return;
 
-    await Notifications.cancelAllScheduledNotificationsAsync(); // clear the old notifications
-    const [t1, t2, t3] =  await Promise.all([ // I promise we will wait 
+    await Notifications.cancelAllScheduledNotificationsAsync(); 
+    const [t1, t2, t3] =  await Promise.all([ 
       AsyncStorage.getItem('checkIn1Time'),
       AsyncStorage.getItem('checkIn2Time'),
       AsyncStorage.getItem('checkIn3Time'),
     ]);
 
-    // parse the time from storage or use default
-    const {hour: h1, minute: m1} = parseTime(t1, 8, 0); 
-    const {hour: h2, minute: m2} = parseTime(t2, 14, 0);
-    const {hour: h3, minute: m3} = parseTime(t3, 21, 0);
+    
+    const {hour: h1, minute: m1} = parseTimeOrDefault(t1, 8, 0); 
+    const {hour: h2, minute: m2} = parseTimeOrDefault(t2, 14, 0);
+    const {hour: h3, minute: m3} = parseTimeOrDefault(t3, 21, 0);
 
-    // Schedule the reminders
-    await scheduleReminder('checkIn1', h1, m1); 
-    await scheduleReminder('checkIn2', h2, m2);
-    await scheduleReminder('checkIn3', h3, m3);
+    
+    await scheduleCheckInReminder('checkIn1', h1, m1); 
+    await scheduleCheckInReminder('checkIn2', h2, m2);
+    await scheduleCheckInReminder('checkIn3', h3, m3);
   }
 
-  async function requestNotificationPermission() {
+  async function ensureNotificationPermission() {
     if (!Device.isDevice) {
       Alert.alert('Error', 'This feature only works on physical devices');
       return false;
     }
 
-    const { status: existingStatus } = await Notifications.getPermissionsAsync(); // returns object but only save the status
+    const { status: existingStatus } = await Notifications.getPermissionsAsync(); 
     let finalStatus = existingStatus;
 
-    if (existingStatus !== 'granted') { // if not granted permission
-      const { status } = await Notifications.requestPermissionsAsync(); // we request permission from the user and save as status
-      finalStatus = status; // the response is called status
+    if (existingStatus !== 'granted') { 
+      const { status } = await Notifications.requestPermissionsAsync(); 
+      finalStatus = status; 
     }
     
     if (finalStatus !== 'granted') {
@@ -97,38 +97,38 @@ export default function App() {
     return true; 
   }
 
-  async function scheduleReminder(window, hour, minute) { 
-    let message = ''; // empty
+  async function scheduleCheckInReminder(window, hour, minute) { 
+    let message = ''; 
     try {
-      message = await generatePersonalizedReminder(window); // check if there is a message for the window
+      message = await generatePersonalizedReminder(window); 
     } catch (e) {
-      message = `Don't miss your ${window} check-in!`; // fallback
+      message = `Don't miss your ${window} check-in!`; 
    }
 
-   const now = new Date(); // get current time
-   const triggerDate = new Date() // create a new date object
-   triggerDate.setHours(hour, minute, 0, 0); // set the time from the parameters
-   if (triggerDate <= now) { // if the time has past
-    triggerDate.setDate(triggerDate.getDate() + 1); // if the time is in the past, schedule for tomorrow
+   const now = new Date(); 
+   const triggerDate = new Date() 
+   triggerDate.setHours(hour, minute, 0, 0); 
+   if (triggerDate <= now) { 
+    triggerDate.setDate(triggerDate.getDate() + 1); 
    }
    
-   await Notifications.scheduleNotificationAsync({ // schedule the notification
+   await Notifications.scheduleNotificationAsync({ 
     content: {
       title: 'zen-kAI',
       body: message,
       sound: true,
     },
     trigger: {
-      type: 'date', // trigger on the date
+      type: 'date', 
       date: triggerDate,
     },
 
    });
 
-   const labelMap = {checkIn1: 'morning', checkIn2: 'afternoon', checkIn3: 'evening'}; // to display
-   const label = labelMap[window] || window; // make the label "morning", "afternoon", "evening"
-   const timeStr = formatDisplayTime(hour, minute); // format the time for display
-   console.log(`✅ GPT Reminder (${label}): "${message}" (${timeStr})`); // log the reminder
+   const labelMap = {checkIn1: 'morning', checkIn2: 'afternoon', checkIn3: 'evening'}; 
+   const label = labelMap[window] || window; 
+   const timeStr = formatDisplayTime(hour, minute); 
+   console.log(`✅ GPT Reminder (${label}): "${message}" (${timeStr})`); 
   }
 
   function formatDisplayTime(hour, minute) {
@@ -137,7 +137,7 @@ export default function App() {
     return `${h12}:${minute.toString().padStart(2, '0')}${suffix}`;
   }
 
-  function parseTime(str, defH, defM) {
+  function parseTimeOrDefault(str, defH, defM) {
     if (str) {
       const parts = str.split(':'); 
       const h = parseInt(parts[0], 10);
@@ -146,7 +146,7 @@ export default function App() {
         return { hour: h, minute: m};
       }
     }
-    return { hour: defH, minute: defM } // if the string is not valid, return the default time
+    return { hour: defH, minute: defM } 
  }
 
   return (

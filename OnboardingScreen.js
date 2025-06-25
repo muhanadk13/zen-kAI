@@ -10,7 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Modal,
-  Animated, // ✅ ADD THIS LINE
+  Animated, 
 } from 'react-native';
 
 import React, { useRef, useState, useEffect } from 'react';
@@ -303,7 +303,7 @@ That’s it. Add a note (Optional: Highly Recommended)</Text>
   intensity={30}
   tint="dark"
   style={{
-    marginTop: 40, // 👈 Push header down
+    marginTop: 40, 
     justifyContent: 'center',
     alignItems: 'center',
     paddingTop: 20,
@@ -416,7 +416,7 @@ That’s it. Add a note (Optional: Highly Recommended)</Text>
   >
     <Text
       style={{
-        fontSize: 36, // ⬆️ Increased size
+        fontSize: 36, 
         fontWeight: '800',
         color: '#FFFFFF',
         textAlign: 'center',
@@ -497,7 +497,7 @@ Your Mind’s Dashboard    </Text>
       <Text
         style={{
           color: '#FFFFFF',
-          fontSize: 18, // ⬆️ Bolder CTA text
+          fontSize: 18, 
           fontWeight: '600',
           textAlign: 'center',
         }}

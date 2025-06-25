@@ -15,7 +15,7 @@ export default function LoadScreen() {
       const timer = setTimeout(async () => {
         const done = await AsyncStorage.getItem('onboardingComplete');
         navigation.replace(done ? 'MentalScore' : 'Onboarding');
-      }, 3000); // wait 3s after load, then jump
+      }, 3000); 
       return () => clearTimeout(timer);
     }
   }, [videoLoaded]);

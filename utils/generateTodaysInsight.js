@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { OPENAI_API_KEY } from './apiKey';
 
-// Function to generate Today's Insight using GPT
+
 export async function generateTodaysInsight(metrics) {
   const compiledHistory = await AsyncStorage.getItem('compiledHistory');
   const { energy, clarity, emotion, focus, note, window, timestamp, tags = [] } = metrics;
@@ -10,7 +10,7 @@ export async function generateTodaysInsight(metrics) {
   let insight = '';
 
   try {
-    // If an insight was already generated for the latest check-in, reuse it
+    
     const storedRaw = await AsyncStorage.getItem(`todaysInsight-${today}`);
     if (storedRaw) {
       try {
@@ -20,17 +20,17 @@ export async function generateTodaysInsight(metrics) {
         }
       } catch {
         if (timestamp) {
-          // old format was plain text; ignore if timestamp differs
+          
         } else {
           return storedRaw;
         }
       }
     }
-    // Fetch check-in history
+    
     const historyRaw = await AsyncStorage.getItem('checkInHistory');
     const history = historyRaw ? JSON.parse(historyRaw) : [];
 
-    // Gather additional context
+    
     const weekAgo = new Date();
     weekAgo.setDate(weekAgo.getDate() - 7);
     const last7Days = history.filter((e) => new Date(e.timestamp) >= weekAgo);
@@ -38,7 +38,7 @@ export async function generateTodaysInsight(metrics) {
     const emotionStreak = calculateEmotionStreak(history);
     const streakCount = calculateCheckInStreak(history);
 
-    // Compare this week's averages to the week prior
+    
     const twoWeeksAgo = new Date();
     twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
     const last14Days = history.filter((e) => new Date(e.timestamp) >= twoWeeksAgo);
@@ -65,7 +65,7 @@ export async function generateTodaysInsight(metrics) {
       .filter(Boolean)
       .join('; ');
 
-    // Calculate yesterday's averages
+    
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
     const yesterdayStr = yesterday.toISOString().split('T')[0];
@@ -82,10 +82,10 @@ export async function generateTodaysInsight(metrics) {
         }
       : null;
 
-    // Calculate overall mental score
+    
     const mentalScore = Math.round((energy + clarity + emotion + focus) / 4);
 
-    // Map check-in window to time of day
+    
     const windowDescription = {
       checkIn1: 'morning',
       checkIn2: 'afternoon',
@@ -93,7 +93,7 @@ export async function generateTodaysInsight(metrics) {
     }[window] || 'recent';
 
 
-    // Prepare prompt for GPT
+    
     const prompt = `
 You are ZenKai — a calm, emotionally intelligent coach who gives a single powerful insight per day.
 
@@ -145,9 +145,9 @@ ${weeklyShift
 ${compiledHistory || 'No long-term data yet.'}
 `;
 
-    // Call OpenAI API
+    
     const response = await axios.post(
-      'https://api.openai.com/v1/chat/completions',
+      'https:
       {
         model: 'gpt-4o-mini',
         messages: [
@@ -167,7 +167,7 @@ ${compiledHistory || 'No long-term data yet.'}
 
     insight = response.data.choices[0].message.content.trim();
 
-    // Store the insight along with the timestamp of the latest check-in
+    
     await AsyncStorage.setItem(
       `todaysInsight-${today}`,
       JSON.stringify({ timestamp, text: insight })
@@ -180,7 +180,7 @@ ${compiledHistory || 'No long-term data yet.'}
   }
 }
 
-// Helper function to calculate focus based on clarity and energy
+
 function calculateFocus(clarity, energy) {
   return Math.round(0.6 * clarity + 0.4 * energy);
 }
@@ -190,7 +190,7 @@ function formatChange(num) {
   return `${sign}${Math.round(num)}%`;
 }
 
-// Calculate averages and standard deviation for a set of entries
+
 function calculateWeekStats(entries) {
   if (entries.length < 6) return { avg: null, std: null };
   const sums = { energy: 0, clarity: 0, emotion: 0, focus: 0 };
@@ -223,7 +223,7 @@ function calculateWeekStats(entries) {
   return { avg, std };
 }
 
-// Calculate how many recent days had similar emotion values
+
 function calculateEmotionStreak(entries) {
   if (!entries.length) return 0;
   const sorted = [...entries].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
@@ -238,7 +238,7 @@ function calculateEmotionStreak(entries) {
   return streak;
 }
 
-// Calculate consecutive days of check-ins ending today
+
 function calculateCheckInStreak(entries) {
   if (!entries.length) return 0;
   const uniqueDates = [...new Set(entries.map((e) => e.timestamp.split('T')[0]))];
@@ -257,7 +257,7 @@ function calculateCheckInStreak(entries) {
   return streak;
 }
 
-// Create a compact summary of today's check-ins versus yesterday
+
 export function generateMicroInsight(checkIns = [], yesterday = {}) {
   const valid = checkIns.filter(
     (e) => e.energy != null && e.clarity != null && e.emotion != null

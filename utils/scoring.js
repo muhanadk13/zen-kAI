@@ -69,9 +69,9 @@ export async function updateMomentum() {
     const diffDays = Math.floor((now - last) / DAY_MS);
     let value = data.value;
     if (diffDays > 0) {
-      value = Math.max(0, value - diffDays * 20); // decay
+      value = Math.max(0, value - diffDays * 20); 
     }
-    value = Math.min(100, value + 34); // check-in boost
+    value = Math.min(100, value + 34); 
     await AsyncStorage.setItem(MOMENTUM_KEY, JSON.stringify({
       value,
       last: getDateKey()
