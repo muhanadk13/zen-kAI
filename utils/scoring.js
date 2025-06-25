@@ -28,22 +28,26 @@ export async function updateMindScore() {
 
     const todayKey = getDateKey();
     const raw = await AsyncStorage.getItem(MIND_SCORE_KEY);
-    let data = raw ? JSON.parse(raw) : { date: todayKey, value: 600 };
+    let data = raw
+      ? JSON.parse(raw)
+      : { date: todayKey, base: 600, value: 600 };
 
-    // Nothing to update if we've already processed today
-    if (data.date === todayKey) return data.value;
+    // Support old format without base property
+    if (data.base == null) data.base = data.value;
 
-    let score = data.value;
-    let day = new Date(data.date);
-    const end = new Date(todayKey);
+    let { date: lastDate, value: score, base } = data;
 
-    while (day < end) {
+    // Start from the day after the last processed date
+    let day = new Date(lastDate);
+    day = new Date(day.getTime() + DAY_MS);
+
+    while (getDateKey(day) < todayKey) {
       const dayKey = getDateKey(day);
       const entries = history.filter((e) => e.timestamp.startsWith(dayKey));
+      let delta = 0;
 
       if (entries.length === 0) {
-        // Missed day penalty
-        score -= 10;
+        delta = -10; // Missed day
       } else {
         const dailyAvg = Math.round(
           entries.reduce(
@@ -52,26 +56,51 @@ export async function updateMindScore() {
           ) / entries.length
         );
 
-        if (dailyAvg >= 85) score += 7;
-        else if (dailyAvg >= 70) score += 5;
-        else if (dailyAvg >= 50) score += 2;
-        else if (dailyAvg >= 30) score -= 3;
-        else score -= 7;
+        if (dailyAvg >= 85) delta = 7;
+        else if (dailyAvg >= 70) delta = 5;
+        else if (dailyAvg >= 50) delta = 2;
+        else if (dailyAvg >= 30) delta = -3;
+        else delta = -7;
 
         const streakRaw = await AsyncStorage.getItem(CURRENT_STREAK_KEY);
         const streak = streakRaw ? parseInt(streakRaw, 10) : 0;
-        if (streak > 0 && streak % 3 === 0) score += 4;
+        if (streak > 0 && streak % 3 === 0) delta += 4;
       }
 
-      score = Math.min(900, Math.max(300, score));
+      score = Math.min(900, Math.max(300, score + delta));
+      base = score; // next day's starting point
       day = new Date(day.getTime() + DAY_MS);
     }
 
+    // Calculate today's delta using the stored base score
+    const todayEntries = history.filter((e) => e.timestamp.startsWith(todayKey));
+    let todayDelta = 0;
+    if (todayEntries.length > 0) {
+      const dailyAvg = Math.round(
+        todayEntries.reduce(
+          (s, e) => s + (e.energy + e.clarity + e.emotion) / 3,
+          0
+        ) / todayEntries.length
+      );
+
+      if (dailyAvg >= 85) todayDelta = 7;
+      else if (dailyAvg >= 70) todayDelta = 5;
+      else if (dailyAvg >= 50) todayDelta = 2;
+      else if (dailyAvg >= 30) todayDelta = -3;
+      else todayDelta = -7;
+
+      const streakRaw = await AsyncStorage.getItem(CURRENT_STREAK_KEY);
+      const streak = streakRaw ? parseInt(streakRaw, 10) : 0;
+      if (streak > 0 && streak % 3 === 0) todayDelta += 4;
+    }
+
+    const final = Math.min(900, Math.max(300, base + todayDelta));
+
     await AsyncStorage.setItem(
       MIND_SCORE_KEY,
-      JSON.stringify({ date: todayKey, value: score })
+      JSON.stringify({ date: todayKey, base, value: final })
     );
-    return score;
+    return final;
   } catch (err) {
     console.error('updateMindScore', err);
     return 600;
