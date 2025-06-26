@@ -69,6 +69,8 @@ export default function ReflectionScreen() { // this is the start that contains 
   const [isAIResponding, setIsAIResponding] = useState(false); // isAIResponding is false bit setIsAIResponding changes it
   const scrollViewRef = useRef(); // create a remote for scrollViewRef
   const sendButtonRef = useRef(null); // remote but set to null
+  const [inputHeight, setInputHeight] = useState(70);
+
 
   useFocusEffect(
     React.useCallback(() => {
@@ -261,16 +263,20 @@ export default function ReflectionScreen() { // this is the start that contains 
 
           <View style={styles.inputContainer}> 
 
-            <TextInput 
-              style={styles.input} 
-              placeholder={isAIResponding ? 'AI is responding...' : 'Type your response...'} 
-              placeholderTextColor="#7C7C8A"
-              value={message} 
-              onChangeText={setMessage} 
-              returnKeyType="send" 
-              onSubmitEditing={handleSend} 
-              editable={!isAIResponding}
-            />
+          <TextInput
+            style={[styles.input, { height: Math.max(44, inputHeight) }]}
+            placeholder={isAIResponding ? 'AI is responding...' : 'Type your response...'}
+            placeholderTextColor="#7C7C8A"
+            value={message}
+            onChangeText={setMessage}
+            multiline
+            onContentSizeChange={(e) =>
+              setInputHeight(Math.min(e.nativeEvent.contentSize.height, 120))
+            }
+            returnKeyType="default"
+            editable={!isAIResponding}
+          />
+
             <Pressable onPress={handleSend} style={styles.sendButton} disabled={isAIResponding}> 
               <Animatable.View ref={sendButtonRef}> 
                 <Ionicons name="arrow-up-circle" size={40} color="#51C4FF" /> 
@@ -369,7 +375,10 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     fontSize: 16,
     color: '#FFFFFF',
+    minHeight: 44,
+    maxHeight: 150,
   },
+  
   sendButton: {
     marginLeft: 12,
     width: 44,
