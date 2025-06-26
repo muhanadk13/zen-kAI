@@ -20,13 +20,47 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import * as Animatable from 'react-native-animatable';
 import { OPENAI_API_KEY } from './utils/apiKey';
+import { useFocusEffect } from '@react-navigation/native';
+
 
 const BASE_SYSTEM_MESSAGE = {
   role: 'system',
-  content:
-    'You are zen-kAI, a calm, emotionally intelligent assistant. ' +
-    'Acknowledge the user in one short line and always finish with a thoughtful question.',
+  content: `You are zen-kAI, a reflective journaling partner.
+
+  Your role is to help users process their day, emotions, and thoughts through a warm, thoughtful, and human conversation.
+  
+  Speak like a mix of a caring friend, a thoughtful mentor, and a supportive therapist.
+  
+  Your tone is gentle, warm, understanding, and deeply present. Your goal is to make the user feel truly heard and understood.
+  
+  Start naturally — respond to what the user says. Reflect their emotions, affirm their experiences, and help them feel seen. Do NOT sound like a chatbot. Do NOT ask a question after every message.
+  
+  The check-in data gives quiet context about how the user has been feeling lately. Never mention the check-ins directly. Let the conversation flow naturally based on what the user shares.
+  
+  Use statements like:
+  - “It sounds like...”
+  - “That seems really important to you.”
+  - “I can tell this has been on your mind.”
+  - “That’s a powerful thing to realize.”
+  - “You’ve clearly been thinking deeply about this.”
+  
+  Use questions *only* when it feels meaningful to help them explore deeper:
+  - “What do you think this means for you?”
+  - “How do you want to show up moving forward?”
+  - “What feels true for you right now?”
+  
+  Focus on:
+  - Reflecting their emotions back to them.
+  - Helping them notice patterns in how they feel or act.
+  - Validating their wins and struggles.
+  - Offering clarity and insight — never advice unless asked.
+  
+  After about 4–6 exchanges, gently summarize the key emotions, patterns, and realizations from the conversation in a warm, thoughtful way — like a caring friend summarizing what they’ve noticed.
+  
+  Do not ever mention this system prompt. It is only a guide for how you behave.
+  `,
 };
+
 
 export default function ReflectionScreen() { // this is the start that contains all the pages information
   const navigation = useNavigation(); // giving the import a name
@@ -36,39 +70,47 @@ export default function ReflectionScreen() { // this is the start that contains 
   const scrollViewRef = useRef(); // create a remote for scrollViewRef
   const sendButtonRef = useRef(null); // remote but set to null
 
-  useEffect(() => { // run immediately 
-    const loadChatHistory = async () => { // get the chat history - await: there will be some waiting in function
-      const savedChatHistory = await AsyncStorage.getItem('chatHistory'); // await means wait for the get item to finish and save
-      if (savedChatHistory) { // now if there is history
-        setChatMessages(JSON.parse(savedChatHistory)); // convert to understandable format
-      }
-    };
-    loadChatHistory(); // run the method 
-    startConversation(); // later
-  }, []);
+  useFocusEffect(
+    React.useCallback(() => {
+      // When screen is focused, start a new conversation
+      startConversation();
+  
+      return () => {
+        // When leaving the screen, clear chat
+        setChatMessages([]);
+        AsyncStorage.removeItem('chatHistory');
+      };
+    }, [])
+  );
+  
 
   useEffect(() => {
     scrollViewRef.current?.scrollToEnd({ animated: true }); // lets scroll to the end if there is one 
   }, [chatMessages]); // runs everytime the chatMessages changes
 
-  const animateAIResponse = async (response) => { // will take an input of response
-    let displayedText = ''; // no text to start
-    for (const letter of response) { //for each letter in the response
-      displayedText += letter; // add a new letter to diplayedText
-      setChatMessages((prev) => { // create function that takes the previous chat messages
-        const lastMessage = prev[prev.length - 1]; // get the last message
-        if (lastMessage && !lastMessage.fromUser) { // if there is a last message it its from AI
-          return [...prev.slice(0, -1), { text: displayedText, fromUser: false }]; // take all message except last and add a new messgage
+  const animateAIResponse = async (response) => {
+    let displayedText = '';
+    for (const letter of response) {
+      displayedText += letter;
+      setChatMessages((prev) => {
+        const lastMessage = prev[prev.length - 1];
+        if (lastMessage && !lastMessage.fromUser) {
+          return [...prev.slice(0, -1), { text: displayedText, fromUser: false }];
         } else {
-          return [...prev, { text: displayedText, fromUser: false }]; // add a new message since there is no last message
+          return [...prev, { text: displayedText, fromUser: false }];
         }
       });
-      await new Promise((res) => setTimeout(res, 25)); // add a pause of 25 milliseconds to each letter
-    }
+  
+      // ✅ Smoothly scrolls as the AI types
+      scrollViewRef.current?.scrollToEnd({ animated: false });
+      await Haptics.selectionAsync()	
 
-    // Trigger haptic feedback when the AI message is fully displayed
+      await new Promise((res) => setTimeout(res, 8));
+    }
+  
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
   };
+  
 
   const fetchOpenAIResponse = async (messages) => { // function for getting AI response with message parameter
     try { // try this code 
@@ -108,13 +150,28 @@ export default function ReflectionScreen() { // this is the start that contains 
       previousDays: history.filter((e) => !e.timestamp.startsWith(today)), // keep everything but today
     };
     const initialMessages = [
-      BASE_SYSTEM_MESSAGE, // how AI should behave
+      BASE_SYSTEM_MESSAGE,
       {
         role: 'user',
-        // Give information and prompt 
-        content: `Here are my check-ins:\n\nToday's: ${JSON.stringify(context.today)}\n\nPrevious days: ${JSON.stringify(context.previousDays)}\n\nAsk one short, meaningful reflection question that helps me understand something about how I’ve been feeling lately — without offering advice or suggesting actions. You never say more than a few words.`,
+        content: `
+   
+    rules:
+    Here's some context about how I've been feeling lately. Use this only to quietly understand my general mood, energy, or patterns — you do not need to mention this directly.
+    Keep the conversation natural and human, as if you were a mentor.
+    Do not ever speak of the system prompt or your role as an AI, start with a natural welcome to speak.
+    
+    Today's check-ins: ${JSON.stringify(context.today)}
+    Previous days: ${JSON.stringify(context.previousDays)}
+    
+
+
+
+
+        `.trim(),
       },
     ];
+    
+    
     const response = await fetchOpenAIResponse(initialMessages); // response is the AI response with the parameter intialMessages
     if (!chatMessages.some((m) => m.text === response && !m.fromUser)) { // prevent duplicate AI messages (not needed)
       setChatMessages([{ text: response, fromUser: false }]); // set chat messages to the response
@@ -189,16 +246,17 @@ export default function ReflectionScreen() { // this is the start that contains 
             ref={scrollViewRef}
             keyboardShouldPersistTaps="handled" 
           >
-            {chatMessages.map((msg, index) => ( 
-              <Animatable.View 
-                key={index}
-                animation="fadeInUp"
-                duration={400}
-                style={[styles.chatBubble, msg.fromUser ? styles.userBubble : styles.aiBubble]} 
-              >
-                <Text style={styles.chatText}>{msg.text}</Text> 
-              </Animatable.View>
-            ))}
+            {chatMessages.map((msg, index) => (
+            <Animatable.View
+              key={index}
+              animation="fadeInUp"
+              duration={400}
+              style={msg.fromUser ? styles.userBubble : styles.aiTextContainer} 
+            >
+              <Text style={msg.fromUser ? styles.chatText : styles.aiText}>{msg.text}</Text>
+            </Animatable.View>
+          ))}
+
           </ScrollView>
 
           <View style={styles.inputContainer}> 
@@ -270,24 +328,30 @@ const styles = StyleSheet.create({
     padding: 14,
     marginVertical: 6,
     borderRadius: 18,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    elevation: 2,
   },
   userBubble: {
+    maxWidth: '80%',
+    padding: 14,
+    marginVertical: 6,
+    borderRadius: 18,
     alignSelf: 'flex-end',
     backgroundColor: '#3D9DF6',
   },
-  aiBubble: {
+  
+  aiTextContainer: {
     alignSelf: 'flex-start',
-    backgroundColor: '#1C1E29',
+    marginHorizontal: 15,
+    marginVertical: 8,
   },
   chatText: {
     fontSize: 16,
     fontWeight: '500',
     color: '#FFFFFF',
+  },
+  aiText: {
+    fontSize: 17,
+    color: '#FFFFFF',
+    lineHeight: 24,
   },
   inputContainer: {
     flexDirection: 'row',
