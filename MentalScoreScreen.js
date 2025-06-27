@@ -24,7 +24,7 @@ import Svg, { Circle, Defs, LinearGradient as SvgLinearGradient, Stop } from 're
 import LottieView from 'lottie-react-native'; // Import Lottie
 import { BlurView } from 'expo-blur'; // blur the header
 
-const CustomHeader = ({ onLogoPress, devMode, navigation, handleCheckInPress }) => {
+const CustomHeader = ({ onLogoPress, devMode, navigation, handleCheckInPress, label }) => {
   return (
     <BlurView
       tint="dark"
@@ -81,6 +81,7 @@ const CustomHeader = ({ onLogoPress, devMode, navigation, handleCheckInPress }) 
             />
           </TouchableOpacity>
         </View>
+        {label ? <Text style={styles.identityLabelHeader}>{label}</Text> : null}
       </View>
     </BlurView>
   );
@@ -233,7 +234,7 @@ export default function MentalScoreScreen() {
   const [weeklyMindMirror, setWeeklyMindMirror] = useState('No MindMirror yet.'); // mindmirror is the same
   const [streak, setStreak] = useState(0); 
   const [longestStreak, setLongestStreak] = useState(0); // not used yet
-  const [xp, setXp] = useState({ xpToday: 0, total: 0, level: 1, progress: 0 }); // xp state
+  const [xp, setXp] = useState({ xpToday: 0, total: 0, level: 1, progress: 0, label: 'Explorer' });
   const [dailyGoal, setDailyGoal] = useState(null); // not used
   const xpGainRef = useRef(null); // ref for xp gain animation
   const xpBarRef = useRef(null);  // ref for xp bar animation
@@ -682,7 +683,7 @@ export default function MentalScoreScreen() {
       setInsightRevealed(false);
       setDisplayedInsight('');
       setWeeklyMindMirror('No MindMirror yet.');
-      setXp({ xpToday: 0, total: 0, level: 1, progress: 0 });
+      setXp({ xpToday: 0, total: 0, level: 1, progress: 0, label: 'Explorer' });
     } catch (err) { // if there is any errors
       console.error('❌ Error clearing data:', err);
       Alert.alert('Error', 'Failed to clear data');
@@ -766,6 +767,7 @@ export default function MentalScoreScreen() {
           devMode={devMode}
           navigation={navigation}
           handleCheckInPress={handleCheckInPress}
+          label={xp.label}
         />
   
         {/* 🎉 Confetti Animation */}
@@ -800,7 +802,7 @@ export default function MentalScoreScreen() {
           {/* 📈 XP Progress */}
           <Animatable.View
             ref={xpBarRef}
-            style={[styles.momentumContainer, xp.progress > 60 && styles.levelGlow]}
+            style={[styles.momentumContainer, xp.progress >= 90 && styles.levelGlow]}
           >
             <Text style={styles.momentumLabel}>
               Level {xp.level} — {xp.total - xpForLevel(xp.level)} /{' '}
@@ -810,6 +812,10 @@ export default function MentalScoreScreen() {
             <Animatable.Text ref={xpGainRef} style={styles.xpGainText}>
               +{xpDelta}
             </Animatable.Text>
+            <Text style={styles.identityLabel}>{xp.label}</Text>
+            {xp.progress >= 90 && (
+              <Text style={styles.nearMiss}>🔥 You're close to Level {xp.level + 1}</Text>
+            )}
           </Animatable.View>
   
           {/* 🔥 Streak */}
@@ -1184,6 +1190,25 @@ const styles = StyleSheet.create({
     top: -18,
     color: '#7CF67C',
     fontWeight: '800',
+  },
+  identityLabel: {
+    marginTop: 4,
+    color: '#B48DFF',
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  identityLabelHeader: {
+    position: 'absolute',
+    bottom: 4,
+    alignSelf: 'center',
+    color: '#B48DFF',
+    fontWeight: '700',
+  },
+  nearMiss: {
+    marginTop: 4,
+    color: '#ffae00',
+    fontWeight: '700',
+    textAlign: 'center',
   },
 
   cardGradient: {
