@@ -190,9 +190,18 @@ const ScoreHistoryOverlay = ({ visible, onClose, history, selected, onSelect }) 
   const overlayRef = useRef(null);
   const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
   const cardWidth = screenWidth * 0.9;
-  const cardHeight = screenHeight * 0.85;
+  const cardHeight = screenHeight - 80;
   const chartHeight = cardHeight * 0.45;
   const padding = 24;
+
+  const circleScale = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    Animated.sequence([
+      Animated.timing(circleScale, { toValue: 1.15, duration: 150, useNativeDriver: true }),
+      Animated.spring(circleScale, { toValue: 1, useNativeDriver: true })
+    ]).start();
+  }, [selected]);
 
   const path = history.length
     ? history
@@ -226,18 +235,26 @@ const ScoreHistoryOverlay = ({ visible, onClose, history, selected, onSelect }) 
         style={[styles.historyCard, { width: cardWidth, height: cardHeight }]}
       >
         <TouchableOpacity style={styles.historyClose} onPress={handleClose}>
-          <Text style={styles.historyCloseText}>✕</Text>
+          <View style={styles.historyCloseCircle}>
+            <Text style={styles.historyCloseText}>✕</Text>
+          </View>
         </TouchableOpacity>
         <Text style={styles.historyTitle}>Mental Score</Text>
         {selected != null && (
           <Animatable.View
             key={selected}
-            animation="bounceIn"
-            duration={600}
+            animation="fadeIn"
+            duration={300}
             style={{ marginBottom: 20, alignItems: 'center', justifyContent: 'center' }}
           >
-            <ScoreCircle score={(selected - 300) / 6} size={130} strokeWidth={16} />
-            <Text style={styles.historyScore}>{selected}</Text>
+            <Animated.View style={{ transform: [{ scale: circleScale }] }}>
+              <ScoreCircle
+                score={(selected - 300) / 6}
+                size={130}
+                strokeWidth={16}
+              />
+              <Text style={styles.historyScore}>{selected}</Text>
+            </Animated.View>
           </Animatable.View>
         )}
         <Svg width={cardWidth} height={chartHeight} style={styles.historySvg}>
@@ -1448,6 +1465,10 @@ historyCard: {
   paddingTop: 60,
   paddingHorizontal: 20,
   alignItems: 'center',
+  shadowColor: '#000',
+  shadowOpacity: 0.4,
+  shadowRadius: 16,
+  shadowOffset: { width: 0, height: 8 },
 },
 historyClose: {
   position: 'absolute',
@@ -1455,9 +1476,21 @@ historyClose: {
   right: 20,
   zIndex: 2,
 },
+historyCloseCircle: {
+  backgroundColor: '#FF4C4C',
+  width: 40,
+  height: 40,
+  borderRadius: 20,
+  alignItems: 'center',
+  justifyContent: 'center',
+  shadowColor: '#000',
+  shadowOpacity: 0.3,
+  shadowRadius: 6,
+  shadowOffset: { width: 0, height: 3 },
+},
 historyCloseText: {
-  fontSize: 32,
-  color: 'red',
+  fontSize: 24,
+  color: '#FFFFFF',
   fontWeight: '800',
 },
 historyTitle: {
