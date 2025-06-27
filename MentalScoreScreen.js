@@ -190,7 +190,7 @@ const ScoreHistoryOverlay = ({ visible, onClose, history, selected, onSelect }) 
   const overlayRef = useRef(null);
   const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
   const cardWidth = screenWidth * 0.9;
-  const cardHeight = screenHeight * 0.8;
+  const cardHeight = screenHeight * 0.85;
   const chartHeight = cardHeight * 0.45;
   const padding = 24;
 
@@ -272,7 +272,7 @@ const ScoreHistoryOverlay = ({ visible, onClose, history, selected, onSelect }) 
             const y = h.score == null
               ? chartHeight - padding
               : chartHeight - padding - ((h.score - 300) / 600) * (chartHeight - padding * 2);
-            const display = h.score != null ? Math.round((h.score - 300) / 6) : null;
+            const display = h.score != null ? Math.round(h.score) : null;
             const isSelected = selected === h.score;
             return (
               <React.Fragment key={idx}>
@@ -1444,7 +1444,7 @@ historyOverlay: {
 },
 historyCard: {
   backgroundColor: '#1C1E29',
-  borderRadius: 30,
+  borderRadius: 34,
   paddingTop: 60,
   paddingHorizontal: 20,
   alignItems: 'center',
