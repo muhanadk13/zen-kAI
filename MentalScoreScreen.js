@@ -21,7 +21,7 @@ import { generateTodaysInsight } from './utils/generateTodaysInsight'; // gets t
 import { getWeeklyMindMirror } from './utils/mindMirror'; // gets the functions from this page
 import { markInsightRead, getCurrentScores, xpForLevel, resetStreakIfNeeded, getScoreHistory } from './utils/scoring';
 import { LinearGradient } from 'expo-linear-gradient';
-import Svg, { Circle, Defs, Polyline, Text as SvgText, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg'; // create circle
+import Svg, { Circle, Defs, Polyline, Line, Text as SvgText, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg'; // create circle
 import LottieView from 'lottie-react-native'; // Import Lottie
 import { BlurView } from 'expo-blur'; // blur the header
 
@@ -189,8 +189,8 @@ const ScoreHistoryOverlay = ({ visible, onClose, history, selected, onSelect }) 
   if (!visible) return null;
   const overlayRef = useRef(null);
   const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
-  const cardWidth = screenWidth * 0.88;
-  const cardHeight = screenHeight * 0.75;
+  const cardWidth = screenWidth * 0.9;
+  const cardHeight = screenHeight * 0.8;
   const chartHeight = cardHeight * 0.45;
   const padding = 24;
 
@@ -212,6 +212,7 @@ const ScoreHistoryOverlay = ({ visible, onClose, history, selected, onSelect }) 
   });
 
   const handleClose = () => {
+    Haptics.selectionAsync();
     overlayRef.current?.fadeOut(200).then(onClose);
   };
 
@@ -227,9 +228,16 @@ const ScoreHistoryOverlay = ({ visible, onClose, history, selected, onSelect }) 
         <TouchableOpacity style={styles.historyClose} onPress={handleClose}>
           <Text style={styles.historyCloseText}>✕</Text>
         </TouchableOpacity>
+        <Text style={styles.historyTitle}>Mental Score</Text>
         {selected != null && (
-          <Animatable.View key={selected} animation="bounceIn" duration={600} style={{ marginBottom: 20 }}>
+          <Animatable.View
+            key={selected}
+            animation="bounceIn"
+            duration={600}
+            style={{ marginBottom: 20, alignItems: 'center', justifyContent: 'center' }}
+          >
             <ScoreCircle score={(selected - 300) / 6} size={130} strokeWidth={16} />
+            <Text style={styles.historyScore}>{selected}</Text>
           </Animatable.View>
         )}
         <Svg width={cardWidth} height={chartHeight} style={styles.historySvg}>
@@ -244,6 +252,20 @@ const ScoreHistoryOverlay = ({ visible, onClose, history, selected, onSelect }) 
               <Stop offset="100%" stopColor="#ae6ef7" />
             </SvgLinearGradient>
           </Defs>
+          {[300, 500, 700, 900].map((val) => {
+            const yLine = chartHeight - padding - ((val - 300) / 600) * (chartHeight - padding * 2);
+            return (
+              <Line
+                key={val}
+                x1={padding}
+                x2={cardWidth - padding}
+                y1={yLine}
+                y2={yLine}
+                stroke="rgba(255,255,255,0.05)"
+                strokeWidth={1}
+              />
+            );
+          })}
           {path && <Polyline points={path} fill="none" stroke="#ae6ef7" strokeWidth={3} />}
           {history.map((h, idx) => {
             const x = padding + (idx / (history.length - 1)) * (cardWidth - padding * 2);
@@ -251,16 +273,22 @@ const ScoreHistoryOverlay = ({ visible, onClose, history, selected, onSelect }) 
               ? chartHeight - padding
               : chartHeight - padding - ((h.score - 300) / 600) * (chartHeight - padding * 2);
             const display = h.score != null ? Math.round((h.score - 300) / 6) : null;
+            const isSelected = selected === h.score;
             return (
               <React.Fragment key={idx}>
                 <Circle
                   cx={x}
                   cy={y}
-                  r={10}
+                  r={isSelected ? 12 : 10}
                   stroke="url(#historyGradient)"
-                  strokeWidth={3}
+                  strokeWidth={isSelected ? 4 : 3}
                   fill="#1C1E29"
-                  onPress={() => h.score != null && onSelect(h.score)}
+                  onPress={() => {
+                    if (h.score != null) {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      onSelect(h.score);
+                    }
+                  }}
                 />
                 <Circle cx={x} cy={y} r={5} fill="#fff" pointerEvents="none" />
                 {display != null && (
@@ -365,7 +393,11 @@ export default function MentalScoreScreen() {
 
   useEffect(() => {
     if (historyVisible) {
-      getScoreHistory().then(setScoreHistory);
+      getScoreHistory().then((data) => {
+        setScoreHistory(data);
+        const last = data[data.length - 1];
+        if (last) setSelectedScore(last.score);
+      });
     }
   }, [historyVisible]);
 
@@ -913,7 +945,7 @@ export default function MentalScoreScreen() {
         >
           {/* 🔘 Main Score Circle */}
           <Animatable.View animation="bounceIn" duration={800} style={styles.gaugeContainer}>
-            <TouchableOpacity activeOpacity={0.9} onPress={() => { setSelectedScore(mindScore); setHistoryVisible(true); }}>
+            <TouchableOpacity activeOpacity={0.9} onPress={() => setHistoryVisible(true)}>
               <ScoreCircle score={displayScore} />
             </TouchableOpacity>
             <OrbitingButtons size={170} />
@@ -1427,6 +1459,18 @@ historyCloseText: {
   fontSize: 32,
   color: 'red',
   fontWeight: '800',
+},
+historyTitle: {
+  fontSize: 24,
+  fontWeight: '700',
+  color: '#FFFFFF',
+  marginBottom: 10,
+},
+historyScore: {
+  position: 'absolute',
+  fontSize: 36,
+  fontWeight: '800',
+  color: '#FFFFFF',
 },
 historySvg: {
   backgroundColor: '#1C1E29',
