@@ -11,6 +11,7 @@ import {
   Alert,
   Animated,
   Easing,
+  Dimensions,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import * as Animatable from 'react-native-animatable';
@@ -20,7 +21,7 @@ import { generateTodaysInsight } from './utils/generateTodaysInsight'; // gets t
 import { getWeeklyMindMirror } from './utils/mindMirror'; // gets the functions from this page
 import { markInsightRead, getCurrentScores, xpForLevel, resetStreakIfNeeded, getScoreHistory } from './utils/scoring';
 import { LinearGradient } from 'expo-linear-gradient';
-import Svg, { Circle, Defs, Polyline, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg'; // create circle
+import Svg, { Circle, Defs, Polyline, Text as SvgText, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg'; // create circle
 import LottieView from 'lottie-react-native'; // Import Lottie
 import { BlurView } from 'expo-blur'; // blur the header
 
@@ -184,9 +185,10 @@ const ScoreCircle = ({ score, size = 170, strokeWidth = 18 }) => {
 
 const ScoreHistoryOverlay = ({ visible, onClose, history, selected, onSelect }) => {
   if (!visible) return null;
-  const width = 300;
-  const height = 180;
-  const padding = 20;
+  const { width: screenWidth } = Dimensions.get('window');
+  const width = screenWidth * 0.9;
+  const height = 220;
+  const padding = 24;
   const path = history.length
     ? history
         .map((h, idx) => {
@@ -205,11 +207,22 @@ const ScoreHistoryOverlay = ({ visible, onClose, history, selected, onSelect }) 
         <Text style={styles.historyCloseText}>✕</Text>
       </TouchableOpacity>
       {selected != null && (
-        <View style={{ marginBottom: 20 }}>
+        <Animatable.View animation="bounceIn" duration={600} style={{ marginBottom: 20 }}>
           <ScoreCircle score={(selected - 300) / 6} size={120} strokeWidth={14} />
-        </View>
+        </Animatable.View>
       )}
       <Svg width={width} height={height} style={styles.historySvg}>
+        <Defs>
+          <SvgLinearGradient id="historyGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <Stop offset="0%" stopColor="#04ca76" />
+            <Stop offset="16.6%" stopColor="#1cf1b7" />
+            <Stop offset="33.3%" stopColor="#00a6cb" />
+            <Stop offset="50%" stopColor="#1cadf1" />
+            <Stop offset="66.6%" stopColor="#6279f5" />
+            <Stop offset="83.3%" stopColor="#9048f7" />
+            <Stop offset="100%" stopColor="#ae6ef7" />
+          </SvgLinearGradient>
+        </Defs>
         {path && (
           <Polyline points={path} fill="none" stroke="#ae6ef7" strokeWidth={3} />
         )}
@@ -218,17 +231,31 @@ const ScoreHistoryOverlay = ({ visible, onClose, history, selected, onSelect }) 
           const y = h.score == null
             ? height - padding
             : height - padding - ((h.score - 300) / 600) * (height - padding * 2);
+          const display = h.score != null ? Math.round((h.score - 300) / 6) : null;
           return (
-            <Circle
-              key={idx}
-              cx={x}
-              cy={y}
-              r={5}
-              fill="#1cf1b7"
-              stroke="#fff"
-              strokeWidth={2}
-              onPress={() => h.score != null && onSelect(h.score)}
-            />
+            <React.Fragment key={idx}>
+              <Circle
+                cx={x}
+                cy={y}
+                r={7}
+                fill="url(#historyGradient)"
+                stroke="#fff"
+                strokeWidth={2}
+                onPress={() => h.score != null && onSelect(h.score)}
+              />
+              {display != null && (
+                <SvgText
+                  x={x}
+                  y={y - 10}
+                  fontSize="12"
+                  fill="white"
+                  alignmentBaseline="middle"
+                  textAnchor="middle"
+                >
+                  {display}
+                </SvgText>
+              )}
+            </React.Fragment>
           );
         })}
       </Svg>
@@ -1350,7 +1377,8 @@ historyOverlay: {
   backgroundColor: 'rgba(0,0,0,0.6)',
   justifyContent: 'center',
   alignItems: 'center',
-  paddingTop: 40,
+  paddingTop: 80,
+  paddingHorizontal: 20,
 },
 historyClose: {
   position: 'absolute',
@@ -1366,6 +1394,7 @@ historyCloseText: {
 historySvg: {
   backgroundColor: '#1C1E29',
   borderRadius: 12,
+  padding: 12,
 },
 
   
