@@ -9,6 +9,7 @@ const DAILY_GOAL_KEY = 'dailyGoal';
 const LAST_CHECKIN_KEY = 'lastCheckIn';
 const CURRENT_STREAK_KEY = 'currentStreak';
 const LONGEST_STREAK_KEY = 'longestStreak';
+const LAST_CHECKIN_TIME_KEY = 'lastCheckInTime';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -113,19 +114,18 @@ export async function updateMindScore() {
 export async function updateMomentum() {
   try {
     const raw = await AsyncStorage.getItem(MOMENTUM_KEY);
-    const data = raw ? JSON.parse(raw) : { value: 0, last: getDateKey() };
-    const last = new Date(data.last);
-    const now = new Date();
-    const diffDays = Math.floor((now - last) / DAY_MS);
+    const data = raw ? JSON.parse(raw) : { value: 0, last: Date.now() };
+    const now = Date.now();
+    const intervals = Math.floor((now - data.last) / (12 * 60 * 60 * 1000));
     let value = data.value;
-    if (diffDays > 0) {
-      value = Math.max(0, value - diffDays * 20); // decay
+    if (intervals > 0) {
+      value = Math.round(value * Math.pow(0.9, intervals));
     }
     value = Math.min(100, value + 34); // check-in boost
-    await AsyncStorage.setItem(MOMENTUM_KEY, JSON.stringify({
-      value,
-      last: getDateKey()
-    }));
+    await AsyncStorage.setItem(
+      MOMENTUM_KEY,
+      JSON.stringify({ value, last: now })
+    );
     return value;
   } catch (err) {
     console.error('updateMomentum', err);
@@ -173,12 +173,36 @@ export function xpStats(total) {
   return { level, progress };
 }
 
+export function identityLabel(level) {
+  if (level < 5) return 'Explorer';
+  if (level < 10) return 'Thinker';
+  if (level < 20) return 'Philosopher';
+  return 'Sage';
+}
+
+export function rollReward() {
+  const table = [
+    { name: 'Super Insight', chance: 0.05 },
+    { name: 'XP Boost', chance: 0.15 },
+    { name: 'Badge Unlock', chance: 0.05 },
+    { name: 'Streak Freeze Token', chance: 0.03 },
+  ];
+  const r = Math.random();
+  let accum = 0;
+  for (const item of table) {
+    accum += item.chance;
+    if (r < accum) return item.name;
+  }
+  return 'Nothing';
+}
+
 export async function getXP() {
   const raw = await AsyncStorage.getItem(XP_KEY);
   if (!raw) return { xpToday: 0, total: 0, level: 1, progress: 0 };
   const data = JSON.parse(raw);
   const { level, progress } = xpStats(data.total);
-  return { ...data, level, progress };
+  const label = identityLabel(level);
+  return { ...data, level, progress, label };
 }
 
 const DAILY_GOALS = [
@@ -355,12 +379,13 @@ export async function getCurrentScores() {
   ]);
   const xpData = xpStatsRaw ? JSON.parse(xpStatsRaw) : { xpToday: 0, total: 0 };
   const { level, progress } = xpStats(xpData.total);
+  const label = identityLabel(level);
   return {
     mindScore: mindRaw ? JSON.parse(mindRaw).value : 600,
     momentum: momentumRaw ? JSON.parse(momentumRaw).value : 0,
     streakRings: streakRaw ? JSON.parse(streakRaw)[getDateKey()] || {} : {},
     traitXP: traitRaw ? JSON.parse(traitRaw) : {},
-    xp: { ...xpData, level, progress },
+    xp: { ...xpData, level, progress, label },
     dailyGoal: goalRaw ? JSON.parse(goalRaw) : null,
     streak: streakValRaw ? parseInt(streakValRaw, 10) : 0,
     longestStreak: longestRaw ? parseInt(longestRaw, 10) : 0,
@@ -375,10 +400,24 @@ export async function processCheckIn(entry) {
   await updateMindScore();
   await updateMomentum();
   await markEnergyLogged();
-  let xpAmount = 10;
-  if (entry.window === 'checkIn1') xpAmount = 10;
-  else if (entry.window === 'checkIn2') xpAmount = 10;
-  else if (entry.window === 'checkIn3') xpAmount = 15;
+
+  const historyRaw = await AsyncStorage.getItem('checkInHistory');
+  const history = historyRaw ? JSON.parse(historyRaw) : [];
+  const today = getDateKey();
+  const count = history.filter((e) => e.timestamp.startsWith(today)).length;
+  const decay = [1, 0.6, 0.3, 0.05];
+  let xpAmount = 10 * (decay[Math.min(count, 3)] || 0.05);
+
+  const now = Date.now();
+  const lastRaw = await AsyncStorage.getItem(LAST_CHECKIN_TIME_KEY);
+  if (lastRaw && now - parseInt(lastRaw, 10) <= 2 * 60 * 60 * 1000) {
+    xpAmount *= 1.25; // combo bonus
+  }
+  await AsyncStorage.setItem(LAST_CHECKIN_TIME_KEY, now.toString());
+
+  xpAmount = Math.round(xpAmount);
   await updateXP(xpAmount);
   await updateTraitXP(entry.tags || []);
+  const reward = rollReward();
+  return reward;
 }
