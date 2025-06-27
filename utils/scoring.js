@@ -382,3 +382,36 @@ export async function processCheckIn(entry) {
   await updateXP(xpAmount);
   await updateTraitXP(entry.tags || []);
 }
+
+// Return an array of mental scores for the last `days` days. Each item has
+// `{ date, score }` where score may be `null` if there were no check-ins.
+export async function getScoreHistory(days = 7) {
+  try {
+    const historyRaw = await AsyncStorage.getItem('checkInHistory');
+    const history = historyRaw ? JSON.parse(historyRaw) : [];
+
+    const result = [];
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const key = getDateKey(d);
+      const entries = history.filter((e) => e.timestamp.startsWith(key));
+      if (entries.length === 0) {
+        result.push({ date: key, score: null });
+      } else {
+        const avg = Math.round(
+          entries.reduce(
+            (s, e) => s + (e.energy + e.clarity + e.emotion) / 3,
+            0
+          ) / entries.length
+        );
+        const score = 300 + avg * 6; // map 0-100 → 300-900
+        result.push({ date: key, score });
+      }
+    }
+    return result;
+  } catch (err) {
+    console.error('getScoreHistory', err);
+    return [];
+  }
+}

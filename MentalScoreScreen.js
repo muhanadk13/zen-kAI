@@ -18,9 +18,9 @@ import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { generateTodaysInsight } from './utils/generateTodaysInsight'; // gets the functions from this page
 import { getWeeklyMindMirror } from './utils/mindMirror'; // gets the functions from this page
-import { markInsightRead, getCurrentScores, xpForLevel, resetStreakIfNeeded } from './utils/scoring';
+import { markInsightRead, getCurrentScores, xpForLevel, resetStreakIfNeeded, getScoreHistory } from './utils/scoring';
 import { LinearGradient } from 'expo-linear-gradient';
-import Svg, { Circle, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg'; // create circle
+import Svg, { Circle, Defs, Polyline, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg'; // create circle
 import LottieView from 'lottie-react-native'; // Import Lottie
 import { BlurView } from 'expo-blur'; // blur the header
 
@@ -182,6 +182,60 @@ const ScoreCircle = ({ score, size = 170, strokeWidth = 18 }) => {
   );
 };
 
+const ScoreHistoryOverlay = ({ visible, onClose, history, selected, onSelect }) => {
+  if (!visible) return null;
+  const width = 300;
+  const height = 180;
+  const padding = 20;
+  const path = history.length
+    ? history
+        .map((h, idx) => {
+          const x = padding + (idx / (history.length - 1)) * (width - padding * 2);
+          const y = h.score == null
+            ? height - padding
+            : height - padding - ((h.score - 300) / 600) * (height - padding * 2);
+          return `${x},${y}`;
+        })
+        .join(' ')
+    : '';
+
+  return (
+    <View style={styles.historyOverlay}>
+      <TouchableOpacity style={styles.historyClose} onPress={onClose}>
+        <Text style={styles.historyCloseText}>✕</Text>
+      </TouchableOpacity>
+      {selected != null && (
+        <View style={{ marginBottom: 20 }}>
+          <ScoreCircle score={(selected - 300) / 6} size={120} strokeWidth={14} />
+        </View>
+      )}
+      <Svg width={width} height={height} style={styles.historySvg}>
+        {path && (
+          <Polyline points={path} fill="none" stroke="#ae6ef7" strokeWidth={3} />
+        )}
+        {history.map((h, idx) => {
+          const x = padding + (idx / (history.length - 1)) * (width - padding * 2);
+          const y = h.score == null
+            ? height - padding
+            : height - padding - ((h.score - 300) / 600) * (height - padding * 2);
+          return (
+            <Circle
+              key={idx}
+              cx={x}
+              cy={y}
+              r={5}
+              fill="#1cf1b7"
+              stroke="#fff"
+              strokeWidth={2}
+              onPress={() => h.score != null && onSelect(h.score)}
+            />
+          );
+        })}
+      </Svg>
+    </View>
+  );
+};
+
 const OrbitingButtons = ({ size = 170 }) => {
     const navigation = useNavigation();
     const orbitRadius = size / 2 + 35;
@@ -247,6 +301,15 @@ export default function MentalScoreScreen() {
   const [insightRevealed, setInsightRevealed] = useState(false); // Insight reveal state
   const [devMode, setDevMode] = useState(false);
   const tapTracker = useRef({ count: 0, lastTap: 0 });
+  const [historyVisible, setHistoryVisible] = useState(false);
+  const [scoreHistory, setScoreHistory] = useState([]);
+  const [selectedScore, setSelectedScore] = useState(null);
+
+  useEffect(() => {
+    if (historyVisible) {
+      getScoreHistory().then(setScoreHistory);
+    }
+  }, [historyVisible]);
 
   const handleLogoPress = () => { // dev mode
     const now = Date.now(); // current time
@@ -792,7 +855,9 @@ export default function MentalScoreScreen() {
         >
           {/* 🔘 Main Score Circle */}
           <Animatable.View animation="bounceIn" duration={800} style={styles.gaugeContainer}>
-            <ScoreCircle score={displayScore} />
+            <TouchableOpacity activeOpacity={0.9} onPress={() => { setSelectedScore(mindScore); setHistoryVisible(true); }}>
+              <ScoreCircle score={displayScore} />
+            </TouchableOpacity>
             <OrbitingButtons size={170} />
             <Text style={styles.mentalScore}>{displayMindScore}</Text>
           </Animatable.View>
@@ -976,6 +1041,13 @@ export default function MentalScoreScreen() {
             </View>
           )}
         </ScrollView>
+        <ScoreHistoryOverlay
+          visible={historyVisible}
+          onClose={() => setHistoryVisible(false)}
+          history={scoreHistory}
+          selected={selectedScore}
+          onSelect={(s) => setSelectedScore(s)}
+        />
       </LinearGradient>
     </Animatable.View>
   );
@@ -1267,6 +1339,33 @@ metricValue: {
   fontSize: 20,
   fontWeight: '800',
   color: '#FFFFFF',
+},
+
+historyOverlay: {
+  position: 'absolute',
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  backgroundColor: 'rgba(0,0,0,0.6)',
+  justifyContent: 'center',
+  alignItems: 'center',
+  paddingTop: 40,
+},
+historyClose: {
+  position: 'absolute',
+  top: 40,
+  right: 30,
+  zIndex: 2,
+},
+historyCloseText: {
+  fontSize: 32,
+  color: 'red',
+  fontWeight: '800',
+},
+historySvg: {
+  backgroundColor: '#1C1E29',
+  borderRadius: 12,
 },
 
   
