@@ -25,6 +25,8 @@ import Svg, { Circle, Defs, Polyline, Text as SvgText, LinearGradient as SvgLine
 import LottieView from 'lottie-react-native'; // Import Lottie
 import { BlurView } from 'expo-blur'; // blur the header
 
+const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
 const CustomHeader = ({ onLogoPress, devMode, navigation, handleCheckInPress }) => {
   return (
     <BlurView
@@ -185,80 +187,109 @@ const ScoreCircle = ({ score, size = 170, strokeWidth = 18 }) => {
 
 const ScoreHistoryOverlay = ({ visible, onClose, history, selected, onSelect }) => {
   if (!visible) return null;
-  const { width: screenWidth } = Dimensions.get('window');
-  const width = screenWidth * 0.9;
-  const height = 220;
+  const overlayRef = useRef(null);
+  const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+  const cardWidth = screenWidth * 0.88;
+  const cardHeight = screenHeight * 0.75;
+  const chartHeight = cardHeight * 0.45;
   const padding = 24;
+
   const path = history.length
     ? history
         .map((h, idx) => {
-          const x = padding + (idx / (history.length - 1)) * (width - padding * 2);
+          const x = padding + (idx / (history.length - 1)) * (cardWidth - padding * 2);
           const y = h.score == null
-            ? height - padding
-            : height - padding - ((h.score - 300) / 600) * (height - padding * 2);
+            ? chartHeight - padding
+            : chartHeight - padding - ((h.score - 300) / 600) * (chartHeight - padding * 2);
           return `${x},${y}`;
         })
         .join(' ')
     : '';
 
+  const dayLabels = history.map((h) => {
+    const d = new Date(h.date + 'T00:00:00');
+    return DAYS[d.getDay()];
+  });
+
+  const handleClose = () => {
+    overlayRef.current?.fadeOut(200).then(onClose);
+  };
+
   return (
-    <View style={styles.historyOverlay}>
-      <TouchableOpacity style={styles.historyClose} onPress={onClose}>
-        <Text style={styles.historyCloseText}>✕</Text>
-      </TouchableOpacity>
-      {selected != null && (
-        <Animatable.View animation="bounceIn" duration={600} style={{ marginBottom: 20 }}>
-          <ScoreCircle score={(selected - 300) / 6} size={120} strokeWidth={14} />
-        </Animatable.View>
-      )}
-      <Svg width={width} height={height} style={styles.historySvg}>
-        <Defs>
-          <SvgLinearGradient id="historyGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <Stop offset="0%" stopColor="#04ca76" />
-            <Stop offset="16.6%" stopColor="#1cf1b7" />
-            <Stop offset="33.3%" stopColor="#00a6cb" />
-            <Stop offset="50%" stopColor="#1cadf1" />
-            <Stop offset="66.6%" stopColor="#6279f5" />
-            <Stop offset="83.3%" stopColor="#9048f7" />
-            <Stop offset="100%" stopColor="#ae6ef7" />
-          </SvgLinearGradient>
-        </Defs>
-        {path && (
-          <Polyline points={path} fill="none" stroke="#ae6ef7" strokeWidth={3} />
+    <View style={styles.historyOverlay} pointerEvents="box-none">
+      <BlurView intensity={40} tint="dark" style={StyleSheet.absoluteFill} />
+      <Animatable.View
+        ref={overlayRef}
+        animation="fadeInUp"
+        duration={300}
+        style={[styles.historyCard, { width: cardWidth, height: cardHeight }]}
+      >
+        <TouchableOpacity style={styles.historyClose} onPress={handleClose}>
+          <Text style={styles.historyCloseText}>✕</Text>
+        </TouchableOpacity>
+        {selected != null && (
+          <Animatable.View key={selected} animation="bounceIn" duration={600} style={{ marginBottom: 20 }}>
+            <ScoreCircle score={(selected - 300) / 6} size={130} strokeWidth={16} />
+          </Animatable.View>
         )}
-        {history.map((h, idx) => {
-          const x = padding + (idx / (history.length - 1)) * (width - padding * 2);
-          const y = h.score == null
-            ? height - padding
-            : height - padding - ((h.score - 300) / 600) * (height - padding * 2);
-          const display = h.score != null ? Math.round((h.score - 300) / 6) : null;
-          return (
-            <React.Fragment key={idx}>
-              <Circle
-                cx={x}
-                cy={y}
-                r={7}
-                fill="url(#historyGradient)"
-                stroke="#fff"
-                strokeWidth={2}
-                onPress={() => h.score != null && onSelect(h.score)}
-              />
-              {display != null && (
+        <Svg width={cardWidth} height={chartHeight} style={styles.historySvg}>
+          <Defs>
+            <SvgLinearGradient id="historyGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <Stop offset="0%" stopColor="#04ca76" />
+              <Stop offset="16.6%" stopColor="#1cf1b7" />
+              <Stop offset="33.3%" stopColor="#00a6cb" />
+              <Stop offset="50%" stopColor="#1cadf1" />
+              <Stop offset="66.6%" stopColor="#6279f5" />
+              <Stop offset="83.3%" stopColor="#9048f7" />
+              <Stop offset="100%" stopColor="#ae6ef7" />
+            </SvgLinearGradient>
+          </Defs>
+          {path && <Polyline points={path} fill="none" stroke="#ae6ef7" strokeWidth={3} />}
+          {history.map((h, idx) => {
+            const x = padding + (idx / (history.length - 1)) * (cardWidth - padding * 2);
+            const y = h.score == null
+              ? chartHeight - padding
+              : chartHeight - padding - ((h.score - 300) / 600) * (chartHeight - padding * 2);
+            const display = h.score != null ? Math.round((h.score - 300) / 6) : null;
+            return (
+              <React.Fragment key={idx}>
+                <Circle
+                  cx={x}
+                  cy={y}
+                  r={10}
+                  stroke="url(#historyGradient)"
+                  strokeWidth={3}
+                  fill="#1C1E29"
+                  onPress={() => h.score != null && onSelect(h.score)}
+                />
+                <Circle cx={x} cy={y} r={5} fill="#fff" pointerEvents="none" />
+                {display != null && (
+                  <SvgText
+                    x={x}
+                    y={y - 14}
+                    fontSize="12"
+                    fill="white"
+                    alignmentBaseline="middle"
+                    textAnchor="middle"
+                  >
+                    {display}
+                  </SvgText>
+                )}
                 <SvgText
                   x={x}
-                  y={y - 10}
-                  fontSize="12"
-                  fill="white"
-                  alignmentBaseline="middle"
+                  y={chartHeight - padding + 14}
+                  fontSize="10"
+                  fill="#A0A5B9"
+                  alignmentBaseline="hanging"
                   textAnchor="middle"
                 >
-                  {display}
+                  {dayLabels[idx]}
                 </SvgText>
-              )}
-            </React.Fragment>
-          );
-        })}
-      </Svg>
+              </React.Fragment>
+            );
+          })}
+        </Svg>
+      </Animatable.View>
     </View>
   );
 };
@@ -1377,13 +1408,19 @@ historyOverlay: {
   backgroundColor: 'rgba(0,0,0,0.6)',
   justifyContent: 'center',
   alignItems: 'center',
-  paddingTop: 80,
   paddingHorizontal: 20,
+},
+historyCard: {
+  backgroundColor: '#1C1E29',
+  borderRadius: 30,
+  paddingTop: 60,
+  paddingHorizontal: 20,
+  alignItems: 'center',
 },
 historyClose: {
   position: 'absolute',
-  top: 40,
-  right: 30,
+  top: 20,
+  right: 20,
   zIndex: 2,
 },
 historyCloseText: {
