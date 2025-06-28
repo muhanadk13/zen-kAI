@@ -16,6 +16,7 @@ import TestInsightScreen from './TestInsightScreen';
 import HistoryScreen from './HistoryScreen';
 import LoadScreen from './LoadScreen';
 import OnboardingScreen from './OnboardingScreen';
+import ChestScreen from './ChestScreen';
 
 // GPT Reminder Helper
 import { generatePersonalizedReminder } from './utils/generatePersonalizedReminder';
@@ -157,6 +158,7 @@ export default function App() {
         <Stack.Screen name='Onboarding' component={OnboardingScreen} options={{ headerShown: false }} />
         <Stack.Screen name='MentalScore' component={MentalScoreScreen} options={{ headerShown: false }} />
         <Stack.Screen name='CheckIn' component={CheckInScreen} options={{ headerShown: false }} />
+        <Stack.Screen name='Chest' component={ChestScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Reflection" component={ReflectionScreen} options={{ headerShown: false }} />
         <Stack.Screen name="TestInsight" component={TestInsightScreen} />
         <Stack.Screen name="History" component={HistoryScreen} />
