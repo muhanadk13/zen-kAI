@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import * as Animatable from 'react-native-animatable';
 
-const BOOM_SIZE = Math.min(Dimensions.get('window').width, Dimensions.get('window').height) * 0.9;
+const BOOM_SIZE = 220; // Match the chest image dimensions
 
 export default function ChestModal({ visible, onComplete }) {
   const [stage, setStage] = useState('closed');
@@ -45,7 +45,7 @@ export default function ChestModal({ visible, onComplete }) {
               animation={stage === 'closed' ? 'pulse' : undefined}
               iterationCount={stage === 'closed' ? 'infinite' : 1}
               duration={1500}
-              style={[styles.image, stage === 'open' && styles.openGlow]}
+              style={[styles.image, stage === 'open']}
             />
             {stage === 'boom' && (
               <Animatable.Image
@@ -79,18 +79,14 @@ const styles = StyleSheet.create({
     height: BOOM_SIZE,
     resizeMode: 'contain',
   },
-  openGlow: {
-    shadowColor: '#FFD700',
-    shadowOpacity: 0.9,
-    shadowRadius: 20,
-    shadowOffset: { width: 0, height: 0 },
-    elevation: 20,
-  },
+
   absolute: {
     position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+    top: '50%', // Center vertically
+    left: '50%', // Center horizontally
+    transform: [
+      { translateX: -BOOM_SIZE / 2 }, // Adjust horizontal position
+      { translateY: -BOOM_SIZE / 2 }, // Adjust vertical position
+    ],
   },
 });
