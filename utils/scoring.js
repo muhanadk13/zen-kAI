@@ -405,8 +405,8 @@ export async function processCheckIn(entry) {
   const history = historyRaw ? JSON.parse(historyRaw) : [];
   const today = getDateKey();
   const count = history.filter((e) => e.timestamp.startsWith(today)).length;
-  const decay = [1, 0.6, 0.3, 0.05];
-  let xpAmount = 10 * (decay[Math.min(count, 3)] || 0.05);
+  const xpTable = [20, 10, 5, 2]; // diminishing XP rewards
+  let xpAmount = xpTable[Math.min(count - 1, 3)];
 
   const now = Date.now();
   const lastRaw = await AsyncStorage.getItem(LAST_CHECKIN_TIME_KEY);

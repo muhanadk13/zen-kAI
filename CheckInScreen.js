@@ -23,6 +23,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import TagSelectorModal from './TagSelectorModal';
+import RewardModal from './RewardModal';
 import { processCheckIn } from './utils/scoring';
 
 
@@ -76,6 +77,8 @@ export default function CheckInScreen() {
   const [note, setNote] = useState('');
   const [selectedTags, setSelectedTags] = useState([]);
   const [tagModalVisible, setTagModalVisible] = useState(false);
+  const [reward, setReward] = useState(null);
+  const [rewardVisible, setRewardVisible] = useState(false);
   const scrollRef = useRef();
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const milestones = [0, 25, 50, 75, 100];
@@ -137,7 +140,9 @@ export default function CheckInScreen() {
       const history = historyRaw ? JSON.parse(historyRaw) : []; // check if history exists, if not make empty array
       history.push(entry); // add the entry to history
       await AsyncStorage.setItem('checkInHistory', JSON.stringify(history)); // stringify and save the history with the new entry
-      await processCheckIn(entry); // update scores and momentum
+      const rewardName = await processCheckIn(entry); // update scores and momentum
+      setReward(rewardName);
+      setRewardVisible(true);
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); // success haptic
       if (window === 'checkIn3') { // if we are on check in 3
         navigation.navigate('MentalScore'); // return to main screen
@@ -251,6 +256,11 @@ export default function CheckInScreen() {
         onClose={() => setTagModalVisible(false)}
         selectedTags={selectedTags}
         toggleTag={toggleTag}
+      />
+      <RewardModal
+        visible={rewardVisible}
+        reward={reward}
+        onClose={() => setRewardVisible(false)}
       />
     </LinearGradient>
     </Animatable.View>
