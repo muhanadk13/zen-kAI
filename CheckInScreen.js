@@ -23,6 +23,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import TagSelectorModal from './TagSelectorModal';
+import ChestModal from './ChestModal';
 import RewardModal from './RewardModal';
 import { processCheckIn } from './utils/scoring';
 
@@ -79,6 +80,8 @@ export default function CheckInScreen() {
   const [tagModalVisible, setTagModalVisible] = useState(false);
   const [reward, setReward] = useState(null);
   const [rewardVisible, setRewardVisible] = useState(false);
+  const [chestVisible, setChestVisible] = useState(false);
+  const [savedWindow, setSavedWindow] = useState(null);
   const scrollRef = useRef();
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const milestones = [0, 25, 50, 75, 100];
@@ -142,7 +145,8 @@ export default function CheckInScreen() {
       await AsyncStorage.setItem('checkInHistory', JSON.stringify(history)); // stringify and save the history with the new entry
       const rewardName = await processCheckIn(entry); // update scores and momentum
       setReward(rewardName);
-      setRewardVisible(true);
+      setSavedWindow(window);
+      setChestVisible(true);
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); // success haptic
       if (window === 'checkIn3') { // if we are on check in 3
         navigation.navigate('MentalScore'); // return to main screen
@@ -261,6 +265,25 @@ export default function CheckInScreen() {
         visible={rewardVisible}
         reward={reward}
         onClose={() => setRewardVisible(false)}
+      />
+       <ChestModal
+        visible={chestVisible}
+        onComplete={() => {
+          setChestVisible(false);
+          setRewardVisible(true);
+        }}
+      />
+      <RewardModal
+        visible={rewardVisible}
+        reward={reward}
+        onClose={() => {
+          setRewardVisible(false);
+          if (savedWindow === 'checkIn3') {
+            navigation.navigate('MentalScore');
+          } else {
+            navigation.goBack();
+          }
+        }}
       />
     </LinearGradient>
     </Animatable.View>
