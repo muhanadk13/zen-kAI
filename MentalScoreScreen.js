@@ -24,7 +24,7 @@ import Svg, { Circle, Defs, LinearGradient as SvgLinearGradient, Stop } from 're
 import LottieView from 'lottie-react-native'; // Import Lottie
 import { BlurView } from 'expo-blur'; // blur the header
 
-const CustomHeader = ({ onLogoPress, devMode, navigation, handleCheckInPress, label }) => {
+const CustomHeader = ({ onLogoPress, devMode, navigation, handleCheckInPress }) => {
   return (
     <BlurView
       tint="dark"
@@ -81,7 +81,6 @@ const CustomHeader = ({ onLogoPress, devMode, navigation, handleCheckInPress, la
             />
           </TouchableOpacity>
         </View>
-        {label ? <Text style={styles.identityLabelHeader}>{label}</Text> : null}
       </View>
     </BlurView>
   );
@@ -622,16 +621,9 @@ export default function MentalScoreScreen() {
     // Trigger the check-in animation and navigation
     checkInButtonRef.current?.rubberBand(600); // animate the checkin button
     await Haptics.selectionAsync(); // wait until the haptics done then move on
-    const today = new Date().toISOString().split('T')[0]; // get today's date
     const window = getCheckInWindow(); // get the check-in window from the function
-    const key = `${today}-${window}`; // create a passcode so that it is easy to find with functions
-    const existing = await AsyncStorage.getItem(key); // check if there is already an entry for today and this window
-    if (!existing) { // if there is no entry
-      navigation.navigate('CheckIn', { window }); // navigate to the check-in screen
-      await calculateStreak(); // then run the calculate streak function
-    } else { 
-      Alert.alert('Already Checked In', 'You already completed this check-in.'); // if you already check in then this pops up
-    }
+    navigation.navigate('CheckIn', { window }); // always navigate
+    await calculateStreak();
   };
 
   //DEV
@@ -767,7 +759,6 @@ export default function MentalScoreScreen() {
           devMode={devMode}
           navigation={navigation}
           handleCheckInPress={handleCheckInPress}
-          label={xp.label}
         />
   
         {/* 🎉 Confetti Animation */}
@@ -1196,13 +1187,6 @@ const styles = StyleSheet.create({
     color: '#B48DFF',
     fontWeight: '700',
     textAlign: 'center',
-  },
-  identityLabelHeader: {
-    position: 'absolute',
-    bottom: 4,
-    alignSelf: 'center',
-    color: '#B48DFF',
-    fontWeight: '700',
   },
   nearMiss: {
     marginTop: 4,

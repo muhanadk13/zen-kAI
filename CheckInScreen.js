@@ -128,16 +128,11 @@ export default function CheckInScreen() {
 
   const handleSave = async () => { // save the check-in
     const timestamp = new Date().toISOString(); // current time in ISO format
-    const today = timestamp.split('T')[0]; // only get data
     const window = route.params?.window || getCheckInWindow(); // get the window from params or determine it
     const entry = { energy, clarity, emotion, note, window, timestamp, tags: selectedTags }; // create the entry object (default values)
 
     try {
-      const key = `${today}-${window}`; // unique key for today and window
-      const existing = await AsyncStorage.getItem(key); // check if already exists
-      if (existing) return Alert.alert('Already Checked In', `You've already completed ${window}.`); // if exists, alert and return
-
-      await AsyncStorage.setItem(key, JSON.stringify(entry)); // save with the key then stringify the entry
+      await AsyncStorage.setItem(`${timestamp}`, JSON.stringify(entry)); // save each entry by timestamp
       const historyRaw = await AsyncStorage.getItem('checkInHistory'); // get the check in history
       const history = historyRaw ? JSON.parse(historyRaw) : []; // check if history exists, if not make empty array
       history.push(entry); // add the entry to history
