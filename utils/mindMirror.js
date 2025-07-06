@@ -1,6 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import { OPENAI_API_KEY } from './apiKey';
+import { OPENAI_API_KEY } from '@env';
+
+const apiKey = OPENAI_API_KEY;
+
 
 // Default prompt for generating the weekly MindMirror. Modify as needed.
 export const WEEKLY_MINDMIRROR_PROMPT = `You are a weekly mental performance coach for ZenKai. Generate a Weekly MindMirror report that feels like positive therapy. Use this format:
