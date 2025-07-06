@@ -19,7 +19,10 @@ import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import * as Animatable from 'react-native-animatable';
-import { OPENAI_API_KEY } from './utils/apiKey';
+import { OPENAI_API_KEY } from '@env';
+
+const apiKey = OPENAI_API_KEY;
+
 import { useFocusEffect } from '@react-navigation/native';
 
 

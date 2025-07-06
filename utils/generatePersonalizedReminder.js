@@ -1,5 +1,8 @@
 import axios from 'axios';
-import { OPENAI_API_KEY } from './apiKey';
+import { OPENAI_API_KEY } from '@env';
+
+const apiKey = OPENAI_API_KEY;
+
 
 export async function generatePersonalizedReminder(window) {
   const labelMap = {

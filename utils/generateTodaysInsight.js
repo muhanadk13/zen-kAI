@@ -1,6 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import { OPENAI_API_KEY } from './apiKey';
+import { OPENAI_API_KEY } from '@env';
+
+const apiKey = OPENAI_API_KEY;
+
 
 // Function to generate Today's Insight using GPT
 export async function generateTodaysInsight(metrics) {

@@ -182,19 +182,26 @@ export function identityLabel(level) {
 
 export function rollReward() {
   const table = [
-    { name: 'Super Insight', chance: 0.05 },
-    { name: 'XP Boost', chance: 0.15 },
-    { name: 'Badge Unlock', chance: 0.05 },
-    { name: 'Streak Freeze Token', chance: 0.03 },
+    { name: '✨ Small XP Boost', chance: 0.3 },
+    { name: '💡 Insight Boost', chance: 0.25 },
+    { name: '🔥 Streak Freeze', chance: 0.15 },
+    { name: '🏅 Badge Unlock', chance: 0.1 },
+    { name: '🚀 Mega XP Boost', chance: 0.07 },
+    { name: '🎯 Focus Booster', chance: 0.05 },
+    { name: '💎 Golden Reflection', chance: 0.03 },
+    { name: '🎁 Mystery Jackpot', chance: 0.02 },
   ];
+
   const r = Math.random();
   let accum = 0;
   for (const item of table) {
     accum += item.chance;
     if (r < accum) return item.name;
   }
-  return 'Nothing';
+  // Fallback safety — mathematically unreachable but safe
+  return '✨ Small XP Boost';
 }
+
 
 export async function getXP() {
   const raw = await AsyncStorage.getItem(XP_KEY);
