@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import * as Animatable from 'react-native-animatable';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import requireAuth from './zenkai-backend/middleware/authMiddleware';
 
 function formatTime(iso) {
   const d = new Date(iso);
@@ -68,9 +69,8 @@ export default function HistoryScreen() {
   useEffect(() => {
     const load = async () => {
       try {
-        const raw = await AsyncStorage.getItem('checkInHistory');
-        const history = raw ? JSON.parse(raw) : [];
-
+        const token = await AsyncStorage.getItems('token');
+        
         const grouped = {};
         history.forEach((e) => {
           const day = e.timestamp.split('T')[0];
