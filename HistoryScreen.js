@@ -1,146 +1,148 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import * as Animatable from 'react-native-animatable';
+import jwtDecode from 'jwt-decode';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import requireAuth from './zenkai-backend/middleware/authMiddleware';
 
-function formatTime(iso) {
-  const d = new Date(iso);
-  return d.toTimeString().slice(0, 5);
-}
+const formatTime = (isoString) => {
+  const date = new Date(isoString);
+  return date.toTimeString().slice(0, 5);
+};
 
-function calcFocus(clarity, energy) {
+const calculateFocus = (clarity, energy) => {
   return Math.round(0.6 * clarity + 0.4 * energy);
-}
+};
 
-function formatCompiledHistory(days) {
-  const lines = [];
+const compileHistory = (days) => {
+  return days.map((day, idx) => {
+    const header = `Day ${day.date}`;
+    const entries = day.entries;
 
-  days.forEach((day, idx) => {
-    lines.push(`Day ${day.date}`);
     if (idx < 7) {
-      if (day.entries.length > 0) {
-        [...day.entries]
-          .sort((a, b) => a.window.localeCompare(b.window))
-          .forEach((e) => {
-            const focus = calcFocus(e.clarity, e.energy);
-            lines.push(`  - ${e.window} @ ${formatTime(e.timestamp)}`);
-            lines.push(`    Today's Metrics (${e.window} check-in):`);
-            lines.push(`      - Energy: ${e.energy}% ⚡`);
-            lines.push(`      - Clarity: ${e.clarity}% 💡`);
-            lines.push(`      - Emotion: ${e.emotion}% 💚`);
-            lines.push(`      - Focus: ${focus}% 🎯`);
-            lines.push(`      - Mental Score: ${focus}%`);
-            lines.push(`      - Note: ${e.note || 'No note provided.'}`);
-          });
-      } else {
-        lines.push(`  No check-ins`);
-      }
+      if (entries.length === 0) return `${header}\n  No check-ins\n`;
+
+      const details = entries
+        .sort((a, b) => a.window.localeCompare(b.window))
+        .map((e) => {
+          const focus = calculateFocus(e.clarity, e.energy);
+          return [
+            `  - ${e.window} @ ${formatTime(e.timestamp)}`,
+            `    Today's Metrics:`,
+            `      - Energy: ${e.energy}% ⚡`,
+            `      - Clarity: ${e.clarity}% 💡`,
+            `      - Emotion: ${e.emotion}% 💚`,
+            `      - Focus: ${focus}% 🎯`,
+            `      - Mental Score: ${focus}%`,
+            `      - Note: ${e.note || 'No note provided.'}`,
+          ].join('\n');
+        })
+        .join('\n');
+
+      return `${header}\n${details}\n`;
     } else {
-      const length = day.entries.length;
       const avg = (key) =>
-        length
-          ? Math.round(day.entries.reduce((s, e) => s + (e[key] || 0), 0) / length)
+        entries.length
+          ? Math.round(entries.reduce((sum, e) => sum + (e[key] || 0), 0) / entries.length)
           : 'N/A';
-      const focus = length
+
+      const avgFocus = entries.length
         ? Math.round(
-            day.entries.reduce(
-              (s, e) => s + calcFocus(e.clarity || 0, e.energy || 0),
+            entries.reduce(
+              (sum, e) => sum + calculateFocus(e.clarity || 0, e.energy || 0),
               0
-            ) / length
+            ) / entries.length
           )
         : 'N/A';
-      const tagSummary = [...new Set(day.entries.flatMap((e) => e.tags || []))];
-      lines.push(
-        `  Avg Energy ${avg('energy')}, Clarity ${avg('clarity')}, Emotion ${avg(
-          'emotion'
-        )}, Focus ${focus} — Tags: ${tagSummary.length ? tagSummary.join(', ') : 'None'}`
-      );
-    }
-    lines.push('');
-  });
 
-  return lines.join('\n');
-}
+      const tags = [...new Set(entries.flatMap((e) => e.tags || []))].join(', ') || 'None';
+
+      return `${header}\n  Avg Energy ${avg('energy')}, Clarity ${avg('clarity')}, Emotion ${avg('emotion')}, Focus ${avgFocus} — Tags: ${tags}\n`;
+    }
+  }).join('\n');
+};
 
 export default function HistoryScreen() {
   const [days, setDays] = useState([]);
 
   useEffect(() => {
-    const load = async () => {
+    const loadHistory = async () => {
       try {
-        const token = await AsyncStorage.getItems('token');
-        
+        const token = await AsyncStorage.getItem('token');
+        if (!token) return;
+
+        const decoded = jwtDecode(token); // Future use if needed
+        const historyRaw = await AsyncStorage.getItem('history');
+        const history = historyRaw ? JSON.parse(historyRaw) : [];
+
         const grouped = {};
-        history.forEach((e) => {
-          const day = e.timestamp.split('T')[0];
+        history.forEach((entry) => {
+          const day = entry.timestamp.split('T')[0];
           if (!grouped[day]) grouped[day] = [];
-          grouped[day].push(e);
+          grouped[day].push(entry);
         });
 
-        const result = [];
-        for (let i = 0; i < 30; i++) {
-          const d = new Date();
-          d.setDate(d.getDate() - i);
-          const key = d.toISOString().split('T')[0];
-          result.push({ date: key, entries: grouped[key] || [] });
-        }
+        const daysArray = Array.from({ length: 30 }, (_, i) => {
+          const date = new Date();
+          date.setDate(date.getDate() - i);
+          const dateString = date.toISOString().split('T')[0];
+          return { date: dateString, entries: grouped[dateString] || [] };
+        });
 
-        const compiled = formatCompiledHistory(result);
+        const compiled = compileHistory(daysArray);
         await AsyncStorage.setItem('compiledHistory', compiled);
-        console.log('✅ Compiled check-in history saved:');
-        console.log(compiled);
+        console.log('✅ Compiled check-in history saved:\n', compiled);
 
-        setDays(result);
-      } catch (err) {
-        console.error('❌ Error loading check-in history', err);
+        setDays(daysArray);
+      } catch (error) {
+        console.error('❌ Failed to load history', error);
       }
     };
 
-    load();
+    loadHistory();
   }, []);
 
   return (
-    <Animatable.View animation="fadeIn" duration={400} style={{ flex: 1 }}>
-    <ScrollView contentContainerStyle={styles.container}>
-      {days.map((day, idx) => (
-        <View key={day.date} style={styles.dayBox}>
-          <Text style={styles.dayHeader}>Day {day.date}</Text>
-          {idx < 7 ? (
-            day.entries.length > 0 ? (
-              [...day.entries]
-                .sort((a, b) => a.window.localeCompare(b.window))
-                .map((e) => (
-                  <View key={e.timestamp} style={styles.entry}>
-                    <Text style={styles.entryText}>
-                      - {e.window} @ {formatTime(e.timestamp)}: Energy {e.energy}, Clarity {e.clarity}, Emotion {e.emotion}
-                    </Text>
-                    <Text style={styles.note}>Note: {e.note || 'None'}</Text>
-                    <Text style={styles.tags}>
-                      Tags: {e.tags && e.tags.length ? e.tags.join(', ') : 'None'}
-                    </Text>
-                  </View>
-                ))
+    <Animatable.View animation="fadeIn" duration={400} style={styles.flexContainer}>
+      <ScrollView contentContainerStyle={styles.container}>
+        {days.map((day, idx) => (
+          <View key={day.date} style={styles.dayBox}>
+            <Text style={styles.dayHeader}>Day {day.date}</Text>
+            {idx < 7 ? (
+              day.entries.length > 0 ? (
+                day.entries
+                  .sort((a, b) => a.window.localeCompare(b.window))
+                  .map((entry) => (
+                    <View key={entry.timestamp} style={styles.entry}>
+                      <Text style={styles.entryText}>
+                        - {entry.window} @ {formatTime(entry.timestamp)}: Energy {entry.energy}, Clarity {entry.clarity}, Emotion {entry.emotion}
+                      </Text>
+                      <Text style={styles.note}>Note: {entry.note || 'None'}</Text>
+                      <Text style={styles.tags}>Tags: {entry.tags?.join(', ') || 'None'}</Text>
+                    </View>
+                  ))
+              ) : (
+                <Text style={styles.noData}>No check-ins</Text>
+              )
             ) : (
-              <Text style={styles.noData}>No check-ins</Text>
-            )
-          ) : (
-            <Text style={styles.avgText}>
-              Avg Energy {day.entries.length ? Math.round(day.entries.reduce((s, e) => s + (e.energy || 0), 0) / day.entries.length) : 'N/A'},
-              Clarity {day.entries.length ? Math.round(day.entries.reduce((s, e) => s + (e.clarity || 0), 0) / day.entries.length) : 'N/A'},
-              Emotion {day.entries.length ? Math.round(day.entries.reduce((s, e) => s + (e.emotion || 0), 0) / day.entries.length) : 'N/A'},
-              Focus {day.entries.length ? Math.round(day.entries.reduce((s, e) => s + calcFocus(e.clarity || 0, e.energy || 0), 0) / day.entries.length) : 'N/A'} —
-              Tags: {day.entries.length ? [...new Set(day.entries.flatMap(e => e.tags || []))].join(', ') || 'None' : 'N/A'}
-            </Text>
-          )}
-        </View>
-      ))}
-    </ScrollView>
+              <Text style={styles.avgText}>
+                Avg Energy {day.entries.length ? Math.round(day.entries.reduce((s, e) => s + (e.energy || 0), 0) / day.entries.length) : 'N/A'},
+                Clarity {day.entries.length ? Math.round(day.entries.reduce((s, e) => s + (e.clarity || 0), 0) / day.entries.length) : 'N/A'},
+                Emotion {day.entries.length ? Math.round(day.entries.reduce((s, e) => s + (e.emotion || 0), 0) / day.entries.length) : 'N/A'},
+                Focus {day.entries.length ? Math.round(day.entries.reduce((s, e) => s + calculateFocus(e.clarity || 0, e.energy || 0), 0) / day.entries.length) : 'N/A'} —
+                Tags: {day.entries.length ? [...new Set(day.entries.flatMap(e => e.tags || []))].join(', ') || 'None' : 'N/A'}
+              </Text>
+            )}
+          </View>
+        ))}
+      </ScrollView>
     </Animatable.View>
   );
 }
 
 const styles = StyleSheet.create({
+  flexContainer: {
+    flex: 1,
+  },
   container: {
     padding: 20,
     backgroundColor: '#F2F2F7',
