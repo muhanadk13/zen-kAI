@@ -7,6 +7,7 @@ import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import jwtDecode from 'jwt-decode';
 
 // Screens
 import MentalScoreScreen from './MentalScoreScreen';
@@ -17,6 +18,7 @@ import HistoryScreen from './HistoryScreen';
 import LoadScreen from './LoadScreen';
 import OnboardingScreen from './OnboardingScreen';
 import ChestScreen from './ChestScreen';
+import LoginScreen from './LoginScreen';
 
 // GPT Reminder Helper
 import { generatePersonalizedReminder } from './utils/generatePersonalizedReminder';
@@ -34,6 +36,31 @@ const Stack = createNativeStackNavigator();
 export default function App() {
   const navigationRef = useRef(null); // this will allow us to navigate no matter the screen
 
+  useEffect(() => {
+    const checkToken = async () => {
+        const rawToken = await AsyncStorage.getItem('token');
+        if (!rawToken) {
+            navigationRef.current?.replace('LoginScreen');
+            return;
+        }
+
+        try {
+            const decoded = jwtDecode(rawToken);
+            const nowInSeconds = Date.now() / 1000;
+
+            if (decoded.exp > nowInSeconds) {
+                navigationRef.current?.replace('MentalScore');
+            } else {
+                navigationRef.current?.replace('LoginScreen');
+            }
+        } catch (err) {
+            navigationRef.current?.replace('LoginScreen');
+        } 
+    };
+
+    checkToken();
+  },[]);
+  
   useEffect(() => {
     (async () => {
       const done = await AsyncStorage.getItem('onboardingComplete');
