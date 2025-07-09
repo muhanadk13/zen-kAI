@@ -28,6 +28,7 @@ import Slider from '@react-native-community/slider';
 import { BlurView } from 'expo-blur';
 import { generatePersonalizedReminder } from './utils/generatePersonalizedReminder';
 import * as Animatable from 'react-native-animatable';
+import jwtDecode from 'jwt-decode';
 
 
 function formatTime(date) {
@@ -181,10 +182,23 @@ const interpolatedGlow = glowAnim.interpolate({
   
     setIsLoading(false);
 
-    // After onboarding, show Login if no token is saved yet
+    // After onboarding, show Login if no valid token is saved yet
     const token = await AsyncStorage.getItem('token');
-    const nextScreen = token ? 'MentalScore' : 'LoginScreen';
-    navigation.reset({ index: 0, routes: [{ name: nextScreen }] });
+
+    if (token) {
+      try {
+        const { exp } = jwtDecode(token);
+        if (exp * 1000 > Date.now()) {
+          navigation.reset({ index: 0, routes: [{ name: 'MentalScore' }] });
+          return;
+        }
+        await AsyncStorage.removeItem('token');
+      } catch {
+        await AsyncStorage.removeItem('token');
+      }
+    }
+
+    navigation.reset({ index: 0, routes: [{ name: 'LoginScreen' }] });
   };
   
 

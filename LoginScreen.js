@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { TextInput, View, StyleSheet, Text } from 'react-native';
+import React, { useState } from 'react';
+import { TextInput, View, StyleSheet, Text, ActivityIndicator } from 'react-native';
 import { Button } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
+
+const API_URL = 'http://localhost:4000';
 
 export default function LoginScreen() {
   console.log("🟢 LoginScreen rendered");
@@ -11,14 +13,28 @@ export default function LoginScreen() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  useEffect(() => {
-    console.log("✅ LoginScreen useEffect hit");
-  }, []);
+
+  const validate = () => {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError('Enter a valid email');
+      return false;
+    }
+    if (!password) {
+      setError('Password is required');
+      return false;
+    }
+    return true;
+  };
 
   const handleLogin = async () => {
+    if (!validate()) return;
+    setLoading(true);
+    setError('');
     try {
-      const res = await fetch('http://192.168.0.87:4000/api/auth/login', {
+      const res = await fetch(`${API_URL}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -26,19 +42,23 @@ export default function LoginScreen() {
         body: JSON.stringify({ email, password })
       });
 
+      if (res.status === 401) {
+        setError('Invalid email or password');
+        return;
+      }
       if (!res.ok) {
-        console.error("Login failed");
+        setError('Server error, try again');
         return;
       }
 
       const data = await res.json();
       await AsyncStorage.setItem('token', data.token);
-      console.log("✅ Token saved!", data.token);
 
-      // Go to main app after successful login
       navigation.reset({ index: 0, routes: [{ name: 'MentalScore' }] });
     } catch (err) {
-      console.error("❌ Login error:", err);
+      setError('Server error, try again');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -60,10 +80,10 @@ export default function LoginScreen() {
         onChangeText={setPassword}
         value={password}
       />
-      <Button mode="contained" onPress={handleLogin}>
-        Log In
+      {error ? <Text style={styles.error}>{error}</Text> : null}
+      <Button mode="contained" onPress={handleLogin} disabled={loading}>
+        {loading ? <ActivityIndicator color="#fff" /> : 'Log In'}
       </Button>
-      <Text style={styles.footer}>LOGIN SCREEN</Text>
     </View>
   );
 }
@@ -87,9 +107,9 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderRadius: 6,
   },
-  footer: {
-    marginTop: 20,
+  error: {
+    color: 'red',
+    marginBottom: 12,
     textAlign: 'center',
-    fontSize: 16,
   },
 });
