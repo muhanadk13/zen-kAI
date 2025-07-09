@@ -29,6 +29,8 @@
     "expo-linear-gradient": "~14.1.5",
     "expo-notifications": "~0.31.3",
     "expo-status-bar": "~2.2.3",
+    "express-rate-limit": "^7.5.1",
+    "express-validator": "^7.2.1",
     "jwt-decode": "^4.0.0",
     "lottie-react-native": "7.2.2",
     "react": "19.0.0",
