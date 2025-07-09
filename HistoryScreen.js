@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import * as Animatable from 'react-native-animatable';
-import jwtDecode from 'jwt-decode';
+import jwt_decode from 'jwt-decode';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const formatTime = (isoString) => {
@@ -70,7 +70,7 @@ export default function HistoryScreen() {
         const token = await AsyncStorage.getItem('token');
         if (!token) return;
 
-        const decoded = jwtDecode(token); // Future use if needed
+        const decoded = jwt_decode(token); // Future use if needed
         const historyRaw = await AsyncStorage.getItem('history');
         const history = historyRaw ? JSON.parse(historyRaw) : [];
 
