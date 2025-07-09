@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import React, { useEffect, useState, useLayoutEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import * as Animatable from 'react-native-animatable';
 import decodeToken from './utils/decodeToken';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -63,6 +64,22 @@ const compileHistory = (days) => {
 
 export default function HistoryScreen() {
   const [days, setDays] = useState([]);
+  const navigation = useNavigation();
+
+  const handleLogout = async () => {
+    await AsyncStorage.removeItem('token');
+    navigation.reset({ index: 0, routes: [{ name: 'LoginScreen' }] });
+  };
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity onPress={handleLogout}>
+          <Text style={{ color: '#646DFF' }}>Logout</Text>
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation]);
 
   useEffect(() => {
     const loadHistory = async () => {
@@ -104,10 +121,13 @@ export default function HistoryScreen() {
   return (
     <Animatable.View animation="fadeIn" duration={400} style={styles.flexContainer}>
       <ScrollView contentContainerStyle={styles.container}>
-        {days.map((day, idx) => (
-          <View key={day.date} style={styles.dayBox}>
-            <Text style={styles.dayHeader}>Day {day.date}</Text>
-            {idx < 7 ? (
+        {days.every((d) => d.entries.length === 0) ? (
+          <Text style={styles.noData}>No check-ins yet</Text>
+        ) : (
+          days.map((day, idx) => (
+            <View key={day.date} style={styles.dayBox}>
+              <Text style={styles.dayHeader}>Day {day.date}</Text>
+              {idx < 7 ? (
               day.entries.length > 0 ? (
                 day.entries
                   .sort((a, b) => a.window.localeCompare(b.window))
@@ -133,7 +153,8 @@ export default function HistoryScreen() {
               </Text>
             )}
           </View>
-        ))}
+          ))
+        )}
       </ScrollView>
     </Animatable.View>
   );

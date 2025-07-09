@@ -15,7 +15,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import * as Animatable from 'react-native-animatable';
 
-const API_URL = 'https://zen-kai-production.up.railway.app';
+import { API_URL } from '@env';
+const BACKEND_URL = API_URL || 'https://zen-kai-production.up.railway.app';
 
 export default function LoginScreen() {
   const navigation = useNavigation();
@@ -47,7 +48,7 @@ export default function LoginScreen() {
     setError('');
     try {
       const endpoint = isSignup ? 'signup' : 'login';
-      const res = await fetch(`${API_URL}/api/auth/${endpoint}`, {
+      const res = await fetch(`${BACKEND_URL}/api/auth/${endpoint}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

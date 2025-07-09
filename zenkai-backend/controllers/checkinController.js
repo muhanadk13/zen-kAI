@@ -1,6 +1,6 @@
 const Checkin = require('../models/Checkin');
 
-exports.checkin = async (req, res) => {
+exports.checkin = async (req, res, next) => {
   const { energy, clarity, emotion, note } = req.body;
 
   try {
@@ -17,15 +17,15 @@ exports.checkin = async (req, res) => {
       data: newCheckin,
     });
   } catch (err) {
-    res.status(500).json({ error: 'Check-in failed' });
+    next(err);
   }
 };
 
-exports.history = async (req, res) => {
+exports.history = async (req, res, next) => {
   try {
     const history = await Checkin.find({ userId: req.userId }).sort({ createdAt: -1 });
     res.status(200).json({ success: true, history });
   } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch history' });
+    next(err);
   }
 };

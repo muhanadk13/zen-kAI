@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 const { validationResult } = require('express-validator');
 const User = require('../models/User');
 
-exports.signup = async (req, res) => {
+exports.signup = async (req, res, next) => {
   // ✅ 1. Validate request
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -31,12 +31,11 @@ exports.signup = async (req, res) => {
 
     res.status(201).json({ token });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Signup failed' });
+    next(err);
   }
 };
 
-exports.login = async (req, res) => {
+exports.login = async (req, res, next) => {
   console.log("✅ Login route hit");
   console.log("🔍 req.body:", req.body);
 
@@ -76,18 +75,17 @@ exports.login = async (req, res) => {
     res.status(200).json({ token, user: { id: user._id, email: user.email } });
 
   } catch (err) {
-    console.error("🔥 LOGIN ERROR:", err.stack);
-    res.status(500).json({ error: 'Server error, try again' });
+    next(err);
   }
 };
 
 
-exports.verify = async (req, res) => {
+exports.verify = async (req, res, next) => {
   try {
     const user = await User.findById(req.userId).select('email');
     if (!user) return res.status(401).json({ valid: false });
     res.json({ valid: true, user: { id: user._id, email: user.email } });
   } catch (err) {
-    res.status(500).json({ valid: false });
+    next(err);
   }
 };

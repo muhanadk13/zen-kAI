@@ -8,6 +8,7 @@ import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import decodeToken from './utils/decodeToken';
+import { API_URL } from '@env';
 
 // Screens
 import MentalScoreScreen from './MentalScoreScreen';
@@ -38,38 +39,35 @@ export default function App() {
   const [initialScreen, setInitialScreen] = useState(null);
 
 
+    const BACKEND_URL = API_URL || 'https://zen-kai-production.up.railway.app';
+
     const checkToken = async () => {
       const token = await AsyncStorage.getItem('token');
       const onboardingComplete = await AsyncStorage.getItem('onboardingComplete');
-      console.log("🚀 Token:", token);
-      console.log("✅ Onboarding complete:", onboardingComplete);
-  
+
       if (!token) {
-        console.log("🔑 No token found. Redirecting...");
         if (onboardingComplete) {
-          console.log("reaching the login");
           navigationRef.current?.dispatch(StackActions.replace('LoginScreen'));
         } else {
           navigationRef.current?.dispatch(StackActions.replace('Onboarding'));
         }
         return;
       }
+
       try {
-        const decoded = decodeToken(token);
-        console.log("🔓 Decoded token:", decoded);
-        const nowInSeconds = Date.now() / 1000;
-  
-        if (decoded.exp > nowInSeconds) {
-          console.log("✅ Token is valid. Going to MentalScore...");
+        const res = await fetch(`${BACKEND_URL}/api/auth/verify`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (res.ok) {
           await initializeNotifications();
           navigationRef.current?.dispatch(StackActions.replace('MentalScore'));
         } else {
-          console.log("❌ Token expired. Removing and going to Login...");
           await AsyncStorage.removeItem('token');
           navigationRef.current?.dispatch(StackActions.replace('LoginScreen'));
         }
-      } catch (err) {
-        console.error("❌ Token decode failed:", err);
+      } catch {
+        await AsyncStorage.removeItem('token');
         navigationRef.current?.dispatch(StackActions.replace('LoginScreen'));
       }
     };

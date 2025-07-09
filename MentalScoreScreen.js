@@ -24,7 +24,7 @@ import Svg, { Circle, Defs, LinearGradient as SvgLinearGradient, Stop } from 're
 import LottieView from 'lottie-react-native'; // Import Lottie
 import { BlurView } from 'expo-blur'; // blur the header
 
-const CustomHeader = ({ onLogoPress, devMode, navigation, handleCheckInPress }) => {
+const CustomHeader = ({ onLogoPress, devMode, navigation, handleCheckInPress, onLogout }) => {
   return (
     <BlurView
       tint="dark"
@@ -58,6 +58,13 @@ const CustomHeader = ({ onLogoPress, devMode, navigation, handleCheckInPress }) 
               resizeMode="contain"
             />
           )}
+        </View>
+
+        {/* Logout button */}
+        <View style={{ position: 'absolute', right: 20, top: 10 }}>
+          <TouchableOpacity onPress={onLogout}>
+            <Text style={{ color: '#fff' }}>Logout</Text>
+          </TouchableOpacity>
         </View>
 
         {/* Right: Check-In */}
@@ -626,6 +633,11 @@ export default function MentalScoreScreen() {
     await calculateStreak();
   };
 
+  const handleLogout = async () => {
+    await AsyncStorage.removeItem('token');
+    navigation.reset({ index: 0, routes: [{ name: 'LoginScreen' }] });
+  };
+
   //DEV
   const resetCheckIn3 = async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); // give haptic before starting
@@ -759,6 +771,7 @@ export default function MentalScoreScreen() {
           devMode={devMode}
           navigation={navigation}
           handleCheckInPress={handleCheckInPress}
+          onLogout={handleLogout}
         />
   
         {/* 🎉 Confetti Animation */}
