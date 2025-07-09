@@ -4,6 +4,7 @@ import * as Animatable from 'react-native-animatable';
 import { Video } from 'expo-av';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import jwtDecode from 'jwt-decode';
 
 export default function LoadScreen() {
   const navigation = useNavigation();
@@ -21,7 +22,24 @@ export default function LoadScreen() {
           }
 
           const token = await AsyncStorage.getItem('token');
-          navigation.replace(token ? 'MentalScore' : 'LoginScreen');
+
+          if (!token) {
+            navigation.replace('LoginScreen');
+            return;
+          }
+
+          try {
+            const decoded = jwtDecode(token);
+            if (decoded.exp * 1000 > Date.now()) {
+              navigation.replace('MentalScore');
+            } else {
+              await AsyncStorage.removeItem('token');
+              navigation.replace('LoginScreen');
+            }
+          } catch {
+            await AsyncStorage.removeItem('token');
+            navigation.replace('LoginScreen');
+          }
         }, 3000); // wait 3s after load, then jump
       return () => clearTimeout(timer);
     }

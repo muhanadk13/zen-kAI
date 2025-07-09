@@ -43,15 +43,43 @@ exports.login = async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) return res.status(401).json({ error: 'Invalid email or password' });
 
-    const isMatch = await bcrypt.compare(password, user.passwordHash);
-    if (!isMatch) return res.status(401).json({ error: 'Invalid email or password' });
+    if (user.lockUntil && user.lockUntil > Date.now()) {
+      return res.status(403).json({ error: 'Account locked. Try again later.' });
+    }
 
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+    const isMatch = await bcrypt.compare(password, user.passwordHash);
+
+    if (!isMatch) {
+      user.failedLoginAttempts += 1;
+      if (user.failedLoginAttempts >= 5) {
+        user.lockUntil = Date.now() + 30 * 60 * 1000; // 30 minutes
+        user.failedLoginAttempts = 0;
+      }
+      await user.save();
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    user.failedLoginAttempts = 0;
+    user.lockUntil = undefined;
+    await user.save();
+
+    const token = jwt.sign({ userId: user._id, email: user.email }, process.env.JWT_SECRET, {
       expiresIn: '7d',
     });
 
-    res.status(200).json({ token });
+    res.status(200).json({ token, user: { id: user._id, email: user.email } });
   } catch (err) {
-    res.status(500).json({ error: 'Login failed' });
+    console.error(err);
+    res.status(500).json({ error: 'Server error, try again' });
+  }
+};
+
+exports.verify = async (req, res) => {
+  try {
+    const user = await User.findById(req.userId).select('email');
+    if (!user) return res.status(401).json({ valid: false });
+    res.json({ valid: true, user: { id: user._id, email: user.email } });
+  } catch (err) {
+    res.status(500).json({ valid: false });
   }
 };
