@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, StackActions } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Alert } from 'react-native';
 import { BlurView } from 'expo-blur';
@@ -7,7 +7,7 @@ import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import jwt_decode from 'jwt-decode';
+import decodeToken from './utils/decodeToken';
 
 // Screens
 import MentalScoreScreen from './MentalScoreScreen';
@@ -48,29 +48,29 @@ export default function App() {
         console.log("🔑 No token found. Redirecting...");
         if (onboardingComplete) {
           console.log("reaching the login");
-          navigationRef.current?.replace('LoginScreen');
+          navigationRef.current?.dispatch(StackActions.replace('LoginScreen'));
         } else {
-          navigationRef.current?.replace('Onboarding');
+          navigationRef.current?.dispatch(StackActions.replace('Onboarding'));
         }
         return;
       }
       try {
-        const decoded = jwt_decode(token);
+        const decoded = decodeToken(token);
         console.log("🔓 Decoded token:", decoded);
         const nowInSeconds = Date.now() / 1000;
   
         if (decoded.exp > nowInSeconds) {
           console.log("✅ Token is valid. Going to MentalScore...");
           await initializeNotifications();
-          navigationRef.current?.replace('MentalScore');
+          navigationRef.current?.dispatch(StackActions.replace('MentalScore'));
         } else {
           console.log("❌ Token expired. Removing and going to Login...");
           await AsyncStorage.removeItem('token');
-          navigationRef.current?.replace('LoginScreen');
+          navigationRef.current?.dispatch(StackActions.replace('LoginScreen'));
         }
       } catch (err) {
         console.error("❌ Token decode failed:", err);
-        navigationRef.current?.replace('LoginScreen');
+        navigationRef.current?.dispatch(StackActions.replace('LoginScreen'));
       }
     };
   
