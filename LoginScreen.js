@@ -4,7 +4,7 @@ import { Button } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 
-const API_URL = 'http://localhost:4000';
+const API_URL = 'http://192.168.0.87:4000';
 
 export default function LoginScreen() {
   console.log("🟢 LoginScreen rendered");

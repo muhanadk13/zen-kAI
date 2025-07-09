@@ -37,8 +37,12 @@ exports.signup = async (req, res) => {
 };
 
 exports.login = async (req, res) => {
+  console.log("✅ Login route hit");
+  console.log("🔍 req.body:", req.body);
+
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
+    console.log("❌ Login validation failed:", errors.array());
     return res.status(400).json({ errors: errors.array() });
   }
 
@@ -46,38 +50,37 @@ exports.login = async (req, res) => {
 
   try {
     const user = await User.findOne({ email });
-    if (!user) return res.status(401).json({ error: 'Invalid email or password' });
+    console.log("🔍 Found user:", user);
 
-    if (user.lockUntil && user.lockUntil > Date.now()) {
-      return res.status(403).json({ error: 'Account locked. Try again later.' });
-    }
-
-    const isMatch = await bcrypt.compare(password, user.passwordHash);
-
-    if (!isMatch) {
-      user.failedLoginAttempts += 1;
-      if (user.failedLoginAttempts >= 5) {
-        user.lockUntil = Date.now() + 30 * 60 * 1000; // 30 minutes
-        user.failedLoginAttempts = 0;
-      }
-      await user.save();
+    if (!user) {
+      console.log("❌ No user found with that email");
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
-    user.failedLoginAttempts = 0;
-    user.lockUntil = undefined;
-    await user.save();
+    const isMatch = await bcrypt.compare(password, user.passwordHash || '');
+    console.log("🔐 Password match:", isMatch);
 
-    const token = jwt.sign({ userId: user._id, email: user.email }, process.env.JWT_SECRET, {
-      expiresIn: '7d',
-    });
+    if (!isMatch) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
 
+    console.log("🔑 JWT_SECRET:", process.env.JWT_SECRET);
+
+    const token = jwt.sign(
+      { userId: user._id, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    console.log("✅ Token created:", token);
     res.status(200).json({ token, user: { id: user._id, email: user.email } });
+
   } catch (err) {
-    console.error(err);
+    console.error("🔥 LOGIN ERROR:", err.stack);
     res.status(500).json({ error: 'Server error, try again' });
   }
 };
+
 
 exports.verify = async (req, res) => {
   try {
