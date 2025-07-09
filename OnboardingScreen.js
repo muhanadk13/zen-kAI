@@ -180,7 +180,11 @@ const interpolatedGlow = glowAnim.interpolate({
     }
   
     setIsLoading(false);
-    navigation.reset({ index: 0, routes: [{ name: 'MentalScore' }] });
+
+    // After onboarding, show Login if no token is saved yet
+    const token = await AsyncStorage.getItem('token');
+    const nextScreen = token ? 'MentalScore' : 'LoginScreen';
+    navigation.reset({ index: 0, routes: [{ name: nextScreen }] });
   };
   
 

@@ -12,10 +12,17 @@ export default function LoadScreen() {
 
   useEffect(() => {
     if (videoLoaded) {
-      const timer = setTimeout(async () => {
-        const done = await AsyncStorage.getItem('onboardingComplete');
-        navigation.replace(done ? 'MentalScore' : 'Onboarding');
-      }, 3000); // wait 3s after load, then jump
+        const timer = setTimeout(async () => {
+          const done = await AsyncStorage.getItem('onboardingComplete');
+
+          if (!done) {
+            navigation.replace('Onboarding');
+            return;
+          }
+
+          const token = await AsyncStorage.getItem('token');
+          navigation.replace(token ? 'MentalScore' : 'LoginScreen');
+        }, 3000); // wait 3s after load, then jump
       return () => clearTimeout(timer);
     }
   }, [videoLoaded]);
