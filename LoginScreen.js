@@ -2,9 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { TextInput, View, StyleSheet, Text } from 'react-native';
 import { Button } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
 
 export default function LoginScreen() {
   console.log("🟢 LoginScreen rendered");
+
+  const navigation = useNavigation();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -31,6 +34,9 @@ export default function LoginScreen() {
       const data = await res.json();
       await AsyncStorage.setItem('token', data.token);
       console.log("✅ Token saved!", data.token);
+
+      // Go to main app after successful login
+      navigation.reset({ index: 0, routes: [{ name: 'MentalScore' }] });
     } catch (err) {
       console.error("❌ Login error:", err);
     }
