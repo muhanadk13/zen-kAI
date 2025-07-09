@@ -28,7 +28,7 @@ import Slider from '@react-native-community/slider';
 import { BlurView } from 'expo-blur';
 import { generatePersonalizedReminder } from './utils/generatePersonalizedReminder';
 import * as Animatable from 'react-native-animatable';
-import jwt_decode from 'jwt-decode';
+import decodeToken from './utils/decodeToken';
 
 
 function formatTime(date) {
@@ -187,7 +187,7 @@ const interpolatedGlow = glowAnim.interpolate({
 
     if (token) {
       try {
-        const { exp } = jwt_decode(token);
+        const { exp } = decodeToken(token);
         if (exp * 1000 > Date.now()) {
           navigation.reset({ index: 0, routes: [{ name: 'MentalScore' }] });
           return;
