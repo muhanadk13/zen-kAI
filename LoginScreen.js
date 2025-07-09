@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TextInput, View, StyleSheet, Text, ActivityIndicator } from 'react-native';
+import { TextInput, View, StyleSheet, Text, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { Button } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
@@ -15,6 +15,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isSignup, setIsSignup] = useState(false);
 
 
   const validate = () => {
@@ -26,15 +27,20 @@ export default function LoginScreen() {
       setError('Password is required');
       return false;
     }
+    if (isSignup && password.length < 6) {
+      setError('Password must be at least 6 characters');
+      return false;
+    }
     return true;
   };
 
-  const handleLogin = async () => {
+  const handleAuth = async () => {
     if (!validate()) return;
     setLoading(true);
     setError('');
     try {
-      const res = await fetch(`${API_URL}/api/auth/login`, {
+      const endpoint = isSignup ? 'signup' : 'login';
+      const res = await fetch(`${API_URL}/api/auth/${endpoint}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -44,6 +50,10 @@ export default function LoginScreen() {
 
       if (res.status === 401) {
         setError('Invalid email or password');
+        return;
+      }
+      if (res.status === 409) {
+        setError('Email already in use');
         return;
       }
       if (!res.ok) {
@@ -81,9 +91,20 @@ export default function LoginScreen() {
         value={password}
       />
       {error ? <Text style={styles.error}>{error}</Text> : null}
-      <Button mode="contained" onPress={handleLogin} disabled={loading}>
-        {loading ? <ActivityIndicator color="#fff" /> : 'Log In'}
+      <Button mode="contained" onPress={handleAuth} disabled={loading}>
+        {loading ? (
+          <ActivityIndicator color="#fff" />
+        ) : isSignup ? (
+          'Sign Up'
+        ) : (
+          'Log In'
+        )}
       </Button>
+      <TouchableOpacity onPress={() => { setError(''); setIsSignup(!isSignup); }}>
+        <Text style={{ marginTop: 12, color: '#007aff', textAlign: 'center' }}>
+          {isSignup ? 'Have an account? Log in' : "Don't have an account? Sign up"}
+        </Text>
+      </TouchableOpacity>
     </View>
   );
 }
