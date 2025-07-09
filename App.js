@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Alert } from 'react-native';
@@ -35,50 +35,47 @@ const Stack = createNativeStackNavigator();
 
 export default function App() {
   const navigationRef = useRef(null);
+  const [initialScreen, setInitialScreen] = useState(null);
 
-  useEffect(() => {
-    const waitForNavigationAndInitialize = async () => {
-      // Wait until navigationRef is ready
-      while (!navigationRef.current || typeof navigationRef.current.replace !== 'function') {
-        await new Promise((res) => setTimeout(res, 50));
-      }
+
+    const checkToken = async () => {
+      const token = await AsyncStorage.getItem('token');
+      const onboardingComplete = await AsyncStorage.getItem('onboardingComplete');
+      console.log("🚀 Token:", token);
+      console.log("✅ Onboarding complete:", onboardingComplete);
   
-      try {
-        const token = await AsyncStorage.getItem('token');
-        const onboardingComplete = await AsyncStorage.getItem('onboardingComplete');
-  
-        if (!token) {
-          if (onboardingComplete) {
-            navigationRef.current.replace('LoginScreen');
-          } else {
-            navigationRef.current.replace('Onboarding');
-          }
-          return;
+      if (!token) {
+        console.log("🔑 No token found. Redirecting...");
+        if (onboardingComplete) {
+          console.log("reaching the login");
+          navigationRef.current?.replace('LoginScreen');
+        } else {
+          navigationRef.current?.replace('Onboarding');
         }
+        return;
+      }
+      try {
+        const decoded = jwtDecode(token);
+        console.log("🔓 Decoded token:", decoded);
+        const nowInSeconds = Date.now() / 1000;
   
-        // Decode and check token expiration
-        try {
-          const decoded = jwtDecode(token);
-          const nowInSeconds = Date.now() / 1000;
-  
-          if (decoded.exp && decoded.exp > nowInSeconds) {
-            await initializeNotifications();
-            navigationRef.current.replace('MentalScore');
-          } else {
-            await AsyncStorage.removeItem('token');
-            navigationRef.current.replace('LoginScreen');
-          }
-        } catch (err) {
-          navigationRef.current.replace('LoginScreen');
+        if (decoded.exp > nowInSeconds) {
+          console.log("✅ Token is valid. Going to MentalScore...");
+          await initializeNotifications();
+          navigationRef.current?.replace('MentalScore');
+        } else {
+          console.log("❌ Token expired. Removing and going to Login...");
+          await AsyncStorage.removeItem('token');
+          navigationRef.current?.replace('LoginScreen');
         }
       } catch (err) {
-        console.error("App initialization error", err);
-        navigationRef.current.replace('LoginScreen');
+        console.error("❌ Token decode failed:", err);
+        navigationRef.current?.replace('LoginScreen');
       }
     };
   
-    waitForNavigationAndInitialize();
-  }, []);
+
+  
   
 
   async function initializeNotifications() {
@@ -154,7 +151,7 @@ export default function App() {
   }
 
   return (
-    <NavigationContainer ref={navigationRef}>
+    <NavigationContainer ref={navigationRef} onReady={checkToken}>
       <Stack.Navigator initialRouteName="Load" screenOptions={{ animation: 'fade', gestureEnabled: false }}>
         <Stack.Screen name="Onboarding" component={OnboardingScreen} options={{ headerShown: false }} />
         <Stack.Screen name="MentalScore" component={MentalScoreScreen} options={{ headerShown: false }} />
