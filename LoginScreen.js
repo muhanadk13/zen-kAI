@@ -4,7 +4,7 @@ import { Button } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 
-const API_URL = 'zen-kai-production.up.railway.app'
+const API_URL = 'https://zen-kai-production.up.railway.app';
 
 export default function LoginScreen() {
   console.log("🟢 LoginScreen rendered");
