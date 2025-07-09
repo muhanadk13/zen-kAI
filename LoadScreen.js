@@ -4,7 +4,7 @@ import * as Animatable from 'react-native-animatable';
 import { Video } from 'expo-av';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import jwt_decode from 'jwt-decode';
+import decodeToken from './utils/decodeToken';
 
 export default function LoadScreen() {
   const navigation = useNavigation();
@@ -29,7 +29,7 @@ export default function LoadScreen() {
           }
 
           try {
-            const decoded = jwt_decode(token);
+            const decoded = decodeToken(token);
             if (decoded.exp * 1000 > Date.now()) {
               navigation.replace('MentalScore');
             } else {

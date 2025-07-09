@@ -7,7 +7,7 @@ import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import jwt_decode from 'jwt-decode';
+import decodeToken from './utils/decodeToken';
 
 // Screens
 import MentalScoreScreen from './MentalScoreScreen';
@@ -55,7 +55,7 @@ export default function App() {
         return;
       }
       try {
-        const decoded = jwt_decode(token);
+        const decoded = decodeToken(token);
         console.log("🔓 Decoded token:", decoded);
         const nowInSeconds = Date.now() / 1000;
   
