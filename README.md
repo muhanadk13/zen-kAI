@@ -2,7 +2,7 @@
 
 A React Native mobile application that gamifies mental wellness through daily check-ins, AI-powered insights, and a Duolingo-inspired scoring system. Built with Expo, featuring a Node.js/Express backend with MongoDB.
 
-## Features
+## 🧠 Features
 
 | Feature         | Description                                     |
 |----------------|-------------------------------------------------|
