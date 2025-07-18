@@ -9,10 +9,18 @@
   "engines": {
     "node": "18.x"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
+  "keywords": [
+    "nodejs",
+    "express",
+    "mongodb",
+    "jwt",
+    "authentication",
+    "api",
+    "backend"
+  ],
+  "author": "Zen kAI Team",
+  "license": "MIT",
+  "description": "Backend API for Zen kAI mental wellness app",
   "dependencies": {
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",

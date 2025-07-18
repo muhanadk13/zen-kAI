@@ -51,5 +51,23 @@
   "devDependencies": {
     "@babel/core": "^7.20.0"
   },
-  "private": true
+  "keywords": [
+    "react-native",
+    "expo",
+    "mental-health",
+    "gamification",
+    "ai",
+    "wellness",
+    "mobile-app"
+  ],
+  "author": "Zen kAI Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/zen-kai.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/zen-kai/issues"
+  },
+  "homepage": "https://github.com/yourusername/zen-kai#readme"
 }
