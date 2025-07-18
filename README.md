@@ -1,24 +1,25 @@
-# Zen kAI - Mental Wellness Gamified App
+# zen-kAI - Mental Wellness Gamified App
 
 A React Native mobile application that gamifies mental wellness through daily check-ins, AI-powered insights, and a Duolingo-inspired scoring system. Built with Expo, featuring a Node.js/Express backend with MongoDB.
 
-## 🌟 Features
+## Features
 
-| Feature | Icon | Description |
-| --- | --- | --- |
-| MindScore | ![MindScore](assets/icons/brain.svg) | AI-powered mental wellness scoring |
-| Level Progress | ![Momentum](assets/icons/bolt.svg) | Gamified progress tracking |
-| Score Circle | ![Level](assets/icons/level.svg) | Visual progress indicators |
-| XP Levels | ![Level](assets/icons/level.svg) | Experience point system |
-| Daily Check-ins | 📝 | Mood and reflection tracking |
-| AI Insights | 🤖 | Personalized daily insights |
-| Reward System | 🎁 | Unlockable rewards and achievements |
+| Feature         | Description                                     |
+|----------------|-------------------------------------------------|
+| MindScore       | AI-powered mental wellness scoring              |
+| Level Progress  | Gamified progress tracking                      |
+| Score Circle    | Visual progress indicators                      |
+| XP Levels       | Experience point leveling system                |
+| Daily Check-ins | Mood, clarity, energy, and reflection tracking  |
+| AI Insights     | Personalized GPT-4o reflections                 |
+| Reward System   | Unlockable rewards and achievements             |
+
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
-- Node.js 18+ 
+- Node.js
 - npm or yarn
 - Expo CLI (`npm install -g @expo/cli`)
 - MongoDB (local or cloud)
